@@ -1,0 +1,538 @@
+/* Common Layout Styles */
+:root {
+    --header-height: 80px;
+    --primary-color: #2196f3;
+    --primary-dark: #1976d2;
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --danger-color: #f44336;
+    --text-dark: #fff;
+    --text-light: #ccc;
+    --border-radius: 12px;
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --background-dark: #0A0F18;
+    --card-bg: #1a1f2e;
+    --hover-bg: #2a2f3e;
+}
+
+/* Main Layout */
+.matches-section {
+    padding-top: calc(var(--header-height) + 2rem);
+    padding-bottom: 2rem;
+    background: var(--background-dark);
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+}
+
+.matches-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    position: relative;
+}
+
+/* Header and Navigation */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+/* User Balance Section */
+.user-balance {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.balance-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    font-weight: 500;
+    color: var(--text-dark);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.balance-item i {
+    color: var(--primary-color);
+}
+
+/* My Matches Link */
+.my-matches-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.my-matches-link:hover {
+    background: var(--primary-dark);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Games Filter */
+.games-filter {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.game-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: calc(var(--border-radius) - 4px);
+    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--card-bg);
+    color: var(--text-light);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.game-filter-btn:hover {
+    background: var(--hover-bg);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.game-filter-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-dark);
+    color: white;
+}
+
+.game-filter-btn img {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+/* Match Cards Grid */
+.matches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.match-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.match-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border-color: var(--primary-color);
+}
+
+/* Match Card Header */
+.match-header {
+    padding: 1.5rem;
+    background: linear-gradient(45deg, #1a237e, #0d47a1);
+    color: white;
+    position: relative;
+}
+
+.game-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.game-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: white;
+    padding: 4px;
+}
+
+.game-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: white;
+}
+
+.tournament-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255,255,255,0.9);
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.match-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Match Card Content */
+.match-info {
+    padding: 1.5rem;
+    color: var(--text-light);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--hover-bg);
+    border-radius: calc(var(--border-radius) - 4px);
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.prize-pool {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+}
+
+.prize-pool > i {
+    margin-right: 0.5rem;
+}
+
+.prize-distribution,
+.coins-per-kill {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.prize-distribution {
+    color: #9c27b0;
+}
+
+.coins-per-kill {
+    color: #f57f17;
+}
+
+.match-rules {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.match-rules h4 {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rules-content {
+    font-size: 0.875rem;
+    color: #555;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Match Status */
+.match-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.status-upcoming {
+    background: rgba(33, 150, 243, 0.1);
+    color: #2196f3;
+}
+
+.status-in-progress {
+    background: rgba(255, 152, 0, 0.1);
+    color: #ff9800;
+}
+
+.status-completed {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+}
+
+/* Room Details */
+.room-details {
+    margin: 1.5rem 0;
+    padding: 1.25rem;
+    background: rgba(255, 152, 0, 0.1);
+    border-radius: calc(var(--border-radius) - 4px);
+    border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.room-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #ff9800;
+    font-family: monospace;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.room-info:last-child {
+    margin-bottom: 0;
+}
+
+.room-info strong {
+    background: rgba(255,255,255,0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Match Actions */
+.match-actions {
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-join {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: calc(var(--border-radius) - 4px);
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-success:disabled {
+    background: rgba(76, 175, 80, 0.5);
+    cursor: not-allowed;
+}
+
+.btn-primary:disabled {
+    background: rgba(33, 150, 243, 0.5);
+    cursor: not-allowed;
+}
+
+/* Messages */
+.error-message,
+.success-message {
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.error-message {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.2);
+}
+
+.success-message {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+/* Empty State */
+.no-matches {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    color: var(--text-light);
+}
+
+.no-matches i {
+    font-size: 4rem;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+}
+
+.no-matches p {
+    font-size: 1.25rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .matches-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .matches-container {
+        padding: 0 1rem;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .user-balance {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .balance-item {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .my-matches-link {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .games-filter {
+        padding: 1rem;
+    }
+    
+    .game-filter-btn {
+        flex: 1;
+        min-width: 140px;
+        justify-content: center;
+    }
+    
+    .match-actions {
+        flex-direction: column;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-title {
+        font-size: 1.75rem;
+    }
+    
+    .match-header {
+        padding: 1.25rem;
+    }
+    
+    .game-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .game-name {
+        font-size: 1.125rem;
+    }
+    
+    .match-info {
+        padding: 1.25rem;
+    }
+    
+    .info-item {
+        padding: 0.75rem;
+    }
+}
+
+/* Icons */
+.bi {
+    display: inline-block;
+    vertical-align: -0.125em;
+    width: 1em;
+    height: 1em;
+    margin-right: 0.25rem;
+} 

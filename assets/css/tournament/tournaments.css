@@ -1,0 +1,196 @@
+/* Modern Tournament Page Styling */
+:root {
+    --primary-color: #00ff66;
+    --secondary-color: #1a1a1a;
+    --accent-color: #6c5ce7;
+    --text-color: #ffffff;
+    --card-bg: #242424;
+    --hover-color: #00cc52;
+    --gradient-start: #1a1a1a;
+    --gradient-end: #2d2d2d;
+}
+
+body {
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+}
+
+.container {
+    padding: 2rem 1rem;
+}
+
+/* Page Title */
+.mb-4 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 2rem !important;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+}
+
+/* Tournament Cards */
+.card {
+    background: var(--card-bg);
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 255, 102, 0.2);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.1);
+}
+
+.card-body {
+    padding: 1.5rem;
+    background: linear-gradient(180deg, rgba(36, 36, 36, 0.9) 0%, var(--card-bg) 100%);
+}
+
+.card-title {
+    color: var(--primary-color);
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.card-text small {
+    color: #a0a0a0 !important;
+    font-size: 0.9rem;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bg-info {
+    background: linear-gradient(45deg, #00c6fb, #005bea) !important;
+    color: white;
+}
+
+.bg-secondary {
+    background: linear-gradient(45deg, #4a4a4a, #2d2d2d) !important;
+}
+
+.bg-primary {
+    background: linear-gradient(45deg, #00ff66, #00cc52) !important;
+}
+
+.bg-success {
+    background: linear-gradient(45deg, #00b09b, #96c93d) !important;
+}
+
+/* View Details Button */
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 50px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.3);
+}
+
+/* Grid Layout */
+.row {
+    margin: 0 -1rem;
+}
+
+.col {
+    padding: 1rem;
+}
+
+/* Prize Pool and Teams Badge Container */
+.mb-2 {
+    margin-bottom: 1rem !important;
+}
+
+.mb-2 .badge {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Status and Button Container */
+.d-flex {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .mb-4 {
+        font-size: 2rem;
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+    }
+    
+    .badge {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Add smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Add loading animation for images */
+.card-img-top {
+    position: relative;
+    background: linear-gradient(110deg, #2d2d2d 8%, #333 18%, #2d2d2d 33%);
+    background-size: 200% 100%;
+    animation: shine 1.5s linear infinite;
+}
+
+@keyframes shine {
+    to {
+        background-position-x: -200%;
+    }
+}
+
+/* Add hover effect for badges */
+.badge {
+    transition: all 0.3s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+

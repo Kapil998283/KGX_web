@@ -1,0 +1,481 @@
+.earn-coins-container {
+    max-width: 1200px;
+    margin: 120px auto 60px;
+    padding: 0 20px;
+}
+
+.coins-header {
+    background: linear-gradient(135deg, var(--rich-black-fogra-29), var(--raisin-black-1));
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-content h1 {
+    color: var(--white);
+    font-size: 2.2em;
+    margin-bottom: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.header-content p {
+    color: var(--quick-silver);
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+.coins-balance {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 25px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.coins-balance ion-icon {
+    font-size: 2.8em;
+    color: var(--orange);
+    filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.3));
+}
+
+.balance-info {
+    text-align: right;
+}
+
+.balance-info .amount {
+    color: var(--orange);
+    font-size: 2.5em;
+    font-weight: bold;
+    line-height: 1;
+    text-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+}
+
+.balance-info .label {
+    color: var(--quick-silver);
+    font-size: 1em;
+    margin-top: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.content-tabs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    padding: 0 10px;
+}
+
+.tab-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 12px;
+    background: var(--raisin-black-2);
+    color: var(--white);
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn ion-icon {
+    font-size: 1.3em;
+}
+
+.tab-btn.active {
+    background: var(--orange);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 165, 0, 0.3);
+}
+
+.tab-btn:hover:not(.active) {
+    background: var(--raisin-black-1);
+    transform: translateY(-1px);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.streams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    padding: 10px;
+}
+
+.stream-card {
+    background: linear-gradient(to bottom, var(--rich-black-fogra-29), var(--raisin-black-2));
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.stream-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 165, 0, 0.3);
+}
+
+.stream-thumbnail {
+    width: 100%;
+    aspect-ratio: 16/9;
+    position: relative;
+    overflow: hidden;
+}
+
+.stream-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.stream-card:hover .stream-thumbnail img {
+    transform: scale(1.05);
+}
+
+.stream-status {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 16px;
+    border-radius: 25px;
+    color: white;
+    font-size: 0.9em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stream-status.live {
+    background: rgba(220, 53, 69, 0.9);
+    animation: pulse 2s infinite;
+}
+
+.stream-status.scheduled {
+    background: rgba(255, 193, 7, 0.9);
+    color: black;
+}
+
+.stream-info {
+    padding: 25px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.stream-title {
+    color: var(--white);
+    font-size: 1.3em;
+    margin: 0 0 15px;
+    line-height: 1.4;
+    font-weight: 600;
+}
+
+.stream-meta {
+    color: var(--quick-silver);
+    font-size: 0.95em;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.stream-meta div {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stream-meta ion-icon {
+    font-size: 1.2em;
+    color: var(--orange);
+}
+
+.stream-reward {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto;
+}
+
+.reward-amount {
+    color: var(--orange);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1em;
+}
+
+.watch-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+.watch-btn.available {
+    background: var(--orange);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+}
+
+.watch-btn.watched {
+    background: var(--green);
+    color: white;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.watch-btn.scheduled {
+    background: var(--blue);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.watch-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.category-tag {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 25px;
+    font-size: 0.85em;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.no-content {
+    text-align: center;
+    padding: 60px 30px;
+    color: var(--quick-silver);
+    background: linear-gradient(135deg, var(--rich-black-fogra-29), var(--raisin-black-2));
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.no-content ion-icon {
+    font-size: 64px;
+    margin-bottom: 25px;
+    color: var(--orange);
+    opacity: 0.8;
+}
+
+.no-content h2 {
+    color: var(--white);
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .coins-header {
+        flex-direction: column;
+        gap: 25px;
+        text-align: center;
+        padding: 25px 20px;
+    }
+
+    .coins-balance {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .balance-info {
+        text-align: left;
+    }
+
+    .content-tabs {
+        flex-direction: column;
+        padding: 0;
+    }
+
+    .tab-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .streams-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 0;
+    }
+}
+
+/* History Tab Styles */
+.history-header {
+    background: var(--raisin-black-2);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.total-earnings {
+    display: inline-block;
+}
+
+.total-earnings .amount {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.total-earnings .amount ion-icon {
+    font-size: 28px;
+}
+
+.total-earnings .label {
+    color: var(--quick-silver);
+    margin-top: 5px;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.history-item {
+    background: var(--raisin-black-2);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+}
+
+.history-thumbnail {
+    width: 180px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.history-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.history-info {
+    flex: 1;
+}
+
+.history-info h3 {
+    font-size: 18px;
+    color: var(--white);
+    margin: 0 0 10px 0;
+}
+
+.history-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+    color: var(--quick-silver);
+    font-size: 14px;
+}
+
+.type {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.type.tournament {
+    background: var(--orange);
+    color: var(--white);
+}
+
+.type.content {
+    background: var(--blue);
+    color: var(--white);
+}
+
+.history-reward {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--green);
+    font-weight: 500;
+}
+
+.history-reward ion-icon {
+    font-size: 20px;
+}
+
+@media (max-width: 768px) {
+    .history-item {
+        flex-direction: column;
+    }
+
+    .history-thumbnail {
+        width: 100%;
+        height: 180px;
+    }
+
+    .history-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+

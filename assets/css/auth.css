@@ -1,0 +1,212 @@
+/* Authentication Styles */
+
+/* Sign In Button */
+#btn-signup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--primary-color);
+  color: var(--white);
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#btn-signup:hover {
+  background: var(--primary-color-dark);
+  transform: translateY(-2px);
+}
+
+#btn-signup .icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+#btn-signup ion-icon {
+  font-size: 20px;
+}
+
+/* Login Form */
+.auth-container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 20px;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.auth-title {
+  text-align: center;
+  color: var(--primary-color);
+  margin-bottom: 30px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.form-group input {
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.form-group input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.auth-btn {
+  background: var(--primary-color);
+  color: var(--white);
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.auth-btn:hover {
+  background: var(--primary-color-dark);
+}
+
+.auth-links {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.auth-links a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+/* Error Messages */
+.error-message {
+  color: var(--error-color);
+  background: var(--error-bg);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Success Messages */
+.success-message {
+  color: var(--success-color);
+  background: var(--success-bg);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Password Toggle */
+.password-toggle {
+  position: relative;
+}
+
+.password-toggle ion-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+/* Remember Me Checkbox */
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.remember-me input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+/* Social Login */
+.social-login {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.social-login-title {
+  color: var(--text-color);
+  margin-bottom: 15px;
+}
+
+.social-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.social-btn:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--white);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .auth-container {
+    margin: 20px;
+    padding: 15px;
+  }
+  
+  #btn-signup {
+    padding: 8px 16px;
+  }
+  
+  .form-group input {
+    padding: 10px;
+  }
+}
+
+.auth-divider,
+.auth-divider::before,
+.auth-divider::after,
+.auth-divider span,
+.google-auth-btn,
+.google-auth-btn:hover,
+.google-auth-btn img {
+    display: none;
+} 

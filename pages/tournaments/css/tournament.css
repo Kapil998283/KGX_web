@@ -1,0 +1,61 @@
+.btn-stream {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-stream.live {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-stream.live:hover {
+    background: #c82333;
+    color: white;
+}
+
+.btn-stream.scheduled {
+    background: #ffc107;
+    color: #000;
+}
+
+.btn-stream.scheduled:hover {
+    background: #e0a800;
+    color: #000;
+}
+
+.btn-stream ion-icon {
+    font-size: 1.2em;
+}
+
+/* Pulsing effect for live streams */
+.btn-stream.live::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+} 

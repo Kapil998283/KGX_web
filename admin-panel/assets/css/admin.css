@@ -1,0 +1,152 @@
+/* Admin Panel Styles */
+:root {
+    --primary-color: #00c896;
+    --secondary-color: #2c3e50;
+    --text-color: #333;
+    --light-gray: #f4f4f9;
+    --border-color: #ddd;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--light-gray);
+}
+
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 20px 0;
+    position: fixed;
+    height: 100vh;
+}
+
+.admin-logo {
+    padding: 0 20px;
+    margin-bottom: 30px;
+}
+
+.admin-logo h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.admin-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-menu li {
+    padding: 10px 20px;
+}
+
+.admin-menu a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-menu a:hover {
+    color: var(--primary-color);
+}
+
+.admin-content {
+    flex: 1;
+    margin-left: 250px;
+    padding: 20px;
+}
+
+/* Table Styles */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.admin-table tr:hover {
+    background-color: var(--light-gray);
+}
+
+/* Button Styles */
+.admin-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Form Styles */
+.admin-form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-sidebar {
+        width: 60px;
+    }
+    
+    .admin-logo h2,
+    .admin-menu span {
+        display: none;
+    }
+    
+    .admin-content {
+        margin-left: 60px;
+    }
+} 
