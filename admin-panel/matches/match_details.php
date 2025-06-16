@@ -53,7 +53,7 @@ $stmt = $db->prepare("SELECT
                         END as is_winner,
                         CASE
                             WHEN mr.position IS NOT NULL THEN mr.position
-                            ELSE NULL
+                            ELSE 999999 -- Large number to push NULL positions to the end
                         END as winner_position
                      FROM match_participants mp
                      JOIN users u ON mp.user_id = u.id
@@ -63,12 +63,13 @@ $stmt = $db->prepare("SELECT
                         SELECT 
                             match_id,
                             user_id,
-                            ROW_NUMBER() OVER (PARTITION BY match_id ORDER BY kills DESC) as position
-                        FROM user_kills
+                            @row_number:=@row_number + 1 as position
+                        FROM user_kills, (SELECT @row_number:=0) as r
                         WHERE match_id = ?
+                        ORDER BY kills DESC
                      ) mr ON mr.match_id = mp.match_id AND mr.user_id = mp.user_id
                      WHERE mp.match_id = ?
-                     ORDER BY mr.position ASC NULLS LAST, uk.kills DESC, u.username ASC");
+                     ORDER BY winner_position ASC, uk.kills DESC, u.username ASC");
 $stmt->execute([$match_id, $match_id]);
 $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
