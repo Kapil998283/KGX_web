@@ -49,136 +49,6 @@ $stmt = $db->prepare("SELECT mp.*, u.username, u.email, u.phone,
                      ORDER BY uk.kills DESC, u.username ASC");
 $stmt->execute([$match_id]);
 $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Handle POST requests for updating kills and selecting winner
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'update_kills':
-                $user_id = $_POST['user_id'];
-                $kills = intval($_POST['kills']);
-                
-                try {
-                    $db->beginTransaction();
-                    
-                    // Update or insert kills
-                    $stmt = $db->prepare("INSERT INTO user_kills (match_id, user_id, kills) 
-                                        VALUES (?, ?, ?) 
-                                        ON DUPLICATE KEY UPDATE kills = ?");
-                    $stmt->execute([$match_id, $user_id, $kills, $kills]);
-                    
-                    // Calculate and award coins for kills
-                    if ($match['coins_per_kill'] > 0) {
-                        $coins_earned = $kills * $match['coins_per_kill'];
-                        $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
-                                            VALUES (?, ?) 
-                                            ON DUPLICATE KEY UPDATE coins = coins + ?");
-                        $stmt->execute([$user_id, $coins_earned, $coins_earned]);
-                    }
-                    
-                    $db->commit();
-                    header("Location: match_details.php?id=" . $match_id . "&success=1");
-                    exit;
-                } catch (Exception $e) {
-                    $db->rollBack();
-                    error_log("Error updating kills: " . $e->getMessage());
-                    header("Location: match_details.php?id=" . $match_id . "&error=1");
-                    exit;
-                }
-                break;
-
-            case 'complete_match':
-                try {
-                    $db->beginTransaction();
-                    
-                    // Get total kills for each team
-                    $stmt = $db->prepare("SELECT mp.team_id, SUM(uk.kills) as total_kills 
-                                        FROM match_participants mp 
-                                        LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id 
-                                        WHERE mp.match_id = ? 
-                                        GROUP BY mp.team_id");
-                    $stmt->execute([$match_id]);
-                    $team_scores = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    
-                    // Update match scores
-                    $score_team1 = 0;
-                    $score_team2 = 0;
-                    foreach ($team_scores as $score) {
-                        if ($score['team_id'] == $match['team1_id']) {
-                            $score_team1 = $score['total_kills'];
-                        } else if ($score['team_id'] == $match['team2_id']) {
-                            $score_team2 = $score['total_kills'];
-                        }
-                    }
-                    
-                    // Determine winner
-                    $winner_id = null;
-                    if ($score_team1 > $score_team2) {
-                        $winner_id = $match['team1_id'];
-                    } elseif ($score_team2 > $score_team1) {
-                        $winner_id = $match['team2_id'];
-                    }
-                    
-                    // Update match status and scores
-                    $stmt = $db->prepare("UPDATE matches SET 
-                                        status = 'completed', 
-                                        completed_at = NOW(), 
-                                        winner_id = ?,
-                                        score_team1 = ?,
-                                        score_team2 = ?
-                                        WHERE id = ?");
-                    $stmt->execute([$winner_id, $score_team1, $score_team2, $match_id]);
-                    
-                    // Award prize to winner's team members
-                    if ($winner_id && $match['website_currency_type'] && $match['website_currency_amount'] > 0) {
-                        $prize_amount = $match['website_currency_amount'];
-                        $currency_type = $match['website_currency_type'];
-                        
-                        // Get winner team members
-                        $stmt = $db->prepare("SELECT user_id FROM match_participants WHERE match_id = ? AND team_id = ?");
-                        $stmt->execute([$match_id, $winner_id]);
-                        $winner_team_members = $stmt->fetchAll(PDO::FETCH_COLUMN);
-                        
-                        // Award prize to each team member
-                        foreach ($winner_team_members as $user_id) {
-                            if ($currency_type === 'coins') {
-                                $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
-                                                    VALUES (?, ?) 
-                                                    ON DUPLICATE KEY UPDATE coins = coins + ?");
-                            } else {
-                                $stmt = $db->prepare("INSERT INTO user_tickets (user_id, tickets) 
-                                                    VALUES (?, ?) 
-                                                    ON DUPLICATE KEY UPDATE tickets = tickets + ?");
-                            }
-                            $stmt->execute([$user_id, $prize_amount, $prize_amount]);
-                        }
-                    }
-                    
-                    $db->commit();
-                    header("Location: match_details.php?id=" . $match_id . "&completed=1");
-                    exit;
-                } catch (Exception $e) {
-                    $db->rollBack();
-                    error_log("Error completing match: " . $e->getMessage());
-                    header("Location: match_details.php?id=" . $match_id . "&error=1");
-                    exit;
-                }
-                break;
-        }
-    }
-}
-
-// Add success/error messages
-$success_message = '';
-$error_message = '';
-
-if (isset($_GET['success'])) {
-    $success_message = 'Kills updated successfully!';
-} elseif (isset($_GET['completed'])) {
-    $success_message = 'Match completed successfully!';
-} elseif (isset($_GET['error'])) {
-    $error_message = 'An error occurred. Please try again.';
-}
 ?>
 
 <div class="container-fluid py-4">
@@ -187,7 +57,7 @@ if (isset($_GET['success'])) {
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="mb-0">Match Details</h3>
+                        <h3 class="mb-0">Match Participants</h3>
                         <a href="javascript:history.back()" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Back
                         </a>
@@ -202,6 +72,11 @@ if (isset($_GET['success'])) {
                                 <p class="text-muted">
                                     <i class="bi bi-calendar"></i> <?= date('M j, Y', strtotime($match['match_date'])) ?>
                                     <i class="bi bi-clock ms-3"></i> <?= date('g:i A', strtotime($match['match_time'])) ?>
+                                </p>
+                                <p class="text-muted">
+                                    <i class="bi bi-info-circle"></i> Status: <span class="badge bg-<?= $match['status'] === 'completed' ? 'success' : ($match['status'] === 'in_progress' ? 'primary' : 'warning') ?>">
+                                        <?= ucfirst($match['status']) ?>
+                                    </span>
                                 </p>
                             </div>
                             <div class="col-md-6 text-md-end">
@@ -221,33 +96,6 @@ if (isset($_GET['success'])) {
                         </div>
                     </div>
 
-                    <!-- Add Complete Match Button -->
-                    <?php if ($match['status'] === 'in_progress'): ?>
-                    <div class="text-end mb-4">
-                        <form method="POST" style="display: inline;">
-                            <input type="hidden" name="action" value="complete_match">
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to complete this match? This will calculate final scores and award prizes.')">
-                                <i class="bi bi-check-lg"></i> Complete Match
-                            </button>
-                        </form>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Add success/error messages -->
-                    <?php if ($success_message): ?>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <?= htmlspecialchars($success_message) ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    <?php endif; ?>
-
-                    <?php if ($error_message): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <?= htmlspecialchars($error_message) ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    <?php endif; ?>
-
                     <!-- Participants Table -->
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -258,7 +106,6 @@ if (isset($_GET['success'])) {
                                     <th>Contact</th>
                                     <th>Kills</th>
                                     <th>Coins Earned</th>
-                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -272,20 +119,6 @@ if (isset($_GET['success'])) {
                                     </td>
                                     <td><?= $participant['total_kills'] ?></td>
                                     <td><?= $participant['total_kills'] * $match['coins_per_kill'] ?></td>
-                                    <td>
-                                        <?php if ($match['status'] === 'in_progress'): ?>
-                                        <button type="button" class="btn btn-sm btn-primary" 
-                                                onclick="updateKills(<?= $participant['user_id'] ?>, '<?= htmlspecialchars($participant['username']) ?>', <?= $participant['total_kills'] ?>)">
-                                            <i class="bi bi-pencil"></i> Update Kills
-                                        </button>
-                                        <?php if (!$match['winner_id']): ?>
-                                        <button type="button" class="btn btn-sm btn-success" 
-                                                onclick="selectWinner(<?= $participant['user_id'] ?>, '<?= htmlspecialchars($participant['username']) ?>')">
-                                            <i class="bi bi-trophy"></i> Select as Winner
-                                        </button>
-                                        <?php endif; ?>
-                                        <?php endif; ?>
-                                    </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -296,85 +129,6 @@ if (isset($_GET['success'])) {
         </div>
     </div>
 </div>
-
-<!-- Update Kills Modal -->
-<div class="modal fade" id="updateKillsModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST">
-                <input type="hidden" name="action" value="update_kills">
-                <input type="hidden" name="user_id" id="kill_user_id">
-                
-                <div class="modal-header">
-                    <h5 class="modal-title">Update Kills</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Update kills for <strong id="kill_username"></strong></p>
-                    <div class="mb-3">
-                        <label for="kills" class="form-label">Number of Kills</label>
-                        <input type="number" class="form-control" id="kills" name="kills" min="0" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Select Winner Modal -->
-<div class="modal fade" id="selectWinnerModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST">
-                <input type="hidden" name="action" value="select_winner">
-                <input type="hidden" name="winner_id" id="winner_user_id">
-                
-                <div class="modal-header">
-                    <h5 class="modal-title">Select Winner</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to select <strong id="winner_username"></strong> as the winner?</p>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> This action will:
-                        <ul class="mb-0">
-                            <li>Mark this player as the match winner</li>
-                            <li>Award the prize pool to this player</li>
-                            <li>Cannot be undone</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Confirm Winner</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-// Initialize Bootstrap modals
-const updateKillsModal = new bootstrap.Modal(document.getElementById('updateKillsModal'));
-const selectWinnerModal = new bootstrap.Modal(document.getElementById('selectWinnerModal'));
-
-function updateKills(userId, username, currentKills) {
-    document.getElementById('kill_user_id').value = userId;
-    document.getElementById('kill_username').textContent = username;
-    document.getElementById('kills').value = currentKills;
-    updateKillsModal.show();
-}
-
-function selectWinner(userId, username) {
-    document.getElementById('winner_user_id').value = userId;
-    document.getElementById('winner_username').textContent = username;
-    selectWinnerModal.show();
-}
-</script>
 
 <style>
 .match-info-header {
@@ -400,26 +154,8 @@ function selectWinner(userId, username) {
     vertical-align: middle;
 }
 
-.btn-sm {
-    margin: 0.25rem;
-}
-
-.modal-content {
-    border-radius: 8px;
-    border: none;
-}
-
-.modal-header {
-    background: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-}
-
-.alert {
-    border-left: 4px solid #0dcaf0;
-}
-
-.alert ul {
-    padding-left: 1.25rem;
+.badge {
+    padding: 0.5em 1em;
 }
 </style>
 

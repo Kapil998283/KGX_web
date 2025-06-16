@@ -136,38 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
 
-            case 'update_score':
-                $match_id = $_POST['match_id'];
-                $score_team1 = $_POST['score_team1'];
-                $score_team2 = $_POST['score_team2'];
-                
-                try {
-                    $db->beginTransaction();
-                    
-                    // Update scores
-                    $stmt = $db->prepare("UPDATE matches SET score_team1 = ?, score_team2 = ? WHERE id = ?");
-                    $stmt->execute([$score_team1, $score_team2, $match_id]);
-                    
-                    // Determine winner if match is completed
-                    if (isset($_POST['complete']) && $_POST['complete'] == 1) {
-                        $winner_id = null;
-                        if ($score_team1 > $score_team2) {
-                            $winner_id = $_POST['team1_id'];
-                        } elseif ($score_team2 > $score_team1) {
-                            $winner_id = $_POST['team2_id'];
-                        }
-                        
-                        $stmt = $db->prepare("UPDATE matches SET status = 'completed', completed_at = NOW(), winner_id = ? WHERE id = ?");
-                        $stmt->execute([$winner_id, $match_id]);
-                    }
-                    
-                    $db->commit();
-                } catch (Exception $e) {
-                    $db->rollBack();
-                    error_log("Error updating match score: " . $e->getMessage());
-                }
-                break;
-
             case 'complete_match':
                 $match_id = $_POST['match_id'];
                 try {
@@ -452,14 +420,9 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?php endif; ?>
                                 
                                 <?php if ($match['status'] === 'in_progress'): ?>
-                                    <button class="btn btn-sm btn-warning" onclick="updateScore(<?= $match['id'] ?>, <?= $match['team1_id'] ?>, <?= $match['team2_id'] ?>)">
+                                    <a href="match_scoring.php?id=<?= $match['id'] ?>" class="btn btn-sm btn-warning">
                                         <i class="bi bi-pencil"></i> Update Score
-                                    </button>
-                                    <?php if ($match['score_team1'] > 0 || $match['score_team2'] > 0): ?>
-                                    <button class="btn btn-sm btn-success" onclick="completeMatch(<?= $match['id'] ?>)">
-                                        <i class="bi bi-check-lg"></i> Complete
-                                    </button>
-                                    <?php endif; ?>
+                                    </a>
                                 <?php endif; ?>
                                 
                                 <?php if ($match['status'] !== 'completed'): ?>
@@ -677,41 +640,6 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
-<!-- Update Score Modal -->
-<div class="modal fade" id="updateScoreModal" tabindex="-1" aria-labelledby="updateScoreModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="updateScoreModalLabel">Update Match Score</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="updateScoreForm" method="POST">
-                <div class="modal-body">
-                    <input type="hidden" name="action" value="update_score">
-                    <input type="hidden" name="match_id" id="score_match_id">
-                    <input type="hidden" name="score_team1_id" id="score_team1_id">
-                    <input type="hidden" name="score_team2_id" id="score_team2_id">
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="score_team1" class="form-label">Team 1 Score</label>
-                            <input type="number" class="form-control" id="score_team1" name="score_team1" required min="0">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="score_team2" class="form-label">Team 2 Score</label>
-                            <input type="number" class="form-control" id="score_team2" name="score_team2" required min="0">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Score</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <!-- Room Details Modal -->
 <div class="modal fade" id="roomDetailsModal" tabindex="-1" aria-labelledby="roomDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -764,7 +692,6 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Initialize Bootstrap modals
 const addMatchModal = new bootstrap.Modal(document.getElementById('addMatchModal'));
-const updateScoreModal = new bootstrap.Modal(document.getElementById('updateScoreModal'));
 const roomDetailsModal = new bootstrap.Modal(document.getElementById('roomDetailsModal'));
 
 // Toggle entry fee based on entry type
@@ -847,13 +774,6 @@ document.addEventListener('DOMContentLoaded', function() {
 function startMatch(matchId) {
     document.getElementById('room_match_id').value = matchId;
     roomDetailsModal.show();
-}
-
-function updateScore(matchId, team1Id, team2Id) {
-    document.getElementById('score_match_id').value = matchId;
-    document.getElementById('score_team1_id').value = team1Id;
-    document.getElementById('score_team2_id').value = team2Id;
-    updateScoreModal.show();
 }
 
 function completeMatch(matchId) {
@@ -942,53 +862,6 @@ function resetMatchForm() {
     // Reset entry fee
     toggleEntryFee();
 }
-
-// Handle score form submission
-document.getElementById('updateScoreForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(this);
-    formData.append('action', 'update_score');
-    
-    fetch(window.location.href, {
-        method: 'POST',
-        body: formData
-    }).then(response => {
-        if (response.ok) {
-            updateScoreModal.hide();
-            window.location.reload();
-        }
-    }).catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the score. Please try again.');
-    });
-});
-
-// Add form submission handler for match form
-document.getElementById('matchForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    
-    if (this.checkValidity()) {
-        const formData = new FormData(this);
-        
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData
-        }).then(response => {
-            if (response.ok) {
-                addMatchModal.hide();
-                window.location.reload();
-            } else {
-                alert('An error occurred while creating the match. Please try again.');
-            }
-        }).catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while creating the match. Please try again.');
-        });
-    }
-    
-    this.classList.add('was-validated');
-});
 
 function editMatch(matchId) {
     // Fetch match details via AJAX
