@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $tournament_id = $_POST['tournament_id'] ?: null;
                 $team1_id = $_POST['team1_id'] ?: null;
                 $team2_id = $_POST['team2_id'] ?: null;
-                $map_name = isset($_POST['map_name']) ? $_POST['map_name'] : 'Erangel';
+                $map_name = isset($_POST['map_name']) ? $_POST['map_name'] : 'Nuketown';
                 
                 // New fields for website currency and prize distribution
                 $website_currency_type = isset($_POST['website_currency_type']) ? $_POST['website_currency_type'] : null;
@@ -34,31 +34,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $db->beginTransaction();
                     
-                    $stmt = $db->prepare("INSERT INTO matches (
-                        game_id, tournament_id, team1_id, team2_id, match_type, match_date, 
-                        entry_type, entry_fee, prize_pool, prize_type, max_participants, map_name,
-                        website_currency_type, website_currency_amount, prize_distribution, coins_per_kill,
-                        status
-                    ) VALUES (
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming'
-                    )");
+                    // Check if this is an update or new match
+                    $match_id = isset($_POST['match_id']) && !empty($_POST['match_id']) ? $_POST['match_id'] : null;
                     
-                    $stmt->execute([
-                        $game_id, $tournament_id, $team1_id, $team2_id, $match_type, $match_date,
-                        $entry_type, $entry_fee, $prize_pool, $prize_type, $max_participants, $map_name,
-                        $website_currency_type, $website_currency_amount, $prize_distribution, $coins_per_kill
-                    ]);
-                    
-                    $match_id = $db->lastInsertId();
-                    
-                    // Add initial participants (teams)
-                    if ($team1_id) {
-                        $stmt = $db->prepare("INSERT INTO match_participants (match_id, team_id) VALUES (?, ?)");
-                        $stmt->execute([$match_id, $team1_id]);
-                    }
-                    if ($team2_id) {
-                        $stmt = $db->prepare("INSERT INTO match_participants (match_id, team_id) VALUES (?, ?)");
-                        $stmt->execute([$match_id, $team2_id]);
+                    if ($match_id) {
+                        // Update existing match
+                        $stmt = $db->prepare("UPDATE matches SET 
+                            game_id = ?, 
+                            tournament_id = ?, 
+                            team1_id = ?, 
+                            team2_id = ?, 
+                            match_type = ?, 
+                            match_date = ?, 
+                            entry_type = ?, 
+                            entry_fee = ?, 
+                            prize_pool = ?, 
+                            prize_type = ?, 
+                            max_participants = ?, 
+                            map_name = ?,
+                            website_currency_type = ?, 
+                            website_currency_amount = ?, 
+                            prize_distribution = ?, 
+                            coins_per_kill = ?
+                            WHERE id = ?");
+                        
+                        $stmt->execute([
+                            $game_id, $tournament_id, $team1_id, $team2_id, $match_type, $match_date,
+                            $entry_type, $entry_fee, $prize_pool, $prize_type, $max_participants, $map_name,
+                            $website_currency_type, $website_currency_amount, $prize_distribution, $coins_per_kill,
+                            $match_id
+                        ]);
+                        
+                        // Update team participants
+                        $stmt = $db->prepare("DELETE FROM match_participants WHERE match_id = ? AND user_id IS NULL");
+                        $stmt->execute([$match_id]);
+                        
+                        if ($team1_id) {
+                            $stmt = $db->prepare("INSERT IGNORE INTO match_participants (match_id, team_id) VALUES (?, ?)");
+                            $stmt->execute([$match_id, $team1_id]);
+                        }
+                        if ($team2_id) {
+                            $stmt = $db->prepare("INSERT IGNORE INTO match_participants (match_id, team_id) VALUES (?, ?)");
+                            $stmt->execute([$match_id, $team2_id]);
+                        }
+                    } else {
+                        // Insert new match
+                        $stmt = $db->prepare("INSERT INTO matches (
+                            game_id, tournament_id, team1_id, team2_id, match_type, match_date, 
+                            entry_type, entry_fee, prize_pool, prize_type, max_participants, map_name,
+                            website_currency_type, website_currency_amount, prize_distribution, coins_per_kill,
+                            status
+                        ) VALUES (
+                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming'
+                        )");
+                        
+                        $stmt->execute([
+                            $game_id, $tournament_id, $team1_id, $team2_id, $match_type, $match_date,
+                            $entry_type, $entry_fee, $prize_pool, $prize_type, $max_participants, $map_name,
+                            $website_currency_type, $website_currency_amount, $prize_distribution, $coins_per_kill
+                        ]);
+                        
+                        $match_id = $db->lastInsertId();
+                        
+                        // Add initial participants (teams)
+                        if ($team1_id) {
+                            $stmt = $db->prepare("INSERT INTO match_participants (match_id, team_id) VALUES (?, ?)");
+                            $stmt->execute([$match_id, $team1_id]);
+                        }
+                        if ($team2_id) {
+                            $stmt = $db->prepare("INSERT INTO match_participants (match_id, team_id) VALUES (?, ?)");
+                            $stmt->execute([$match_id, $team2_id]);
+                        }
                     }
                     
                     $db->commit();
@@ -66,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 } catch (Exception $e) {
                     $db->rollBack();
-                    error_log("Error creating match: " . $e->getMessage());
+                    error_log("Error creating/updating match: " . $e->getMessage());
                 }
                 break;
 
@@ -950,28 +996,41 @@ function editMatch(matchId) {
         .then(response => response.json())
         .then(match => {
             // Populate form fields
-            document.getElementById('match_id').value = match.id;
-            document.getElementById('match_type').value = match.match_type;
-            document.getElementById('entry_type').value = match.entry_type;
-            document.getElementById('entry_fee').value = match.entry_fee;
-            document.getElementById('max_participants').value = match.max_participants;
-            document.getElementById('prize_type').value = match.prize_type;
-            document.getElementById('prize_pool').value = match.prize_pool;
-            document.getElementById('map_name').value = match.map_name;
-            document.getElementById('match_date').value = match.match_date;
-            document.getElementById('match_time').value = match.match_time;
+            const form = document.getElementById('matchForm');
+            form.elements['match_id'].value = match.id;
+            form.elements['game_id'].value = match.game_id;
+            form.elements['match_type'].value = match.match_type;
+            form.elements['entry_type'].value = match.entry_type;
+            form.elements['entry_fee'].value = match.entry_fee;
+            form.elements['max_participants'].value = match.max_participants;
+            form.elements['prize_type'].value = match.prize_type;
+            form.elements['prize_pool'].value = match.prize_pool;
+            form.elements['map_name'].value = match.map_name;
+            
+            // Set date and time
+            const matchDateTime = new Date(match.match_date);
+            form.elements['match_date'].value = matchDateTime.toISOString().split('T')[0];
+            form.elements['match_time'].value = matchDateTime.toTimeString().slice(0,5);
+            
+            // Handle teams
+            if (match.team1_id || match.team2_id) {
+                document.getElementById('enableTeams').checked = true;
+                document.getElementById('teamSection').style.display = 'block';
+                form.elements['team1_id'].value = match.team1_id || '';
+                form.elements['team2_id'].value = match.team2_id || '';
+            }
             
             // Handle website currency
             if (match.website_currency_type) {
                 document.getElementById('useWebsiteCurrency').checked = true;
-                document.getElementById('website_currency_type').value = match.website_currency_type;
-                document.getElementById('website_currency_amount').value = match.website_currency_amount;
+                form.elements['website_currency_type'].value = match.website_currency_type;
+                form.elements['website_currency_amount'].value = match.website_currency_amount;
                 togglePrizeCurrency();
             }
             
-            // Handle prize distribution
-            document.getElementById('prize_distribution').value = match.prize_distribution;
-            document.getElementById('coins_per_kill').value = match.coins_per_kill;
+            // Handle prize distribution and coins per kill
+            form.elements['prize_distribution'].value = match.prize_distribution;
+            form.elements['coins_per_kill'].value = match.coins_per_kill;
             
             // Update modal title and button
             document.getElementById('addMatchModalLabel').textContent = 'Edit Match';
