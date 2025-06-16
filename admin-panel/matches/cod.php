@@ -425,11 +425,9 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </a>
                                 <?php endif; ?>
                                 
-                                <?php if ($match['status'] !== 'completed'): ?>
                                 <button class="btn btn-sm btn-danger" onclick="deleteMatch(<?= $match['id'] ?>)">
                                     <i class="bi bi-trash"></i> Delete
                                 </button>
-                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -783,8 +781,22 @@ function completeMatch(matchId) {
 }
 
 function deleteMatch(matchId) {
-    if (confirm('Are you sure you want to delete this match? This action cannot be undone.')) {
-        submitForm('delete_match', { match_id: matchId });
+    if (confirm('Are you sure you want to delete this match? This action cannot be undone and will remove all related data including participant registrations and scores.')) {
+        const formData = new FormData();
+        formData.append('action', 'delete_match');
+        formData.append('match_id', matchId);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the match. Please try again.');
+        });
     }
 }
 

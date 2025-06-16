@@ -283,6 +283,10 @@ if (isset($_GET['success'])) {
                                                 onclick="updateKills(<?= $participant['user_id'] ?>, '<?= htmlspecialchars($participant['username']) ?>', <?= $participant['total_kills'] ?>)">
                                             <i class="bi bi-pencil"></i> Update Kills
                                         </button>
+                                        <button type="button" class="btn btn-sm btn-success" 
+                                                onclick="selectWinner(<?= $participant['user_id'] ?>, '<?= htmlspecialchars($participant['username']) ?>')">
+                                            <i class="bi bi-trophy"></i> Select as Winner
+                                        </button>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -324,15 +328,54 @@ if (isset($_GET['success'])) {
     </div>
 </div>
 
+<!-- Add Winner Modal -->
+<div class="modal fade" id="selectWinnerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="select_winner">
+                <input type="hidden" name="winner_id" id="winner_user_id">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Winner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to select <strong id="winner_username"></strong> as the winner?</p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> This action will:
+                        <ul class="mb-0">
+                            <li>Mark this player as the match winner</li>
+                            <li>Award the prize pool to this player</li>
+                            <li>Cannot be undone</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm Winner</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
-// Initialize Bootstrap modal
+// Initialize Bootstrap modals
 const updateKillsModal = new bootstrap.Modal(document.getElementById('updateKillsModal'));
+const selectWinnerModal = new bootstrap.Modal(document.getElementById('selectWinnerModal'));
 
 function updateKills(userId, username, currentKills) {
     document.getElementById('kill_user_id').value = userId;
     document.getElementById('kill_username').textContent = username;
     document.getElementById('kills').value = currentKills;
     updateKillsModal.show();
+}
+
+function selectWinner(userId, username) {
+    document.getElementById('winner_user_id').value = userId;
+    document.getElementById('winner_username').textContent = username;
+    selectWinnerModal.show();
 }
 </script>
 
