@@ -37,7 +37,7 @@ if (!$match) {
 $stmt = $db->prepare("SELECT 
                         u.username, 
                         t.name as team_name,
-                        COALESCE(mp.position, 0) as position,
+                        mp.position,
                         COALESCE(uk.kills, 0) as kills,
                         COALESCE(uk.kills * m.coins_per_kill + 
                             CASE 
@@ -53,12 +53,13 @@ $stmt = $db->prepare("SELECT
                         END as winner_type
                     FROM match_participants mp
                     JOIN users u ON mp.user_id = u.id
+                    JOIN matches m ON m.id = mp.match_id
                     LEFT JOIN teams t ON mp.team_id = t.id
-                    LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = u.id
-                    JOIN matches m ON mp.match_id = m.id
+                    LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id
                     WHERE mp.match_id = ? 
-                    AND (mp.position IS NOT NULL OR mp.status = 'winner')
-                    ORDER BY COALESCE(mp.position, 999) ASC");
+                    AND m.status = 'completed'
+                    AND mp.position IS NOT NULL
+                    ORDER BY mp.position ASC");
 $stmt->execute([$match_id]);
 $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

@@ -334,6 +334,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 break;
+
+            case 'update_position':
+                try {
+                    $db->beginTransaction();
+                    
+                    $user_id = $_POST['user_id'];
+                    $position = $_POST['position'];
+                    
+                    // Update position in match_participants
+                    $stmt = $db->prepare("UPDATE match_participants 
+                                        SET position = ? 
+                                        WHERE match_id = ? AND user_id = ?");
+                    $stmt->execute([$position, $match_id, $user_id]);
+                    
+                    $db->commit();
+                    header("Location: match_scoring.php?id=" . $match_id . "&success=Position updated successfully");
+                    exit;
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    error_log("Error updating position: " . $e->getMessage());
+                    header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
+                    exit;
+                }
+                break;
         }
     }
 }
@@ -458,9 +482,9 @@ if (isset($_GET['success'])) {
                                                 onclick="updateKills(<?= $participant['user_id'] ?>, '<?= htmlspecialchars($participant['username']) ?>', <?= $participant['total_kills'] ?>)">
                                             <i class="bi bi-pencil"></i> Update Kills
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-success" 
-                                                onclick="selectWinner(<?= $participant['user_id'] ?>, '<?= htmlspecialchars($participant['username']) ?>')">
-                                            <i class="bi bi-trophy"></i> Select as Winner
+                                        <button type="button" class="btn btn-sm btn-info" 
+                                                onclick="updatePosition(<?= $participant['user_id'] ?>, '<?= htmlspecialchars($participant['username']) ?>')">
+                                            <i class="bi bi-trophy"></i> Set Position
                                         </button>
                                         <?php endif; ?>
                                     </td>
@@ -558,10 +582,48 @@ if (isset($_GET['success'])) {
     </div>
 </div>
 
+<!-- Add this modal for position selection -->
+<div class="modal fade" id="updatePositionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="update_position">
+                <input type="hidden" name="user_id" id="position_user_id">
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Position</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Set position for <strong id="position_username"></strong></p>
+                    <div class="mb-3">
+                        <label for="position" class="form-label">Position</label>
+                        <select class="form-control" id="position" name="position" required>
+                            <?php
+                            // Generate options based on prize distribution
+                            $maxPositions = ($match['prize_distribution'] === 'top5') ? 5 : 
+                                          ($match['prize_distribution'] === 'top3' ? 3 : 1);
+                            for($i = 1; $i <= $maxPositions; $i++) {
+                                echo "<option value='$i'>$i</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 // Initialize modals for kills and winner selection
 const updateKillsModal = new bootstrap.Modal(document.getElementById('updateKillsModal'));
 const selectWinnerModal = new bootstrap.Modal(document.getElementById('selectWinnerModal'));
+const positionModal = new bootstrap.Modal(document.getElementById('updatePositionModal'));
 
 function updateKills(userId, username, currentKills) {
     document.getElementById('kill_user_id').value = userId;
@@ -574,6 +636,12 @@ function selectWinner(userId, username) {
     document.getElementById('winner_user_id').value = userId;
     document.getElementById('winner_username').textContent = username;
     selectWinnerModal.show();
+}
+
+function updatePosition(userId, username) {
+    document.getElementById('position_user_id').value = userId;
+    document.getElementById('position_username').textContent = username;
+    positionModal.show();
 }
 
 function cancelMatch(matchId) {
