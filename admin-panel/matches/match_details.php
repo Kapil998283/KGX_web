@@ -39,16 +39,47 @@ if (!$match) {
     exit;
 }
 
-// Fetch participants
-$stmt = $db->prepare("SELECT mp.*, u.username, u.email, u.phone,
-                            COALESCE(uk.kills, 0) as total_kills
+// Fetch participants with winner information
+$stmt = $db->prepare("SELECT 
+                        mp.*, 
+                        u.username, 
+                        u.email, 
+                        u.phone,
+                        COALESCE(uk.kills, 0) as total_kills,
+                        CASE 
+                            WHEN m.winner_user_id = mp.user_id THEN 1
+                            WHEN m.winner_id = mp.team_id THEN 1
+                            ELSE 0
+                        END as is_winner,
+                        CASE
+                            WHEN mr.position IS NOT NULL THEN mr.position
+                            ELSE NULL
+                        END as winner_position
                      FROM match_participants mp
                      JOIN users u ON mp.user_id = u.id
+                     JOIN matches m ON m.id = mp.match_id
                      LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id
+                     LEFT JOIN (
+                        SELECT 
+                            match_id,
+                            user_id,
+                            ROW_NUMBER() OVER (PARTITION BY match_id ORDER BY kills DESC) as position
+                        FROM user_kills
+                        WHERE match_id = ?
+                     ) mr ON mr.match_id = mp.match_id AND mr.user_id = mp.user_id
                      WHERE mp.match_id = ?
-                     ORDER BY uk.kills DESC, u.username ASC");
-$stmt->execute([$match_id]);
+                     ORDER BY mr.position ASC NULLS LAST, uk.kills DESC, u.username ASC");
+$stmt->execute([$match_id, $match_id]);
 $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get the number of winners based on prize distribution
+$numWinners = 1;
+if ($match['prize_distribution'] === 'top3') {
+    $numWinners = 3;
+} else if ($match['prize_distribution'] === 'top5') {
+    $numWinners = 5;
+}
+
 ?>
 
 <div class="container-fluid py-4">
@@ -143,19 +174,52 @@ $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <th>Contact</th>
                                     <th>Kills</th>
                                     <th>Coins Earned</th>
+                                    <th>Position</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($participants as $index => $participant): ?>
-                                <tr>
+                                <?php foreach ($participants as $index => $participant): 
+                                    $trophyColor = '';
+                                    $trophyTitle = '';
+                                    if ($match['status'] === 'completed' && $participant['winner_position'] <= $numWinners) {
+                                        switch($participant['winner_position']) {
+                                            case 1:
+                                                $trophyColor = 'gold';
+                                                $trophyTitle = '1st Place';
+                                                break;
+                                            case 2:
+                                                $trophyColor = 'silver';
+                                                $trophyTitle = '2nd Place';
+                                                break;
+                                            case 3:
+                                                $trophyColor = '#CD7F32';
+                                                $trophyTitle = '3rd Place';
+                                                break;
+                                            default:
+                                                $trophyColor = '#2196F3';
+                                                $trophyTitle = $participant['winner_position'] . 'th Place';
+                                        }
+                                    }
+                                ?>
+                                <tr <?= $participant['winner_position'] <= $numWinners ? 'class="table-success"' : '' ?>>
                                     <td><?= $index + 1 ?></td>
-                                    <td><?= htmlspecialchars($participant['username']) ?></td>
+                                    <td>
+                                        <?= htmlspecialchars($participant['username']) ?>
+                                        <?php if ($match['status'] === 'completed' && $participant['winner_position'] <= $numWinners): ?>
+                                            <i class="bi bi-trophy-fill" style="color: <?= $trophyColor ?>;" title="<?= $trophyTitle ?>"></i>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <?= htmlspecialchars($participant['email']) ?><br>
                                         <small class="text-muted"><?= htmlspecialchars($participant['phone']) ?></small>
                                     </td>
                                     <td><?= $participant['total_kills'] ?></td>
                                     <td><?= $participant['total_kills'] * $match['coins_per_kill'] ?></td>
+                                    <td>
+                                        <?php if ($match['status'] === 'completed' && $participant['winner_position'] <= $numWinners): ?>
+                                            <span class="badge bg-success"><?= $participant['winner_position'] ?></span>
+                                        <?php endif; ?>
+                                    </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -193,6 +257,19 @@ $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 .badge {
     padding: 0.5em 1em;
+}
+
+.bi-trophy-fill {
+    margin-left: 5px;
+    font-size: 1.1em;
+}
+
+.table-success {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.table-success:hover {
+    background-color: rgba(40, 167, 69, 0.15) !important;
 }
 </style>
 

@@ -34,13 +34,31 @@ if (!$match) {
 }
 
 // Get winner information
-$stmt = $db->prepare("SELECT u.username, t.name as team_name,
-                            COALESCE(uk.kills, 0) as kills,
-                            COALESCE(uk.kills * m.coins_per_kill, 0) as coins_earned
+$stmt = $db->prepare("SELECT 
+                        u.username, 
+                        t.name as team_name,
+                        COALESCE(uk.kills, 0) as kills,
+                        COALESCE(uk.kills * m.coins_per_kill, 0) as coins_earned,
+                        CASE 
+                            WHEN m.winner_user_id IS NOT NULL THEN 'user'
+                            WHEN m.winner_id IS NOT NULL THEN 'team'
+                            ELSE NULL
+                        END as winner_type
                      FROM matches m
-                     JOIN teams t ON m.winner_id = t.id
-                     JOIN match_participants mp ON mp.match_id = m.id AND mp.team_id = t.id
-                     JOIN users u ON mp.user_id = u.id
+                     LEFT JOIN teams t ON m.winner_id = t.id
+                     LEFT JOIN match_participants mp ON (
+                        mp.match_id = m.id AND 
+                        (
+                            (m.winner_id IS NOT NULL AND mp.team_id = m.winner_id) OR
+                            (m.winner_user_id IS NOT NULL AND mp.user_id = m.winner_user_id)
+                        )
+                     )
+                     LEFT JOIN users u ON (
+                        CASE 
+                            WHEN m.winner_user_id IS NOT NULL THEN m.winner_user_id = u.id
+                            ELSE mp.user_id = u.id
+                        END
+                     )
                      LEFT JOIN user_kills uk ON uk.match_id = m.id AND uk.user_id = u.id
                      WHERE m.id = ? AND m.status = 'completed'
                      LIMIT 1");
@@ -80,7 +98,9 @@ include '../../includes/header.php';
                 </div>
                 <div class="winner-info">
                     <h3><?= htmlspecialchars($winner['username']) ?></h3>
-                    <p class="team-name">Team: <?= htmlspecialchars($winner['team_name']) ?></p>
+                    <?php if ($winner['winner_type'] === 'team' && $winner['team_name']): ?>
+                        <p class="team-name">Team: <?= htmlspecialchars($winner['team_name']) ?></p>
+                    <?php endif; ?>
                     <div class="stats">
                         <div class="stat-item">
                             <i class="bi bi-star-fill"></i>
