@@ -1,7 +1,6 @@
 <?php
 require_once '../includes/admin-auth.php';
 require_once '../../config/database.php';
-require_once '../../pages/matches/match_notifications.php';
 include '../includes/admin-header.php';
 
 // Add these headers at the top of the file, after the require statements
@@ -278,13 +277,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->beginTransaction();
                     
                     // Get match details and participants
-                    $stmt = $db->prepare("SELECT m.*, g.name as game_name, mp.user_id, mp.status,
+                    $stmt = $db->prepare("SELECT m.*, mp.user_id, mp.status,
                                         CASE 
                                             WHEN m.entry_type = 'coins' THEN uc.coins 
                                             WHEN m.entry_type = 'tickets' THEN ut.tickets 
                                         END as current_balance
                                         FROM matches m
-                                        JOIN games g ON m.game_id = g.id
                                         LEFT JOIN match_participants mp ON m.id = mp.match_id
                                         LEFT JOIN user_coins uc ON mp.user_id = uc.user_id
                                         LEFT JOIN user_tickets ut ON mp.user_id = ut.user_id
@@ -312,45 +310,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 
                                 // Send notification about refund
                                 $refund_message = "Match cancelled: Your {$match_info['entry_fee']} {$match_info['entry_type']} entry fee has been refunded.";
-                                $stmt = $db->prepare("INSERT INTO notifications (
-                                                        user_id, 
-                                                        type, 
-                                                        message, 
-                                                        related_id, 
-                                                        related_type,
-                                                        created_at
-                                                    ) VALUES (
-                                                        ?, 
-                                                        'match_cancelled', 
-                                                        ?, 
-                                                        ?, 
-                                                        'match',
-                                                        NOW()
-                                                    )");
+                                $stmt = $db->prepare("INSERT INTO notifications (user_id, type, message, related_id, related_type, created_at)
+                                                    VALUES (?, 'match_cancelled', ?, ?, 'match', NOW())");
                                 $stmt->execute([$participant['user_id'], $refund_message, $match_id]);
-                            }
-                        }
-                    } else {
-                        // For free matches, just send cancellation notification
-                        foreach ($participants as $participant) {
-                            if ($participant['user_id']) {
-                                $cancel_message = "Your {$match_info['game_name']} {$match_info['match_type']} match has been cancelled.";
-                                $stmt = $db->prepare("INSERT INTO notifications (
-                                                        user_id, 
-                                                        type, 
-                                                        message, 
-                                                        related_id, 
-                                                        related_type,
-                                                        created_at
-                                                    ) VALUES (
-                                                        ?, 
-                                                        'match_cancelled', 
-                                                        ?, 
-                                                        ?, 
-                                                        'match',
-                                                        NOW()
-                                                    )");
-                                $stmt->execute([$participant['user_id'], $cancel_message, $match_id]);
                             }
                         }
                     }
@@ -368,81 +330,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->rollBack();
                     error_log("Error cancelling match: " . $e->getMessage());
                     $_SESSION['error'] = "Error cancelling match: " . $e->getMessage();
-                    header("Location: match_details.php?id=" . $match_id);
-                    exit;
-                }
-                break;
-
-            case 'start_match':
-                try {
-                    $db->beginTransaction();
-                    
-                    // Get match details
-                    $stmt = $db->prepare("SELECT m.*, g.name as game_name 
-                                         FROM matches m 
-                                         JOIN games g ON m.game_id = g.id 
-                                         WHERE m.id = ?");
-                    $stmt->execute([$match_id]);
-                    $match = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if (!$match) {
-                        throw new Exception("Match not found");
-                    }
-                    
-                    // Check if match has enough participants
-                    $stmt = $db->prepare("SELECT COUNT(*) as count FROM match_participants WHERE match_id = ?");
-                    $stmt->execute([$match_id]);
-                    $participant_count = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                    
-                    if ($participant_count < $match['max_participants']) {
-                        throw new Exception("Cannot start match: Not enough participants");
-                    }
-                    
-                    // Update match status
-                    $stmt = $db->prepare("UPDATE matches SET 
-                                         status = 'in_progress', 
-                                         started_at = NOW(), 
-                                         room_code = ?, 
-                                         room_password = ?, 
-                                         room_details_added_at = NOW() 
-                                         WHERE id = ?");
-                    $stmt->execute([$room_code, $room_password, $match_id]);
-                    
-                    // Get all participants
-                    $stmt = $db->prepare("SELECT DISTINCT user_id FROM match_participants WHERE match_id = ?");
-                    $stmt->execute([$match_id]);
-                    $participants = $stmt->fetchAll(PDO::FETCH_COLUMN);
-                    
-                    // Send notifications to all participants
-                    $start_message = "Your {$match['game_name']} {$match['match_type']} match is starting now! Room Code: {$room_code}, Password: {$room_password}";
-                    foreach ($participants as $user_id) {
-                        $stmt = $db->prepare("INSERT INTO notifications (
-                                                user_id, 
-                                                type, 
-                                                message, 
-                                                related_id, 
-                                                related_type,
-                                                created_at
-                                            ) VALUES (
-                                                ?, 
-                                                'match_started', 
-                                                ?, 
-                                                ?, 
-                                                'match',
-                                                NOW()
-                                            )");
-                        $stmt->execute([$user_id, $start_message, $match_id]);
-                    }
-                    
-                    $db->commit();
-                    $_SESSION['success'] = "Match started successfully.";
-                    header("Location: match_details.php?id=" . $match_id);
-                    exit;
-                    
-                } catch (Exception $e) {
-                    $db->rollBack();
-                    error_log("Error starting match: " . $e->getMessage());
-                    $_SESSION['error'] = "Error starting match: " . $e->getMessage();
                     header("Location: match_details.php?id=" . $match_id);
                     exit;
                 }

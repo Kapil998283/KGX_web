@@ -184,6 +184,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     error_log("Error deleting match: " . $e->getMessage());
                 }
                 break;
+
+            case 'cancel_match':
+                $match_id = $_POST['match_id'];
+                try {
+                    // Redirect to match_scoring.php to handle the cancellation
+                    header("Location: match_scoring.php?action=cancel_match&match_id=" . $match_id);
+                    exit;
+                } catch (Exception $e) {
+                    error_log("Error redirecting to cancel match: " . $e->getMessage());
+                }
+                break;
         }
     }
 }
@@ -416,6 +427,9 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </button>
                                     <button class="btn btn-sm btn-success" onclick="startMatch(<?= $match['id'] ?>)">
                                         <i class="bi bi-play-fill"></i> Start
+                                    </button>
+                                    <button class="btn btn-sm btn-warning" onclick="cancelMatch(<?= $match['id'] ?>)">
+                                        <i class="bi bi-x-circle"></i> Cancel Match
                                     </button>
                                 <?php endif; ?>
                                 
@@ -956,6 +970,19 @@ document.getElementById('matchForm').addEventListener('submit', function(event) 
         alert('An error occurred. Please try again.');
     });
 });
+
+function cancelMatch(matchId) {
+    if (confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="cancel_match">
+            <input type="hidden" name="match_id" value="${matchId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 
 <style>

@@ -262,27 +262,6 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                         </div>
                         <?php endif; ?>
-
-                        <?php if ($match['has_joined']): ?>
-                        <div class="match-notifications">
-                            <?php if ($match['status'] === 'in_progress'): ?>
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i>
-                                    Match is in progress! Check your notifications for room details.
-                                </div>
-                            <?php elseif ($match['status'] === 'cancelled'): ?>
-                                <div class="alert alert-danger">
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    This match has been cancelled. Check your notifications for refund details.
-                                </div>
-                            <?php elseif ($match['status'] === 'completed'): ?>
-                                <div class="alert alert-success">
-                                    <i class="bi bi-trophy"></i>
-                                    Match completed! Check the results page for details.
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <?php endif; ?>
                     </div>
 
                     <div class="match-actions">
@@ -345,48 +324,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
-<style>
-.match-notifications {
-    margin-top: 1rem;
-}
-
-.match-notifications .alert {
-    margin-bottom: 0;
-    padding: 0.5rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.room-details {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin-top: 1rem;
-}
-
-.room-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.room-info:last-child {
-    margin-bottom: 0;
-}
-
-.room-info i {
-    color: #6c757d;
-}
-
-.room-info strong {
-    color: #198754;
-    font-family: monospace;
-    font-size: 1.1em;
-}
-</style>
 
 <?php include '../../includes/footer.php'; ?> 
