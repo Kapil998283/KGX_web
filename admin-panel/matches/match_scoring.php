@@ -203,25 +203,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $db->beginTransaction();
                     
-                    $winner_id = $_POST['winner_id'];
+                    $winner_user_id = $_POST['winner_id'];
                     
-                    // Validate winner exists in match participants
-                    $stmt = $db->prepare("SELECT COUNT(*) FROM match_participants WHERE match_id = ? AND user_id = ?");
-                    $stmt->execute([$match_id, $winner_id]);
-                    if ($stmt->fetchColumn() == 0) {
-                        throw new Exception("Selected winner is not a participant in this match");
+                    // Get the team_id of the winning user
+                    $stmt = $db->prepare("SELECT team_id FROM match_participants WHERE match_id = ? AND user_id = ?");
+                    $stmt->execute([$match_id, $winner_user_id]);
+                    $winner_team_id = $stmt->fetchColumn();
+                    
+                    if (!$winner_team_id) {
+                        throw new Exception("Could not find team ID for the winning user");
                     }
                     
-                    // Update match status and winner
+                    // Update match status and winner using team_id
                     $stmt = $db->prepare("UPDATE matches SET 
                                         status = 'completed', 
                                         completed_at = NOW(), 
                                         winner_id = ?
                                         WHERE id = ?");
-                    $stmt->execute([$winner_id, $match_id]);
+                    $stmt->execute([$winner_team_id, $match_id]);
                     
                     // Award prizes based on distribution type
-                    distributePrize($db, $match_id, $winner_id, $match);
+                    // Pass the winner_user_id to distributePrize since we want to award to the user
+                    distributePrize($db, $match_id, $winner_user_id, $match);
                     
                     $db->commit();
                     // Redirect back to the game-specific page
