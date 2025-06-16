@@ -345,6 +345,7 @@ CREATE TABLE IF NOT EXISTS matches (
     score_team1 INT DEFAULT 0,
     score_team2 INT DEFAULT 0,
     winner_id INT,
+    winner_user_id INT COMMENT 'For individual match winners',
     started_at DATETIME,
     completed_at DATETIME,
     room_details_added_at DATETIME,
@@ -354,7 +355,8 @@ CREATE TABLE IF NOT EXISTS matches (
     FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
     FOREIGN KEY (team1_id) REFERENCES teams(id),
     FOREIGN KEY (team2_id) REFERENCES teams(id),
-    FOREIGN KEY (winner_id) REFERENCES teams(id)
+    FOREIGN KEY (winner_id) REFERENCES teams(id),
+    FOREIGN KEY (winner_user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Match results table

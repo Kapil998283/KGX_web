@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $db->prepare("UPDATE matches SET 
                                         status = 'completed', 
                                         completed_at = NOW(), 
-                                        winner_id = ?
+                                        winner_user_id = ?
                                         WHERE id = ?");
                     $stmt->execute([$winner_id, $match_id]);
                     
@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $db->prepare("UPDATE matches SET 
                                         status = 'completed', 
                                         completed_at = NOW(), 
-                                        winner_id = ?
+                                        winner_user_id = ?
                                         WHERE id = ?");
                     $stmt->execute([$winner_id, $match_id]);
                     
