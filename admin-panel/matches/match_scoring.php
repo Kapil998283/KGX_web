@@ -312,13 +312,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 
                                 // Send notification about refund
                                 $refund_message = "Match cancelled: Your {$match_info['entry_fee']} {$match_info['entry_type']} entry fee has been refunded.";
-                                sendMatchNotification($participant['user_id'], $match_id, 'match_cancelled', $refund_message);
+                                $stmt = $db->prepare("INSERT INTO notifications (
+                                                        user_id, 
+                                                        type, 
+                                                        message, 
+                                                        related_id, 
+                                                        related_type,
+                                                        created_at
+                                                    ) VALUES (
+                                                        ?, 
+                                                        'match_cancelled', 
+                                                        ?, 
+                                                        ?, 
+                                                        'match',
+                                                        NOW()
+                                                    )");
+                                $stmt->execute([$participant['user_id'], $refund_message, $match_id]);
                             }
                         }
                     } else {
                         // For free matches, just send cancellation notification
-                        $cancel_message = "Your {$match_info['game_name']} {$match_info['match_type']} match has been cancelled.";
-                        notifyMatchParticipants($match_id, 'match_cancelled', $cancel_message);
+                        foreach ($participants as $participant) {
+                            if ($participant['user_id']) {
+                                $cancel_message = "Your {$match_info['game_name']} {$match_info['match_type']} match has been cancelled.";
+                                $stmt = $db->prepare("INSERT INTO notifications (
+                                                        user_id, 
+                                                        type, 
+                                                        message, 
+                                                        related_id, 
+                                                        related_type,
+                                                        created_at
+                                                    ) VALUES (
+                                                        ?, 
+                                                        'match_cancelled', 
+                                                        ?, 
+                                                        ?, 
+                                                        'match',
+                                                        NOW()
+                                                    )");
+                                $stmt->execute([$participant['user_id'], $cancel_message, $match_id]);
+                            }
+                        }
                     }
                     
                     // Update match status
@@ -374,9 +408,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                          WHERE id = ?");
                     $stmt->execute([$room_code, $room_password, $match_id]);
                     
-                    // Notify all participants
+                    // Get all participants
+                    $stmt = $db->prepare("SELECT DISTINCT user_id FROM match_participants WHERE match_id = ?");
+                    $stmt->execute([$match_id]);
+                    $participants = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    // Send notifications to all participants
                     $start_message = "Your {$match['game_name']} {$match['match_type']} match is starting now! Room Code: {$room_code}, Password: {$room_password}";
-                    notifyMatchParticipants($match_id, 'match_started', $start_message);
+                    foreach ($participants as $user_id) {
+                        $stmt = $db->prepare("INSERT INTO notifications (
+                                                user_id, 
+                                                type, 
+                                                message, 
+                                                related_id, 
+                                                related_type,
+                                                created_at
+                                            ) VALUES (
+                                                ?, 
+                                                'match_started', 
+                                                ?, 
+                                                ?, 
+                                                'match',
+                                                NOW()
+                                            )");
+                        $stmt->execute([$user_id, $start_message, $match_id]);
+                    }
                     
                     $db->commit();
                     $_SESSION['success'] = "Match started successfully.";
