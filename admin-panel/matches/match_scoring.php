@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/admin-auth.php';
 require_once '../../config/database.php';
+require_once '../../pages/matches/match_notifications.php';
 include '../includes/admin-header.php';
 
 // Add these headers at the top of the file, after the require statements
@@ -240,30 +241,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $db->beginTransaction();
                     
-                    // Get highest scoring player
-                    $stmt = $db->prepare("SELECT mp.user_id, COALESCE(uk.kills, 0) as total_kills 
-                                        FROM match_participants mp 
-                                        LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id 
-                                        WHERE mp.match_id = ? 
-                                        ORDER BY uk.kills DESC 
-                                        LIMIT 1");
+                    // Check if a winner has been selected
+                    $stmt = $db->prepare("SELECT winner_user_id FROM matches WHERE id = ?");
                     $stmt->execute([$match_id]);
-                    $winner = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $winner_info = $stmt->fetch(PDO::FETCH_ASSOC);
                     
-                    $winner_id = $winner ? $winner['user_id'] : null;
+                    if (!$winner_info['winner_user_id']) {
+                        throw new Exception("Please select a winner before completing the match.");
+                    }
                     
-                    // Update match status and winner
+                    // Update match status
                     $stmt = $db->prepare("UPDATE matches SET 
                                         status = 'completed', 
-                                        completed_at = NOW(), 
-                                        winner_user_id = ?
+                                        completed_at = NOW()
                                         WHERE id = ?");
-                    $stmt->execute([$winner_id, $match_id]);
+                    $stmt->execute([$match_id]);
                     
                     // Award prizes based on distribution type
-                    if ($winner_id) {
-                        distributePrize($db, $match_id, $winner_id, $match);
-                    }
+                    distributePrize($db, $match_id, $winner_info['winner_user_id'], $match);
                     
                     $db->commit();
                     // Redirect back to the game-specific page
@@ -274,6 +269,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->rollBack();
                     error_log("Error completing match: " . $e->getMessage());
                     header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
+                    exit;
+                }
+                break;
+
+            case 'cancel_match':
+                try {
+                    $db->beginTransaction();
+                    
+                    // Get match details and participants
+                    $stmt = $db->prepare("SELECT m.*, g.name as game_name, mp.user_id, mp.status,
+                                        CASE 
+                                            WHEN m.entry_type = 'coins' THEN uc.coins 
+                                            WHEN m.entry_type = 'tickets' THEN ut.tickets 
+                                        END as current_balance
+                                        FROM matches m
+                                        JOIN games g ON m.game_id = g.id
+                                        LEFT JOIN match_participants mp ON m.id = mp.match_id
+                                        LEFT JOIN user_coins uc ON mp.user_id = uc.user_id
+                                        LEFT JOIN user_tickets ut ON mp.user_id = ut.user_id
+                                        WHERE m.id = ?");
+                    $stmt->execute([$match_id]);
+                    $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    if (empty($participants)) {
+                        throw new Exception("No participants found for this match");
+                    }
+                    
+                    $match_info = $participants[0];
+                    
+                    // Only process refunds for paid matches
+                    if ($match_info['entry_type'] !== 'free' && $match_info['entry_fee'] > 0) {
+                        foreach ($participants as $participant) {
+                            if ($participant['user_id']) {
+                                // Refund entry fee
+                                if ($match_info['entry_type'] === 'coins') {
+                                    $stmt = $db->prepare("UPDATE user_coins SET coins = coins + ? WHERE user_id = ?");
+                                } else {
+                                    $stmt = $db->prepare("UPDATE user_tickets SET tickets = tickets + ? WHERE user_id = ?");
+                                }
+                                $stmt->execute([$match_info['entry_fee'], $participant['user_id']]);
+                                
+                                // Send notification about refund
+                                $refund_message = "Match cancelled: Your {$match_info['entry_fee']} {$match_info['entry_type']} entry fee has been refunded.";
+                                sendMatchNotification($participant['user_id'], $match_id, 'match_cancelled', $refund_message);
+                            }
+                        }
+                    } else {
+                        // For free matches, just send cancellation notification
+                        $cancel_message = "Your {$match_info['game_name']} {$match_info['match_type']} match has been cancelled.";
+                        notifyMatchParticipants($match_id, 'match_cancelled', $cancel_message);
+                    }
+                    
+                    // Update match status
+                    $stmt = $db->prepare("UPDATE matches SET status = 'cancelled' WHERE id = ?");
+                    $stmt->execute([$match_id]);
+                    
+                    $db->commit();
+                    $_SESSION['success'] = "Match cancelled successfully and refunds processed.";
+                    header("Location: match_details.php?id=" . $match_id);
+                    exit;
+                    
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    error_log("Error cancelling match: " . $e->getMessage());
+                    $_SESSION['error'] = "Error cancelling match: " . $e->getMessage();
+                    header("Location: match_details.php?id=" . $match_id);
+                    exit;
+                }
+                break;
+
+            case 'start_match':
+                try {
+                    $db->beginTransaction();
+                    
+                    // Get match details
+                    $stmt = $db->prepare("SELECT m.*, g.name as game_name 
+                                         FROM matches m 
+                                         JOIN games g ON m.game_id = g.id 
+                                         WHERE m.id = ?");
+                    $stmt->execute([$match_id]);
+                    $match = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if (!$match) {
+                        throw new Exception("Match not found");
+                    }
+                    
+                    // Check if match has enough participants
+                    $stmt = $db->prepare("SELECT COUNT(*) as count FROM match_participants WHERE match_id = ?");
+                    $stmt->execute([$match_id]);
+                    $participant_count = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+                    
+                    if ($participant_count < $match['max_participants']) {
+                        throw new Exception("Cannot start match: Not enough participants");
+                    }
+                    
+                    // Update match status
+                    $stmt = $db->prepare("UPDATE matches SET 
+                                         status = 'in_progress', 
+                                         started_at = NOW(), 
+                                         room_code = ?, 
+                                         room_password = ?, 
+                                         room_details_added_at = NOW() 
+                                         WHERE id = ?");
+                    $stmt->execute([$room_code, $room_password, $match_id]);
+                    
+                    // Notify all participants
+                    $start_message = "Your {$match['game_name']} {$match['match_type']} match is starting now! Room Code: {$room_code}, Password: {$room_password}";
+                    notifyMatchParticipants($match_id, 'match_started', $start_message);
+                    
+                    $db->commit();
+                    $_SESSION['success'] = "Match started successfully.";
+                    header("Location: match_details.php?id=" . $match_id);
+                    exit;
+                    
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    error_log("Error starting match: " . $e->getMessage());
+                    $_SESSION['error'] = "Error starting match: " . $e->getMessage();
+                    header("Location: match_details.php?id=" . $match_id);
                     exit;
                 }
                 break;
@@ -344,10 +458,15 @@ if (isset($_GET['success'])) {
                     <div class="text-end mb-4">
                         <form method="POST" style="display: inline;">
                             <input type="hidden" name="action" value="complete_match">
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to complete this match? This will calculate final scores and award prizes.')">
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to complete this match? This will finalize scores and award prizes.')">
                                 <i class="bi bi-check-lg"></i> Complete Match
                             </button>
                         </form>
+                        <?php if (!isset($match['winner_user_id']) || !$match['winner_user_id']): ?>
+                        <div class="text-danger mt-2">
+                            <small><i class="bi bi-exclamation-triangle"></i> Please select a winner before completing the match.</small>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
 
@@ -407,6 +526,29 @@ if (isset($_GET['success'])) {
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Add this near the buttons section -->
+                    <?php if ($match['status'] === 'upcoming'): ?>
+                    <div class="text-end mb-4">
+                        <!-- Check if match has enough participants -->
+                        <?php $canStart = ($match['current_participants'] >= $match['max_participants']); ?>
+                        <div class="action-buttons">
+                            <?php if ($canStart): ?>
+                                <button type="button" class="btn btn-success" onclick="startMatch(<?= $match['id'] ?>)">
+                                    <i class="bi bi-play-fill"></i> Start Match
+                                </button>
+                            <?php else: ?>
+                                <button type="button" class="btn btn-success" disabled title="Cannot start match until it's full">
+                                    <i class="bi bi-play-fill"></i> Start Match (<?= $match['current_participants'] ?>/<?= $match['max_participants'] ?>)
+                                </button>
+                            <?php endif; ?>
+                            
+                            <button type="button" class="btn btn-danger" onclick="cancelMatch(<?= $match['id'] ?>)">
+                                <i class="bi bi-x-circle"></i> Cancel Match
+                            </button>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -489,6 +631,35 @@ function selectWinner(userId, username) {
     document.getElementById('winner_user_id').value = userId;
     document.getElementById('winner_username').textContent = username;
     selectWinnerModal.show();
+}
+
+// Add this to the JavaScript section
+function cancelMatch(matchId) {
+    if (confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="cancel_match">
+            <input type="hidden" name="match_id" value="${matchId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Update the startMatch function to check participants
+function startMatch(matchId) {
+    // Get current participants count from the page
+    const currentParticipants = <?= $match['current_participants'] ?>;
+    const maxParticipants = <?= $match['max_participants'] ?>;
+    
+    if (currentParticipants < maxParticipants) {
+        alert('Cannot start match until it has enough participants.');
+        return;
+    }
+    
+    document.getElementById('room_match_id').value = matchId;
+    roomDetailsModal.show();
 }
 </script>
 
