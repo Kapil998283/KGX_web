@@ -37,13 +37,13 @@ if (!$match) {
 $stmt = $db->prepare("SELECT 
                         u.username, 
                         t.name as team_name,
-                        mp.position,
+                        COALESCE(mp.position, 0) as position,
                         COALESCE(uk.kills, 0) as kills,
                         COALESCE(uk.kills * m.coins_per_kill + 
-                            CASE mp.position 
-                                WHEN 1 THEN m.prize_pool * 0.5
-                                WHEN 2 THEN m.prize_pool * 0.3
-                                WHEN 3 THEN m.prize_pool * 0.2
+                            CASE 
+                                WHEN mp.position = 1 THEN m.prize_pool * 0.5
+                                WHEN mp.position = 2 THEN m.prize_pool * 0.3
+                                WHEN mp.position = 3 THEN m.prize_pool * 0.2
                                 ELSE 0
                             END, 0) as coins_earned,
                         CASE 
@@ -51,12 +51,14 @@ $stmt = $db->prepare("SELECT
                             WHEN m.winner_id IS NOT NULL THEN 'team'
                             ELSE NULL
                         END as winner_type
-                     FROM match_participants mp
-                     JOIN users u ON mp.user_id = u.id
-                     LEFT JOIN teams t ON mp.team_id = t.id
-                     LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = u.id
-                     WHERE mp.match_id = ? AND mp.position IS NOT NULL
-                     ORDER BY mp.position ASC");
+                    FROM match_participants mp
+                    JOIN users u ON mp.user_id = u.id
+                    LEFT JOIN teams t ON mp.team_id = t.id
+                    LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = u.id
+                    JOIN matches m ON mp.match_id = m.id
+                    WHERE mp.match_id = ? 
+                    AND (mp.position IS NOT NULL OR mp.status = 'winner')
+                    ORDER BY COALESCE(mp.position, 999) ASC");
 $stmt->execute([$match_id]);
 $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

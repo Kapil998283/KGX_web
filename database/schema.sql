@@ -484,6 +484,7 @@ CREATE TABLE IF NOT EXISTS match_participants (
     team_id INT,
     join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status ENUM('joined', 'disqualified', 'winner') DEFAULT 'joined',
+    position INT DEFAULT NULL,
     FOREIGN KEY (match_id) REFERENCES matches(id),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (team_id) REFERENCES teams(id),
@@ -534,4 +535,8 @@ INSERT INTO video_categories (name, description) VALUES
 
 INSERT INTO profile_images (image_path, is_active, is_default) VALUES
 ('https://t3.ftcdn.net/jpg/09/68/64/82/360_F_968648260_97v6FNQWP3alhvyfLWtQTWGcrWZvAr1C.jpg', 1, 1);
+
+-- Add position column to match_participants table if it doesn't exist
+ALTER TABLE match_participants
+ADD COLUMN position INT DEFAULT NULL;
 
