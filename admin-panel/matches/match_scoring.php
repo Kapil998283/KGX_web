@@ -272,6 +272,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
 
+            case 'cancel_match':
+                try {
+                    $db->beginTransaction();
+                    
+                    // Get match details and participants
+                    $stmt = $db->prepare("SELECT m.*, mp.user_id, mp.status,
+                                        CASE 
+                                            WHEN m.entry_type = 'coins' THEN uc.coins 
+                                            WHEN m.entry_type = 'tickets' THEN ut.tickets 
+                                        END as current_balance
+                                        FROM matches m
+                                        LEFT JOIN match_participants mp ON m.id = mp.match_id
+                                        LEFT JOIN user_coins uc ON mp.user_id = uc.user_id
+                                        LEFT JOIN user_tickets ut ON mp.user_id = ut.user_id
+                                        WHERE m.id = ?");
+                    $stmt->execute([$match_id]);
+                    $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    if (empty($participants)) {
+                        throw new Exception("No participants found for this match");
+                    }
+                    
+                    $match_info = $participants[0];
+                    
+                    // Only process refunds for paid matches
+                    if ($match_info['entry_type'] !== 'free' && $match_info['entry_fee'] > 0) {
+                        foreach ($participants as $participant) {
+                            if ($participant['user_id']) {
+                                // Refund entry fee
+                                if ($match_info['entry_type'] === 'coins') {
+                                    $stmt = $db->prepare("UPDATE user_coins SET coins = coins + ? WHERE user_id = ?");
+                                } else {
+                                    $stmt = $db->prepare("UPDATE user_tickets SET tickets = tickets + ? WHERE user_id = ?");
+                                }
+                                $stmt->execute([$match_info['entry_fee'], $participant['user_id']]);
+                                
+                                // Send notification about refund
+                                $refund_message = "Match cancelled: Your {$match_info['entry_fee']} {$match_info['entry_type']} entry fee has been refunded.";
+                                $stmt = $db->prepare("INSERT INTO notifications (user_id, type, message, related_id, related_type, created_at)
+                                                    VALUES (?, 'match_cancelled', ?, ?, 'match', NOW())");
+                                $stmt->execute([$participant['user_id'], $refund_message, $match_id]);
+                            }
+                        }
+                    }
+                    
+                    // Update match status
+                    $stmt = $db->prepare("UPDATE matches SET status = 'cancelled' WHERE id = ?");
+                    $stmt->execute([$match_id]);
+                    
+                    $db->commit();
+                    $_SESSION['success'] = "Match cancelled successfully and refunds processed.";
+                    header("Location: match_details.php?id=" . $match_id);
+                    exit;
+                    
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    error_log("Error cancelling match: " . $e->getMessage());
+                    $_SESSION['error'] = "Error cancelling match: " . $e->getMessage();
+                    header("Location: match_details.php?id=" . $match_id);
+                    exit;
+                }
+                break;
         }
     }
 }
