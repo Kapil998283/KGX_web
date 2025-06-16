@@ -52,90 +52,113 @@ $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Add this function after the require statements at the top
 function distributePrize($db, $match_id, $winner_id, $match) {
-    if (!$winner_id) return;
-
-    // Get all participants sorted by score/kills
-    $stmt = $db->prepare("SELECT mp.user_id, mp.team_id, COALESCE(uk.kills, 0) as kills 
-                         FROM match_participants mp 
-                         LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id 
-                         WHERE mp.match_id = ? 
-                         ORDER BY uk.kills DESC");
-    $stmt->execute([$match_id]);
-    $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Handle website currency distribution
-    if ($match['website_currency_type'] && $match['website_currency_amount'] > 0) {
-        $total_prize = $match['website_currency_amount'];
-        $currency_type = $match['website_currency_type'];
-        
-        // Define prize distribution percentages
-        $distribution_percentages = [];
-        switch($match['prize_distribution']) {
-            case 'top3':
-                $distribution_percentages = [60, 30, 10]; // 60% for 1st, 30% for 2nd, 10% for 3rd
-                break;
-            case 'top5':
-                $distribution_percentages = [50, 25, 15, 7, 3]; // 50% for 1st, 25% for 2nd, etc.
-                break;
-            default: // 'single' - winner takes all
-                $distribution_percentages = [100];
-                break;
-        }
-
-        // Distribute prizes according to the percentages
-        foreach ($participants as $index => $participant) {
-            if ($index >= count($distribution_percentages)) break;
-            
-            $prize_amount = floor($total_prize * $distribution_percentages[$index] / 100);
-            if ($prize_amount <= 0) continue;
-
-            if ($currency_type === 'coins') {
-                $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
-                                    VALUES (?, ?) 
-                                    ON DUPLICATE KEY UPDATE coins = coins + ?");
-            } else {
-                $stmt = $db->prepare("INSERT INTO user_tickets (user_id, tickets) 
-                                    VALUES (?, ?) 
-                                    ON DUPLICATE KEY UPDATE tickets = tickets + ?");
-            }
-            $stmt->execute([$participant['user_id'], $prize_amount, $prize_amount]);
-        }
+    if (!$winner_id) {
+        error_log("Error in distributePrize: No winner_id provided");
+        return;
     }
 
-    // Handle real money distribution (for admin reference)
-    if ($match['prize_pool'] > 0) {
-        $total_prize = $match['prize_pool'];
-        $currency_type = $match['prize_type'];
-        
-        // Define prize distribution percentages
-        $distribution_percentages = [];
-        switch($match['prize_distribution']) {
-            case 'top3':
-                $distribution_percentages = [60, 30, 10];
-                break;
-            case 'top5':
-                $distribution_percentages = [50, 25, 15, 7, 3];
-                break;
-            default: // 'single'
-                $distribution_percentages = [100];
-                break;
+    try {
+        // Get all participants sorted by score/kills
+        $stmt = $db->prepare("SELECT mp.user_id, mp.team_id, COALESCE(uk.kills, 0) as kills 
+                             FROM match_participants mp 
+                             LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id 
+                             WHERE mp.match_id = ? 
+                             ORDER BY uk.kills DESC");
+        $stmt->execute([$match_id]);
+        $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($participants)) {
+            error_log("Error in distributePrize: No participants found for match_id: " . $match_id);
+            return;
         }
 
-        // Calculate and store prize amounts for each winner
-        foreach ($participants as $index => $participant) {
-            if ($index >= count($distribution_percentages)) break;
+        // Handle website currency distribution
+        if ($match['website_currency_type'] && $match['website_currency_amount'] > 0) {
+            $total_prize = $match['website_currency_amount'];
+            $currency_type = $match['website_currency_type'];
             
-            $prize_amount = round($total_prize * $distribution_percentages[$index] / 100, 2);
-            if ($prize_amount <= 0) continue;
+            // Define prize distribution percentages
+            $distribution_percentages = [];
+            switch($match['prize_distribution']) {
+                case 'top3':
+                    $distribution_percentages = [60, 30, 10];
+                    break;
+                case 'top5':
+                    $distribution_percentages = [50, 25, 15, 7, 3];
+                    break;
+                default: // 'single' - winner takes all
+                    $distribution_percentages = [100];
+                    break;
+            }
 
-            // Store in match_results table
-            $stmt = $db->prepare("INSERT INTO match_results (match_id, team_id, prize_amount, prize_currency) 
-                                VALUES (?, ?, ?, ?) 
-                                ON DUPLICATE KEY UPDATE 
-                                prize_amount = VALUES(prize_amount),
-                                prize_currency = VALUES(prize_currency)");
-            $stmt->execute([$match_id, $participant['team_id'], $prize_amount, $currency_type]);
+            // Distribute prizes according to the percentages
+            foreach ($participants as $index => $participant) {
+                if ($index >= count($distribution_percentages)) break;
+                
+                $prize_amount = floor($total_prize * $distribution_percentages[$index] / 100);
+                if ($prize_amount <= 0) continue;
+
+                try {
+                    if ($currency_type === 'coins') {
+                        $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
+                                            VALUES (?, ?) 
+                                            ON DUPLICATE KEY UPDATE coins = coins + ?");
+                    } else {
+                        $stmt = $db->prepare("INSERT INTO user_tickets (user_id, tickets) 
+                                            VALUES (?, ?) 
+                                            ON DUPLICATE KEY UPDATE tickets = tickets + ?");
+                    }
+                    $stmt->execute([$participant['user_id'], $prize_amount, $prize_amount]);
+                } catch (Exception $e) {
+                    error_log("Error distributing website currency: " . $e->getMessage());
+                    throw $e;
+                }
+            }
         }
+
+        // Handle real money distribution (for admin reference)
+        if ($match['prize_pool'] > 0) {
+            $total_prize = $match['prize_pool'];
+            $currency_type = $match['prize_type'];
+            
+            // Define prize distribution percentages
+            $distribution_percentages = [];
+            switch($match['prize_distribution']) {
+                case 'top3':
+                    $distribution_percentages = [60, 30, 10];
+                    break;
+                case 'top5':
+                    $distribution_percentages = [50, 25, 15, 7, 3];
+                    break;
+                default: // 'single'
+                    $distribution_percentages = [100];
+                    break;
+            }
+
+            // Calculate and store prize amounts for each winner
+            foreach ($participants as $index => $participant) {
+                if ($index >= count($distribution_percentages)) break;
+                
+                $prize_amount = round($total_prize * $distribution_percentages[$index] / 100, 2);
+                if ($prize_amount <= 0) continue;
+
+                try {
+                    // Store in match_results table
+                    $stmt = $db->prepare("INSERT INTO match_results (match_id, team_id, prize_amount, prize_currency) 
+                                        VALUES (?, ?, ?, ?) 
+                                        ON DUPLICATE KEY UPDATE 
+                                        prize_amount = VALUES(prize_amount),
+                                        prize_currency = VALUES(prize_currency)");
+                    $stmt->execute([$match_id, $participant['team_id'], $prize_amount, $currency_type]);
+                } catch (Exception $e) {
+                    error_log("Error storing real money prize: " . $e->getMessage());
+                    throw $e;
+                }
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Error in distributePrize function: " . $e->getMessage());
+        throw $e;
     }
 }
 
@@ -182,6 +205,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     $winner_id = $_POST['winner_id'];
                     
+                    // Validate winner exists in match participants
+                    $stmt = $db->prepare("SELECT COUNT(*) FROM match_participants WHERE match_id = ? AND user_id = ?");
+                    $stmt->execute([$match_id, $winner_id]);
+                    if ($stmt->fetchColumn() == 0) {
+                        throw new Exception("Selected winner is not a participant in this match");
+                    }
+                    
                     // Update match status and winner
                     $stmt = $db->prepare("UPDATE matches SET 
                                         status = 'completed', 
@@ -201,7 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } catch (Exception $e) {
                     $db->rollBack();
                     error_log("Error selecting winner: " . $e->getMessage());
-                    header("Location: match_scoring.php?id=" . $match_id . "&error=1");
+                    header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
                     exit;
                 }
                 break;
@@ -274,7 +304,9 @@ $error_message = '';
 if (isset($_GET['success'])) {
     $success_message = 'Kills updated successfully!';
 } elseif (isset($_GET['error'])) {
-    $error_message = 'An error occurred. Please try again.';
+    $error_message = isset($_GET['error']) && $_GET['error'] !== '1' 
+        ? urldecode($_GET['error']) 
+        : 'An error occurred. Please try again.';
 }
 ?>
 
