@@ -140,8 +140,20 @@ if ($has_team) {
     $tournament_count = $count_data['count'];
 }
 
-// Set default values for removed features
-$matches_count = 0;
+// Get matches count for the user (only completed matches)
+$matches_stmt = $conn->prepare("SELECT COUNT(DISTINCT mp.match_id) as matches_count 
+                            FROM match_participants mp 
+                            JOIN matches m ON mp.match_id = m.id 
+                            WHERE mp.user_id = ? AND m.status = 'completed'");
+$matches_stmt->execute([$user_id]);
+$matches_count = $matches_stmt->fetch(PDO::FETCH_ASSOC)['matches_count'];
+
+// Get total kills for the user
+$kills_stmt = $conn->prepare("SELECT COALESCE(SUM(kills), 0) as total_kills 
+                           FROM user_kills 
+                           WHERE user_id = ?");
+$kills_stmt->execute([$user_id]);
+$total_kills = $kills_stmt->fetch(PDO::FETCH_ASSOC)['total_kills'];
 
 // Fetch redeemed items
 $redemption_items = [];
@@ -299,7 +311,7 @@ if ($stmt_redemption) {
                 <div class="card">
                     <div>
                         <div class="numbers"><?php echo $matches_count; ?></div>
-                        <div class="cardName">Match Played</div>
+                        <div class="cardName">Matches Played</div>
                     </div>
 
                     <div class="iconBx">
@@ -309,12 +321,12 @@ if ($stmt_redemption) {
 
                 <div class="card">
                     <div>
-                        <div class="numbers"><?php echo $tournament_count; ?></div>
+                        <div class="numbers"><?php echo $total_kills; ?></div>
                         <div class="cardName">Total Kills</div>
                     </div>
 
                     <div class="iconBx">
-                        <ion-icon name="people-outline"></ion-icon>
+                        <ion-icon name="skull-outline"></ion-icon>
                     </div>
                 </div>
 
