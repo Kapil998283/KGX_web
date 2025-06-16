@@ -203,28 +203,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $db->beginTransaction();
                     
-                    $winner_user_id = $_POST['winner_id'];
+                    $winner_id = $_POST['winner_id'];
                     
-                    // Get the team_id of the winning user
-                    $stmt = $db->prepare("SELECT team_id FROM match_participants WHERE match_id = ? AND user_id = ?");
-                    $stmt->execute([$match_id, $winner_user_id]);
-                    $winner_team_id = $stmt->fetchColumn();
-                    
-                    if (!$winner_team_id) {
-                        throw new Exception("Could not find team ID for the winning user");
+                    // Verify the user is a participant in this match
+                    $stmt = $db->prepare("SELECT COUNT(*) FROM match_participants WHERE match_id = ? AND user_id = ?");
+                    $stmt->execute([$match_id, $winner_id]);
+                    if ($stmt->fetchColumn() == 0) {
+                        throw new Exception("Selected user is not a participant in this match");
                     }
                     
-                    // Update match status and winner using team_id
+                    // Update match status and winner
                     $stmt = $db->prepare("UPDATE matches SET 
                                         status = 'completed', 
                                         completed_at = NOW(), 
                                         winner_id = ?
                                         WHERE id = ?");
-                    $stmt->execute([$winner_team_id, $match_id]);
+                    $stmt->execute([$winner_id, $match_id]);
                     
                     // Award prizes based on distribution type
-                    // Pass the winner_user_id to distributePrize since we want to award to the user
-                    distributePrize($db, $match_id, $winner_user_id, $match);
+                    distributePrize($db, $match_id, $winner_id, $match);
                     
                     $db->commit();
                     // Redirect back to the game-specific page
@@ -243,46 +240,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $db->beginTransaction();
                     
-                    // Get total kills for each team
-                    $stmt = $db->prepare("SELECT mp.team_id, SUM(uk.kills) as total_kills 
+                    // Get highest scoring player
+                    $stmt = $db->prepare("SELECT mp.user_id, COALESCE(uk.kills, 0) as total_kills 
                                         FROM match_participants mp 
                                         LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id 
                                         WHERE mp.match_id = ? 
-                                        GROUP BY mp.team_id");
+                                        ORDER BY uk.kills DESC 
+                                        LIMIT 1");
                     $stmt->execute([$match_id]);
-                    $team_scores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    $winner = $stmt->fetch(PDO::FETCH_ASSOC);
                     
-                    // Update match scores
-                    $score_team1 = 0;
-                    $score_team2 = 0;
-                    foreach ($team_scores as $score) {
-                        if ($score['team_id'] == $match['team1_id']) {
-                            $score_team1 = $score['total_kills'];
-                        } else if ($score['team_id'] == $match['team2_id']) {
-                            $score_team2 = $score['total_kills'];
-                        }
-                    }
+                    $winner_id = $winner ? $winner['user_id'] : null;
                     
-                    // Determine winner
-                    $winner_id = null;
-                    if ($score_team1 > $score_team2) {
-                        $winner_id = $match['team1_id'];
-                    } elseif ($score_team2 > $score_team1) {
-                        $winner_id = $match['team2_id'];
-                    }
-                    
-                    // Update match status and scores
+                    // Update match status and winner
                     $stmt = $db->prepare("UPDATE matches SET 
                                         status = 'completed', 
                                         completed_at = NOW(), 
-                                        winner_id = ?,
-                                        score_team1 = ?,
-                                        score_team2 = ?
+                                        winner_id = ?
                                         WHERE id = ?");
-                    $stmt->execute([$winner_id, $score_team1, $score_team2, $match_id]);
+                    $stmt->execute([$winner_id, $match_id]);
                     
                     // Award prizes based on distribution type
-                    distributePrize($db, $match_id, $winner_id, $match);
+                    if ($winner_id) {
+                        distributePrize($db, $match_id, $winner_id, $match);
+                    }
                     
                     $db->commit();
                     // Redirect back to the game-specific page
@@ -292,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } catch (Exception $e) {
                     $db->rollBack();
                     error_log("Error completing match: " . $e->getMessage());
-                    header("Location: match_scoring.php?id=" . $match_id . "&error=1");
+                    header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
                     exit;
                 }
                 break;
