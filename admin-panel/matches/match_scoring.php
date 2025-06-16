@@ -87,6 +87,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
 
+            case 'select_winner':
+                try {
+                    $db->beginTransaction();
+                    
+                    $winner_id = $_POST['winner_id'];
+                    
+                    // Update match status and winner
+                    $stmt = $db->prepare("UPDATE matches SET 
+                                        status = 'completed', 
+                                        completed_at = NOW(), 
+                                        winner_id = ?
+                                        WHERE id = ?");
+                    $stmt->execute([$winner_id, $match_id]);
+                    
+                    // Award prize to winner
+                    if ($match['website_currency_type'] && $match['website_currency_amount'] > 0) {
+                        $prize_amount = $match['website_currency_amount'];
+                        $currency_type = $match['website_currency_type'];
+                        
+                        if ($currency_type === 'coins') {
+                            $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
+                                                VALUES (?, ?) 
+                                                ON DUPLICATE KEY UPDATE coins = coins + ?");
+                        } else {
+                            $stmt = $db->prepare("INSERT INTO user_tickets (user_id, tickets) 
+                                                VALUES (?, ?) 
+                                                ON DUPLICATE KEY UPDATE tickets = tickets + ?");
+                        }
+                        $stmt->execute([$winner_id, $prize_amount, $prize_amount]);
+                    }
+                    
+                    $db->commit();
+                    // Redirect back to the game-specific page
+                    $game_page = strtolower($match['game_name']) . ".php";
+                    header("Location: $game_page?completed=1");
+                    exit;
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    error_log("Error selecting winner: " . $e->getMessage());
+                    header("Location: match_scoring.php?id=" . $match_id . "&error=1");
+                    exit;
+                }
+                break;
+
             case 'complete_match':
                 try {
                     $db->beginTransaction();
