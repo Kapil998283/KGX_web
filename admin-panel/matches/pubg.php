@@ -707,12 +707,19 @@ function togglePrizeCurrency() {
     if (useWebsiteCurrency) {
         realCurrencySection.style.display = 'none';
         websiteCurrencySection.style.display = 'block';
-        document.getElementById('prize_pool').value = '0';
-        document.getElementById('prize_type').value = 'INR';
+        // Only reset real currency values if they haven't been set yet
+        if (!document.getElementById('prize_pool').value) {
+            document.getElementById('prize_pool').value = '0';
+            document.getElementById('prize_type').value = 'INR';
+        }
     } else {
         realCurrencySection.style.display = 'block';
         websiteCurrencySection.style.display = 'none';
-        document.getElementById('website_currency_amount').value = '0';
+        // Only reset website currency values if they haven't been set yet
+        if (!document.getElementById('website_currency_amount').value) {
+            document.getElementById('website_currency_amount').value = '0';
+            document.getElementById('website_currency_type').value = 'coins';
+        }
     }
 }
 
@@ -868,6 +875,8 @@ function editMatch(matchId) {
             form.elements['prize_type'].value = match.prize_type;
             form.elements['prize_pool'].value = match.prize_pool;
             form.elements['map_name'].value = match.map_name;
+            form.elements['prize_distribution'].value = match.prize_distribution || 'single';
+            form.elements['coins_per_kill'].value = match.coins_per_kill || 0;
             
             // Set date and time
             const matchDateTime = new Date(match.match_date);
@@ -886,23 +895,19 @@ function editMatch(matchId) {
             if (match.website_currency_type) {
                 document.getElementById('useWebsiteCurrency').checked = true;
                 form.elements['website_currency_type'].value = match.website_currency_type;
-                form.elements['website_currency_amount'].value = match.website_currency_amount;
+                form.elements['website_currency_amount'].value = match.website_currency_amount || 0;
                 togglePrizeCurrency();
             }
             
-            // Handle prize distribution and coins per kill
-            form.elements['prize_distribution'].value = match.prize_distribution;
-            form.elements['coins_per_kill'].value = match.coins_per_kill;
-            
-            // Update modal title and button
+            // Update form for editing
             document.getElementById('addMatchModalLabel').textContent = 'Edit Match';
-            document.querySelector('#matchForm button[type="submit"]').textContent = 'Update Match';
+            form.querySelector('button[type="submit"]').textContent = 'Update Match';
+            form.elements['action'].value = 'add_match';
             
-            // Show modal
             addMatchModal.show();
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error fetching match details:', error);
             alert('Failed to load match details. Please try again.');
         });
 }

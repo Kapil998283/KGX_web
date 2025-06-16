@@ -136,6 +136,47 @@ include '../../includes/header.php';
 <!-- Link to external CSS file -->
 <link rel="stylesheet" href="../../assets/css/matches/matches.css">
 
+<style>
+/* Add this at the end of your existing styles */
+.prize-distribution {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.prize-tier {
+    padding: 4px 0;
+    color: #ffd700;
+    font-size: 0.9em;
+}
+
+.prize-tier:nth-child(2) {
+    color: #c0c0c0;
+}
+
+.prize-tier:nth-child(3) {
+    color: #cd7f32;
+}
+
+.prize-tier i {
+    margin-right: 5px;
+}
+
+.coins-per-kill {
+    color: #4caf50;
+    background-color: rgba(76, 175, 80, 0.1);
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 0.9em;
+}
+
+.coins-per-kill i {
+    color: #ffd700;
+    margin-right: 5px;
+}
+</style>
+
 <div class="matches-section">
     <div class="matches-container">
         <?php if (isset($_SESSION['error'])): ?>
@@ -192,6 +233,47 @@ include '../../includes/header.php';
                             <?= number_format($match['website_currency_amount']) ?> <?= ucfirst($match['website_currency_type']) ?>
                         <?php else: ?>
                             <?= $match['prize_type'] === 'USD' ? '$' : '₹' ?><?= number_format($match['prize_pool']) ?>
+                        <?php endif; ?>
+
+                        <?php if ($match['prize_distribution']): ?>
+                            <div class="prize-distribution mt-2">
+                                <?php
+                                    $percentages = [];
+                                    switch($match['prize_distribution']) {
+                                        case 'top3':
+                                            $percentages = [60, 30, 10];
+                                            break;
+                                        case 'top5':
+                                            $percentages = [50, 25, 15, 7, 3];
+                                            break;
+                                        default:
+                                            $percentages = [100];
+                                    }
+
+                                    foreach ($percentages as $index => $percentage) {
+                                        $position = $index + 1;
+                                        $amount = $match['website_currency_type'] 
+                                            ? floor($match['website_currency_amount'] * $percentage / 100)
+                                            : round($match['prize_pool'] * $percentage / 100, 2);
+                                        
+                                        $currency = $match['website_currency_type'] 
+                                            ? ucfirst($match['website_currency_type'])
+                                            : ($match['prize_type'] === 'USD' ? '$' : '₹');
+                                        
+                                        if ($match['website_currency_type']) {
+                                            echo "<div class='prize-tier'><i class='bi bi-award'></i> {$position}st Place: " . number_format($amount) . " {$currency}</div>";
+                                        } else {
+                                            echo "<div class='prize-tier'><i class='bi bi-award'></i> {$position}st Place: {$currency}" . number_format($amount, 2) . "</div>";
+                                        }
+                                    }
+                                ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if ($match['coins_per_kill'] > 0): ?>
+                            <div class="coins-per-kill mt-2">
+                                <i class="bi bi-star"></i> <?= number_format($match['coins_per_kill']) ?> Coins per Kill
+                            </div>
                         <?php endif; ?>
                     </div>
                     <div class="info-item">

@@ -86,6 +86,43 @@ $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php else: ?>
                                         <h5>Prize Pool: <?= $match['prize_type'] === 'USD' ? '$' : '₹' ?><?= number_format($match['prize_pool']) ?></h5>
                                     <?php endif; ?>
+
+                                    <?php if ($match['prize_distribution']): ?>
+                                        <div class="prize-distribution">
+                                            <p class="text-muted mb-1">Prize Distribution:</p>
+                                            <?php
+                                                $percentages = [];
+                                                switch($match['prize_distribution']) {
+                                                    case 'top3':
+                                                        $percentages = [60, 30, 10];
+                                                        break;
+                                                    case 'top5':
+                                                        $percentages = [50, 25, 15, 7, 3];
+                                                        break;
+                                                    default:
+                                                        $percentages = [100];
+                                                }
+
+                                                foreach ($percentages as $index => $percentage) {
+                                                    $position = $index + 1;
+                                                    $amount = $match['website_currency_type'] 
+                                                        ? floor($match['website_currency_amount'] * $percentage / 100)
+                                                        : round($match['prize_pool'] * $percentage / 100, 2);
+                                                    
+                                                    $currency = $match['website_currency_type'] 
+                                                        ? ucfirst($match['website_currency_type'])
+                                                        : ($match['prize_type'] === 'USD' ? '$' : '₹');
+                                                    
+                                                    if ($match['website_currency_type']) {
+                                                        echo "<p class='mb-0'>{$position}st Place: " . number_format($amount) . " {$currency}</p>";
+                                                    } else {
+                                                        echo "<p class='mb-0'>{$position}st Place: {$currency}" . number_format($amount, 2) . "</p>";
+                                                    }
+                                                }
+                                            ?>
+                                        </div>
+                                    <?php endif; ?>
+
                                     <?php if ($match['coins_per_kill'] > 0): ?>
                                         <p class="text-success">
                                             <i class="bi bi-star"></i> <?= number_format($match['coins_per_kill']) ?> Coins per Kill

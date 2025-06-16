@@ -362,6 +362,8 @@ CREATE TABLE IF NOT EXISTS match_results (
     match_id INT,
     team_id INT,
     score INT DEFAULT NULL,
+    prize_amount DECIMAL(10,2) DEFAULT NULL,
+    prize_currency VARCHAR(20) DEFAULT NULL,
     PRIMARY KEY (match_id, team_id),
     FOREIGN KEY (match_id) REFERENCES matches(id),
     FOREIGN KEY (team_id) REFERENCES teams(id)
