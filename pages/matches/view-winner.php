@@ -2,6 +2,10 @@
 require_once '../../config/database.php';
 session_start();
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../auth/login.php');
@@ -20,17 +24,31 @@ if (!$match_id) {
 $database = new Database();
 $db = $database->connect();
 
+// Debug: Print match ID
+error_log("Viewing match ID: " . $match_id);
+
 // Get match details
-$matchStmt = $db->prepare("SELECT m.*, g.name as game_name, g.image_url as game_image 
+$matchStmt = $db->prepare("SELECT m.*, g.name as game_name, g.image_url as game_image,
+                          (SELECT COUNT(*) FROM match_participants mp WHERE mp.match_id = m.id AND mp.position IS NOT NULL) as winners_count
                           FROM matches m 
-                          JOIN games g ON m.game_id = g.id 
-                          WHERE m.id = ? AND m.status = 'completed'");
+                          LEFT JOIN games g ON m.game_id = g.id 
+                          WHERE m.id = ?");
 $matchStmt->execute([$match_id]);
 $match = $matchStmt->fetch(PDO::FETCH_ASSOC);
 
+// Debug output
+error_log("Match query result: " . print_r($match, true));
+
 if (!$match) {
+    error_log("Match not found");
     header('Location: my-matches.php');
     exit();
+}
+
+if (!$match['game_name']) {
+    error_log("Game not found for match");
+    $match['game_name'] = 'Unknown Game';
+    $match['game_image'] = '';
 }
 
 // Get all winners information (supports multiple positions)
@@ -52,11 +70,13 @@ $stmt = $db->prepare("SELECT
                     LEFT JOIN teams t ON mp.team_id = t.id
                     LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id
                     WHERE mp.match_id = ? 
-                    AND m.status = 'completed'
                     AND mp.position IS NOT NULL
                     ORDER BY mp.position ASC");
 $stmt->execute([$match_id]);
 $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Debug output
+error_log("Winners query result: " . print_r($winners, true));
 
 include '../../includes/header.php';
 ?>
@@ -69,19 +89,28 @@ include '../../includes/header.php';
             </a>
             <div class="match-info">
                 <div class="game-info">
+                    <?php if ($match['game_image']): ?>
                     <img src="<?= htmlspecialchars($match['game_image']) ?>" 
                          alt="<?= htmlspecialchars($match['game_name']) ?>" 
                          class="game-icon">
+                    <?php endif; ?>
                     <div>
                         <h2><?= htmlspecialchars($match['game_name']) ?></h2>
                         <p class="match-date">
                             <?= date('F j, Y g:i A', strtotime($match['match_date'])) ?>
+                        </p>
+                        <p class="match-status">
+                            Status: <?= htmlspecialchars(ucfirst($match['status'])) ?>
                         </p>
                     </div>
                 </div>
                 <div class="prize-pool">
                     <i class="bi bi-trophy-fill"></i>
                     <span>Prize Pool: <?= number_format($match['prize_pool']) ?> Coins</span>
+                    <?php if ($match['coins_per_kill'] > 0): ?>
+                    <br>
+                    <small>+<?= number_format($match['coins_per_kill']) ?> Coins per Kill</small>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -169,6 +198,9 @@ include '../../includes/header.php';
             <div class="no-winner">
                 <i class="bi bi-emoji-frown"></i>
                 <p>No winners declared yet</p>
+                <?php if ($match['status'] !== 'completed'): ?>
+                    <small>Match status: <?= htmlspecialchars(ucfirst($match['status'])) ?></small>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>
