@@ -343,7 +343,7 @@ if ($stmt_redemption) {
 
                 <div class="card">
                     <div>
-                        <div class="numbers"><?php echo $watch_video_count; ?></div>
+                        <div class="numbers"><?php echo $matches_count; ?></div>
                         <div class="cardName">videos watched</div>
                     </div>
 

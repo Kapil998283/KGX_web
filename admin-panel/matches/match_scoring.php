@@ -240,24 +240,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $db->beginTransaction();
                     
-                    // Check if a winner has been selected
-                    $stmt = $db->prepare("SELECT winner_user_id FROM matches WHERE id = ?");
-                    $stmt->execute([$match_id]);
-                    $winner_info = $stmt->fetch(PDO::FETCH_ASSOC);
+                    // Check if positions have been set for the required number of winners
+                    $requiredPositions = ($match['prize_distribution'] === 'top5') ? 5 : 
+                                        ($match['prize_distribution'] === 'top3' ? 3 : 1);
                     
-                    if (!$winner_info['winner_user_id']) {
-                        throw new Exception("Please select a winner before completing the match.");
+                    $stmt = $db->prepare("SELECT COUNT(*) FROM match_participants 
+                                         WHERE match_id = ? AND position IS NOT NULL AND position <= ?");
+                    $stmt->execute([$match_id, $requiredPositions]);
+                    $positionsSet = $stmt->fetchColumn();
+                    
+                    if ($positionsSet < $requiredPositions) {
+                        throw new Exception("Please set positions for all winners (top " . $requiredPositions . ") before completing the match.");
                     }
                     
-                    // Update match status
+                    // Get the first position player as the main winner
+                    $stmt = $db->prepare("SELECT user_id FROM match_participants 
+                                         WHERE match_id = ? AND position = 1");
+                    $stmt->execute([$match_id]);
+                    $firstPlace = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if (!$firstPlace) {
+                        throw new Exception("First position must be set before completing the match.");
+                    }
+                    
+                    // Update match status and set the first position player as winner
                     $stmt = $db->prepare("UPDATE matches SET 
                                         status = 'completed', 
-                                        completed_at = NOW()
+                                        completed_at = NOW(), 
+                                        winner_user_id = ?
                                         WHERE id = ?");
-                    $stmt->execute([$match_id]);
+                    $stmt->execute([$firstPlace['user_id'], $match_id]);
                     
-                    // Award prizes based on distribution type
-                    distributePrize($db, $match_id, $winner_info['winner_user_id'], $match);
+                    // Distribute prizes based on positions
+                    $stmt = $db->prepare("SELECT mp.user_id, mp.team_id, mp.position, COALESCE(uk.kills, 0) as kills 
+                                         FROM match_participants mp 
+                                         LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id 
+                                         WHERE mp.match_id = ? AND mp.position IS NOT NULL 
+                                         ORDER BY mp.position ASC");
+                    $stmt->execute([$match_id]);
+                    $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    // Distribute coins for kills and positions
+                    foreach ($winners as $winner) {
+                        // Calculate position-based prize
+                        $prizePercentage = 0;
+                        switch ($winner['position']) {
+                            case 1: $prizePercentage = 0.5; break; // 50%
+                            case 2: $prizePercentage = 0.3; break; // 30%
+                            case 3: $prizePercentage = 0.2; break; // 20%
+                            default: $prizePercentage = 0; break;
+                        }
+                        
+                        $positionPrize = floor($match['prize_pool'] * $prizePercentage);
+                        $killsPrize = $winner['kills'] * $match['coins_per_kill'];
+                        $totalPrize = $positionPrize + $killsPrize;
+                        
+                        if ($totalPrize > 0) {
+                            $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
+                                                VALUES (?, ?) 
+                                                ON DUPLICATE KEY UPDATE coins = coins + ?");
+                            $stmt->execute([$winner['user_id'], $totalPrize, $totalPrize]);
+                        }
+                    }
                     
                     $db->commit();
                     // Redirect back to the game-specific page
