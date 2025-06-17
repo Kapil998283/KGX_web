@@ -24,7 +24,7 @@ $db = $database->connect();
 $matchStmt = $db->prepare("SELECT m.*, g.name as game_name, g.image_url as game_image 
                           FROM matches m 
                           JOIN games g ON m.game_id = g.id 
-                          WHERE m.id = ?");
+                          WHERE m.id = ? AND m.status = 'completed'");
 $matchStmt->execute([$match_id]);
 $match = $matchStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -45,12 +45,7 @@ $stmt = $db->prepare("SELECT
                                 WHEN mp.position = 2 THEN m.prize_pool * 0.3
                                 WHEN mp.position = 3 THEN m.prize_pool * 0.2
                                 ELSE 0
-                            END, 0) as coins_earned,
-                        CASE 
-                            WHEN m.winner_user_id IS NOT NULL THEN 'user'
-                            WHEN m.winner_id IS NOT NULL THEN 'team'
-                            ELSE NULL
-                        END as winner_type
+                            END, 0) as coins_earned
                     FROM match_participants mp
                     JOIN users u ON mp.user_id = u.id
                     JOIN matches m ON m.id = mp.match_id

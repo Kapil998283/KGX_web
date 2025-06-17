@@ -47,24 +47,35 @@ try {
     }
     
     // Fetch winner information
-    $stmt = $db->prepare("SELECT u.username, t.name as team_name,
-                                COALESCE(uk.kills, 0) as kills,
-                                COALESCE(uk.kills * m.coins_per_kill, 0) as coins_earned
-                         FROM matches m
-                         JOIN teams t ON m.winner_id = t.id
-                         JOIN match_participants mp ON mp.match_id = m.id AND mp.team_id = t.id
+    $stmt = $db->prepare("SELECT 
+                            u.username, 
+                            t.name as team_name,
+                            mp.position,
+                            COALESCE(uk.kills, 0) as kills,
+                            COALESCE(uk.kills * m.coins_per_kill + 
+                                CASE 
+                                    WHEN mp.position = 1 THEN m.prize_pool * 0.5
+                                    WHEN mp.position = 2 THEN m.prize_pool * 0.3
+                                    WHEN mp.position = 3 THEN m.prize_pool * 0.2
+                                    ELSE 0
+                                END, 0) as coins_earned
+                         FROM match_participants mp
                          JOIN users u ON mp.user_id = u.id
+                         JOIN matches m ON m.id = mp.match_id
+                         LEFT JOIN teams t ON mp.team_id = t.id
                          LEFT JOIN user_kills uk ON uk.match_id = m.id AND uk.user_id = u.id
-                         WHERE m.id = ? AND m.status = 'completed'
-                         LIMIT 1");
+                         WHERE mp.match_id = ? 
+                         AND m.status = 'completed'
+                         AND mp.position IS NOT NULL
+                         ORDER BY mp.position ASC");
     
     $stmt->execute([$match_id]);
-    $winner = $stmt->fetch(PDO::FETCH_ASSOC);
+    $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Log the query results for debugging
-    error_log("Winner query results: " . print_r($winner, true));
+    error_log("Winners query results: " . print_r($winners, true));
     
-    echo json_encode(['winner' => $winner]);
+    echo json_encode(['winners' => $winners]);
 } catch (Exception $e) {
     error_log("Error in get_match_winner.php: " . $e->getMessage());
     http_response_code(500);
