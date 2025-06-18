@@ -95,11 +95,11 @@ include '../../includes/header.php';
 
 <link rel="stylesheet" href="../../assets/css/game-profile.css">
 
-<main>
+<div class="game-profile-section">
     <div class="game-profile-container">
         <div class="game-selection-title">
-            <h2>Select Your Primary Game</h2>
-            <p>Choose your primary game and provide your in-game details for tournament participation</p>
+            <h2>Choose Your Game</h2>
+            <p>Select your primary game and provide your in-game details</p>
         </div>
 
         <?php if (isset($error)): ?>
@@ -108,23 +108,51 @@ include '../../includes/header.php';
 
         <div class="game-cards">
             <div class="game-card <?php echo $existing_profile && $existing_profile['game_name'] === 'PUBG' ? 'selected' : ''; ?>" data-game="PUBG" data-username-pattern="2-16 characters" data-uid-pattern="8-10 digits">
-                <img src="../../assets/images/games/pubg.png" alt="PUBG">
-                <h3>PUBG</h3>
+                <div class="game-card-inner">
+                    <div class="game-image">
+                        <img src="../../assets/images/games/pubg.png" alt="PUBG">
+                    </div>
+                    <h3>PUBG</h3>
+                    <div class="game-overlay">
+                        <span class="select-text">Select Game</span>
+                    </div>
+                </div>
             </div>
             
             <div class="game-card <?php echo $existing_profile && $existing_profile['game_name'] === 'BGMI' ? 'selected' : ''; ?>" data-game="BGMI" data-username-pattern="2-16 characters" data-uid-pattern="8-10 digits">
-                <img src="../../assets/images/games/bgmi.png" alt="BGMI">
-                <h3>BGMI</h3>
+                <div class="game-card-inner">
+                    <div class="game-image">
+                        <img src="../../assets/images/games/bgmi.png" alt="BGMI">
+                    </div>
+                    <h3>BGMI</h3>
+                    <div class="game-overlay">
+                        <span class="select-text">Select Game</span>
+                    </div>
+                </div>
             </div>
             
             <div class="game-card <?php echo $existing_profile && $existing_profile['game_name'] === 'FREE FIRE' ? 'selected' : ''; ?>" data-game="FREE FIRE" data-username-pattern="1-12 characters" data-uid-pattern="7-9 digits">
-                <img src="../../assets/images/games/freefire.png" alt="Free Fire">
-                <h3>Free Fire</h3>
+                <div class="game-card-inner">
+                    <div class="game-image">
+                        <img src="../../assets/images/games/freefire.png" alt="Free Fire">
+                    </div>
+                    <h3>Free Fire</h3>
+                    <div class="game-overlay">
+                        <span class="select-text">Select Game</span>
+                    </div>
+                </div>
             </div>
             
             <div class="game-card <?php echo $existing_profile && $existing_profile['game_name'] === 'COD' ? 'selected' : ''; ?>" data-game="COD" data-username-pattern="3-20 characters" data-uid-pattern="6-8 digits">
-                <img src="../../assets/images/games/cod.png" alt="COD">
-                <h3>Call of Duty</h3>
+                <div class="game-card-inner">
+                    <div class="game-image">
+                        <img src="../../assets/images/games/cod.png" alt="COD">
+                    </div>
+                    <h3>Call of Duty</h3>
+                    <div class="game-overlay">
+                        <span class="select-text">Select Game</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -132,28 +160,39 @@ include '../../includes/header.php';
             <input type="hidden" name="game_name" id="selected_game" value="<?php echo $existing_profile ? $existing_profile['game_name'] : ''; ?>">
             
             <div class="form-group">
-                <label for="game_username">In-Game Username</label>
-                <input type="text" id="game_username" name="game_username" 
-                    value="<?php echo $existing_profile ? $existing_profile['game_username'] : ''; ?>" 
-                    placeholder="Enter your in-game username" 
-                    required>
-                <small class="help-text">Username format: <span id="username_pattern">Select a game first</span></small>
+                <label for="game_username">
+                    <span class="label-text">In-Game Username</span>
+                    <span class="format-hint" id="username_pattern">Select a game first</span>
+                </label>
+                <div class="input-wrapper">
+                    <input type="text" id="game_username" name="game_username" 
+                        value="<?php echo $existing_profile ? $existing_profile['game_username'] : ''; ?>" 
+                        placeholder="Enter your in-game username" 
+                        required>
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="game_uid">Game UID</label>
-                <input type="text" id="game_uid" name="game_uid" 
-                    value="<?php echo $existing_profile ? $existing_profile['game_uid'] : ''; ?>" 
-                    placeholder="Enter your game UID (numbers only)" 
-                    pattern="\d*"
-                    required>
-                <small class="help-text">UID format: <span id="uid_pattern">Select a game first</span></small>
+                <label for="game_uid">
+                    <span class="label-text">Game UID</span>
+                    <span class="format-hint" id="uid_pattern">Select a game first</span>
+                </label>
+                <div class="input-wrapper">
+                    <input type="text" id="game_uid" name="game_uid" 
+                        value="<?php echo $existing_profile ? $existing_profile['game_uid'] : ''; ?>" 
+                        placeholder="Enter your game UID (numbers only)" 
+                        pattern="\d*"
+                        required>
+                </div>
             </div>
             
-            <button type="submit" class="submit-btn">Save Game Profile</button>
+            <button type="submit" class="submit-btn">
+                <span class="btn-text">Save Game Profile</span>
+                <span class="btn-icon">→</span>
+            </button>
         </form>
     </div>
-</main>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -177,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add selected class to clicked card
             this.classList.add('selected');
             
-            // Show form
+            // Show form with animation
             form.classList.add('active');
             
             // Update hidden input and patterns
