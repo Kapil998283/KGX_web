@@ -134,24 +134,33 @@ include '../../includes/header.php';
                         <div class="winner-avatar">
                             <div class="crown <?= $position === 1 ? 'show' : '' ?>">👑</div>
                             <?php
-                            // Get user's profile image
+                            // Get winner's profile image using the same logic as header
+                            $winner_profile_image = './assets/images/guest-icon.png'; // Default Guest/Fallback Image Path
+
+                            // Get user's specific setting
                             $stmt = $db->prepare("SELECT profile_image FROM users WHERE username = ?");
                             $stmt->execute([$winner['username']]);
-                            $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
-                            $profile_image = $user_data['profile_image'] ?? null;
-
-                            // If user has a profile image, use it
-                            if ($profile_image) {
-                                // Adjust path for local assets if needed
-                                if (strpos($profile_image, '/assets/') === 0) {
-                                    $profile_image = '.' . $profile_image;
-                                }
-                                echo '<img src="' . htmlspecialchars($profile_image) . '" alt="' . htmlspecialchars($winner['username']) . '" class="profile-image">';
+                            $winner_data = $stmt->fetch(PDO::FETCH_ASSOC);
+                            
+                            if ($winner_data && !empty($winner_data['profile_image'])) {
+                                $winner_profile_image = $winner_data['profile_image'];
                             } else {
-                                // Use default icon if no profile image
-                                echo '<i class="bi bi-person-circle"></i>';
+                                // Check for admin-defined default image
+                                $stmt = $db->prepare("SELECT image_path FROM profile_images WHERE is_default = 1 AND is_active = 1 LIMIT 1");
+                                $stmt->execute();
+                                $default_image_data = $stmt->fetch(PDO::FETCH_ASSOC);
+                                
+                                if ($default_image_data) {
+                                    $winner_profile_image = $default_image_data['image_path'];
+                                }
+                            }
+
+                            // Adjust path for local assets if needed
+                            if (strpos($winner_profile_image, '/assets/') === 0 && strpos($winner_profile_image, '.') !== 0) {
+                                $winner_profile_image = '.' . $winner_profile_image;
                             }
                             ?>
+                            <img src="<?php echo htmlspecialchars($winner_profile_image); ?>" alt="<?= htmlspecialchars($winner['username']) ?>" class="profile-image">
                         </div>
                         <div class="winner-details">
                             <div class="position-badge">
