@@ -148,12 +148,12 @@ if (isset($_SESSION['user_id'])) {
   <div class="overlay" data-overlay></div>
   <div class="container">
     <!-- Main Logo (Desktop & Mobile) -->
-<a href="/KGX/index.php" class="logo-main">
+<a href="./home.php" class="logo-main">
   <img src="/KGX/assets/images/logo.svg" alt="GameX Logo">
 </a>
 
 <!-- Additional Logo (Visible Only on Small Devices) -->
-<a href="/KGX/index.php" class="logo-mobile-only">
+<a href="./home.php" class="logo-mobile-only">
   <img src="/KGX/favicon.svg" alt="GameX Mobile Logo">
 </a>
 
@@ -162,7 +162,7 @@ if (isset($_SESSION['user_id'])) {
     </button>
     <nav class="navbar" data-nav>
       <div class="navbar-top">
-        <a href="/KGX/index.php" class="logo">
+        <a href="./home.php" class="logo">
           <img src="/KGX/assets/images/logo.svg" alt="GameX logo">
         </a>
         <button class="nav-close-btn" data-nav-close-btn>
@@ -170,7 +170,7 @@ if (isset($_SESSION['user_id'])) {
         </button>
       </div>
       <ul class="navbar-list">
-        <li><a href="./index.php" class="navbar-link">Home</a></li>
+        <li><a href="./home.php" class="navbar-link">Home</a></li>
         <li class="dropdown">
           <a href="#" class="navbar-link dropdown-toggle">Tournaments <ion-icon name="chevron-down-outline"></ion-icon></a>
           <ul class="dropdown-menu">
