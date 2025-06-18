@@ -65,87 +65,57 @@ try {
         $_POST['tournament_id']
     ]);
 
-    if (!$success) {
-        throw new Exception("Failed to update registration status");
-    }
-
-    // If status is approved, update tournament's current_teams count
-    if ($_POST['status'] === 'approved') {
-        // First check if we haven't exceeded max_teams
+    if ($success && $_POST['status'] === 'approved') {
+        // Get team members
         $stmt = $conn->prepare("
-            SELECT current_teams, max_teams 
-            FROM tournaments 
-            WHERE id = ?
+            SELECT user_id 
+            FROM team_members 
+            WHERE team_id = ? AND status = 'active'
         ");
+        $stmt->execute([$_POST['team_id']]);
+        $team_members = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Create tournament history records for all team members
+        $stmt = $conn->prepare("
+            INSERT INTO tournament_player_history (
+                tournament_id,
+                user_id,
+                team_id,
+                registration_date,
+                status
+            ) VALUES (?, ?, ?, NOW(), 'registered')
+        ");
+
+        foreach ($team_members as $user_id) {
+            $stmt->execute([
+                $_POST['tournament_id'],
+                $user_id,
+                $_POST['team_id']
+            ]);
+        }
+
+        // Get tournament details for notification
+        $stmt = $conn->prepare("SELECT name FROM tournaments WHERE id = ?");
         $stmt->execute([$_POST['tournament_id']]);
         $tournament = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($tournament['current_teams'] >= $tournament['max_teams']) {
-            throw new Exception("Tournament has reached maximum team capacity");
-        }
-
-        // Update current_teams count
-        $stmt = $conn->prepare("
-            UPDATE tournaments 
-            SET current_teams = current_teams + 1 
-            WHERE id = ?
-        ");
-        $stmt->execute([$_POST['tournament_id']]);
+        // Send notifications
+        $notifications = new TournamentNotifications($conn);
+        $notifications->registrationStatus(
+            $_POST['team_id'],
+            $tournament['name'],
+            'approved'
+        );
     }
-
-    // Get team name for logging
-    $stmt = $conn->prepare("SELECT name FROM teams WHERE id = ?");
-    $stmt->execute([$_POST['team_id']]);
-    $team = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$team) {
-        throw new Exception("Team not found");
-    }
-
-    // Try to log the action, but don't fail if table doesn't exist
-    try {
-        $action = $_POST['status'] === 'approved' ? 'approve_registration' : 'reject_registration';
-        $message = ucfirst($_POST['status']) . ' team "' . $team['name'] . '" for tournament #' . $_POST['tournament_id'];
-        
-        // Insert into admin_logs table
-        $stmt = $conn->prepare("
-            INSERT INTO admin_logs (admin_id, action, details, created_at) 
-            VALUES (?, ?, ?, NOW())
-        ");
-        $stmt->execute([
-            $_SESSION['admin_id'],
-            $action,
-            $message
-        ]);
-    } catch (Exception $e) {
-        // Ignore logging errors
-        error_log("Failed to log admin action: " . $e->getMessage());
-    }
-
-    // Send notification
-    $notifications = new TournamentNotifications($conn);
-    $notifications->registrationStatus(
-        $_POST['team_id'],
-        $_POST['tournament_id'],
-        $_POST['status']
-    );
 
     // Commit transaction
     $conn->commit();
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'Registration ' . $_POST['status'] . ' successfully'
-    ]);
 
+    echo json_encode(['success' => true]);
 } catch (Exception $e) {
-    // Rollback transaction on error
     if (isset($conn)) {
         $conn->rollBack();
     }
-    error_log("Error in update_registration.php: " . $e->getMessage());
-    echo json_encode([
-        'error' => $e->getMessage()
-    ]);
+    echo json_encode(['error' => $e->getMessage()]);
 }
 ?> 

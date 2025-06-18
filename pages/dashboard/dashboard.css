@@ -460,3 +460,34 @@ body {
     left: initial;
   }
 }
+
+/* Tournament History */
+.recentTournaments table tbody tr td small {
+    display: block;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+.recentTournaments table tbody tr td .status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--white);
+}
+
+.recentTournaments table tbody tr td .status.registered {
+    background: var(--blue);
+}
+
+.recentTournaments table tbody tr td .status.playing {
+    background: var(--green);
+}
+
+.recentTournaments table tbody tr td .status.completed {
+    background: var(--grey);
+}
+
+.recentTournaments table tbody tr td .status.eliminated {
+    background: var(--red);
+}

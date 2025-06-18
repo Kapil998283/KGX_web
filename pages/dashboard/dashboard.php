@@ -1,4 +1,29 @@
 <?php
+require_once '../../config/database.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/header.php';
+
+// Helper function to get position suffix
+function getPositionSuffix($position) {
+    if ($position >= 11 && $position <= 13) {
+        return 'th';
+    }
+    switch ($position % 10) {
+        case 1:
+            return 'st';
+        case 2:
+            return 'nd';
+        case 3:
+            return 'rd';
+        default:
+            return 'th';
+    }
+}
+
+// Initialize database connection
+$database = new Database();
+$conn = $database->connect();
+
 session_start();
 require_once '../../includes/user-auth.php';
 
@@ -453,16 +478,24 @@ if ($stmt_redemption) {
                             // Get user's recent tournament participation
                             $tournament_sql = "SELECT 
                                 t.name as tournament_name,
-                                g.name as game_name,
+                                t.game_name,
                                 tm.name as team_name,
-                                tr.status,
-                                tr.registered_at
-                            FROM tournament_registrations tr
-                            JOIN tournaments t ON tr.tournament_id = t.id
-                            JOIN games g ON t.game_id = g.id
-                            LEFT JOIN teams tm ON tr.team_id = tm.id
-                            WHERE tr.user_id = ?
-                            ORDER BY tr.registered_at DESC
+                                tph.status,
+                                tph.registration_date,
+                                tph.rounds_played,
+                                tph.total_kills,
+                                tph.total_points,
+                                tph.best_placement,
+                                tph.final_position,
+                                tph.prize_amount,
+                                tph.prize_currency,
+                                tph.website_currency_earned,
+                                tph.website_currency_type
+                            FROM tournament_player_history tph
+                            JOIN tournaments t ON tph.tournament_id = t.id
+                            JOIN teams tm ON tph.team_id = tm.id
+                            WHERE tph.user_id = ?
+                            ORDER BY tph.registration_date DESC
                             LIMIT 5";
                             
                             $stmt = $conn->prepare($tournament_sql);
@@ -471,13 +504,43 @@ if ($stmt_redemption) {
 
                             if (count($tournament_history) > 0):
                                 foreach ($tournament_history as $tournament): 
+                                    // Get performance details
+                                    $performance = [];
+                                    if ($tournament['rounds_played'] > 0) {
+                                        $performance[] = $tournament['rounds_played'] . ' rounds played';
+                                    }
+                                    if ($tournament['total_kills'] > 0) {
+                                        $performance[] = $tournament['total_kills'] . ' kills';
+                                    }
+                                    if ($tournament['total_points'] > 0) {
+                                        $performance[] = $tournament['total_points'] . ' points';
+                                    }
+                                    if ($tournament['best_placement']) {
+                                        $performance[] = 'Best: ' . $tournament['best_placement'] . getPositionSuffix($tournament['best_placement']);
+                                    }
+                                    if ($tournament['final_position'] && $tournament['status'] === 'completed') {
+                                        $performance[] = 'Final: ' . $tournament['final_position'] . getPositionSuffix($tournament['final_position']);
+                                    }
+                                    if ($tournament['prize_amount'] > 0) {
+                                        $performance[] = 'Prize: ' . $tournament['prize_currency'] . ' ' . number_format($tournament['prize_amount'], 2);
+                                    }
+                                    if ($tournament['website_currency_earned'] > 0) {
+                                        $performance[] = 'Earned: ' . $tournament['website_currency_earned'] . ' ' . $tournament['website_currency_type'];
+                                    }
                             ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($tournament['tournament_name']); ?></td>
                                     <td><?php echo htmlspecialchars($tournament['game_name']); ?></td>
-                                    <td><?php echo $tournament['team_name'] ? htmlspecialchars($tournament['team_name']) : 'Solo'; ?></td>
-                                    <td><span class="status <?php echo strtolower($tournament['status']); ?>"><?php echo $tournament['status']; ?></span></td>
-                                    <td><?php echo date('M d, Y', strtotime($tournament['registered_at'])); ?></td>
+                                    <td>
+                                        <?php 
+                                        echo htmlspecialchars($tournament['team_name']);
+                                        if (!empty($performance)) {
+                                            echo '<br><small class="text-muted">' . implode(', ', $performance) . '</small>';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><span class="status <?php echo strtolower($tournament['status']); ?>"><?php echo ucfirst($tournament['status']); ?></span></td>
+                                    <td><?php echo date('M d, Y', strtotime($tournament['registration_date'])); ?></td>
                                 </tr>
                             <?php 
                                 endforeach; 

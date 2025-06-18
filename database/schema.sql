@@ -226,6 +226,60 @@ CREATE TABLE IF NOT EXISTS tournament_winners (
     FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Tournament player history table
+CREATE TABLE IF NOT EXISTS tournament_player_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tournament_id INT NOT NULL,
+    user_id INT NOT NULL,
+    team_id INT NOT NULL,
+    registration_date DATETIME NOT NULL,
+    rounds_played INT DEFAULT 0,
+    total_kills INT DEFAULT 0,
+    total_points INT DEFAULT 0,
+    best_placement INT DEFAULT NULL,
+    final_position INT DEFAULT NULL,
+    prize_amount DECIMAL(10,2) DEFAULT 0.00,
+    prize_currency VARCHAR(20) DEFAULT NULL,
+    website_currency_earned INT DEFAULT 0,
+    website_currency_type VARCHAR(20) DEFAULT NULL,
+    status ENUM('registered', 'playing', 'completed', 'eliminated') DEFAULT 'registered',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_tournament_player (tournament_id, user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Trigger to create tournament history records
+DELIMITER //
+CREATE TRIGGER after_tournament_registration
+AFTER INSERT ON tournament_registrations
+FOR EACH ROW
+BEGIN
+    -- Insert history records for all active team members
+    INSERT INTO tournament_player_history (
+        tournament_id,
+        user_id,
+        team_id,
+        registration_date,
+        status
+    )
+    SELECT 
+        NEW.tournament_id,
+        tm.user_id,
+        NEW.team_id,
+        NEW.registration_date,
+        CASE 
+            WHEN NEW.status = 'approved' THEN 'registered'
+            ELSE 'pending'
+        END
+    FROM team_members tm
+    WHERE tm.team_id = NEW.team_id
+    AND tm.status = 'active';
+END //
+DELIMITER ;
+
 -- Tournament waitlist table
 CREATE TABLE IF NOT EXISTS tournament_waitlist (
     id INT AUTO_INCREMENT PRIMARY KEY,

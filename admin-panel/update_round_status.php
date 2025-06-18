@@ -2,6 +2,7 @@
 require_once '../includes/admin-auth.php';
 require_once '../config/database.php';
 require_once '../includes/notification-helper.php';
+require_once '../includes/functions.php';
 
 header('Content-Type: application/json');
 
@@ -25,6 +26,9 @@ try {
     // Initialize database connection
     $database = new Database();
     $conn = $database->connect();
+
+    // Start transaction
+    $conn->beginTransaction();
 
     // Get round and tournament details
     $stmt = $conn->prepare("
@@ -57,14 +61,24 @@ try {
                 break;
 
             case 'completed':
+                // Update tournament history for all players
+                updateTournamentPlayerHistory($round_id, $conn);
+
+                // Send completion notification
                 NotificationHelper::sendToTournamentParticipants(
                     $round['tournament_id'],
                     "Round Completed",
                     "Round {$round['round_number']} of {$round['tournament_name']} has been completed. Check the results!",
                     "/KGX/pages/tournaments/match-schedule.php?tournament_id={$round['tournament_id']}"
                 );
+
+                // Check if tournament is completed
+                checkAndUpdateTournamentStatus($round['tournament_id'], $conn);
                 break;
         }
+
+        // Commit transaction
+        $conn->commit();
 
         echo json_encode(['success' => true, 'message' => 'Round status updated successfully']);
     } else {
@@ -72,6 +86,9 @@ try {
     }
 
 } catch (Exception $e) {
+    if (isset($conn)) {
+        $conn->rollBack();
+    }
     http_response_code(500);
     echo json_encode(['error' => $e->getMessage()]);
 } 
