@@ -1,23 +1,5 @@
 <?php
 require_once 'config/database.php';
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KGX - Esports Tournament Platform</title>
-    <link rel="stylesheet" href="/KGX/assets/css/style.css">
-</head>
-<body>
-    <!-- Preloader -->
-    <div class="preloader">
-        <video class="preloader-video" autoplay muted>
-            <source src="/KGX/assets/images/kgx_preloader.mp4" type="video/mp4">
-        </video>
-    </div>
-
-<?php
 include 'includes/header.php';
 
 // Initialize database connection
@@ -28,6 +10,13 @@ $db = $database->connect();
 $stmt = $db->query("SELECT * FROM hero_settings WHERE is_active = 1 ORDER BY id DESC LIMIT 1");
 $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
+
+<!-- Preloader -->
+<div class="preloader">
+    <video class="preloader-video" autoplay muted playsinline>
+        <source src="/KGX/assets/images/kgx_preloader.mp4" type="video/mp4">
+    </video>
+</div>
 
 <main>
     <article>

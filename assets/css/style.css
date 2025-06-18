@@ -150,13 +150,13 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background: var(--eerie-black);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 99999;
     opacity: 1;
     visibility: visible;
     transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
@@ -168,9 +168,14 @@
   }
   
   .preloader-video {
-    max-width: 100%;
-    max-height: 100vh;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Ensure body doesn't scroll while preloader is active */
+  body:has(.preloader:not(.hide)) {
+    overflow: hidden;
   }
   
   
