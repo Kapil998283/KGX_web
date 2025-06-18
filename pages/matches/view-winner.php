@@ -106,10 +106,10 @@ include '../../includes/header.php';
                 </div>
                 <div class="prize-pool">
                     <i class="bi bi-trophy-fill"></i>
-                    <span>Prize Pool: <?= number_format($match['prize_pool']) ?> Coins</span>
+                    <span>Prize Pool: <?= number_format($match['website_currency_amount']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></span>
                     <?php if ($match['coins_per_kill'] > 0): ?>
                     <br>
-                    <small>+<?= number_format($match['coins_per_kill']) ?> Coins per Kill</small>
+                    <small>+<?= number_format($match['coins_per_kill']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?> per Kill</small>
                     <?php endif; ?>
                 </div>
             </div>
@@ -133,7 +133,25 @@ include '../../includes/header.php';
                     <div class="podium-spot position-<?= $position ?>" data-position="<?= $position ?>">
                         <div class="winner-avatar">
                             <div class="crown <?= $position === 1 ? 'show' : '' ?>">👑</div>
-                            <i class="bi bi-person-circle"></i>
+                            <?php
+                            // Get user's profile image
+                            $stmt = $db->prepare("SELECT profile_image FROM users WHERE username = ?");
+                            $stmt->execute([$winner['username']]);
+                            $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
+                            $profile_image = $user_data['profile_image'] ?? null;
+
+                            // If user has a profile image, use it
+                            if ($profile_image) {
+                                // Adjust path for local assets if needed
+                                if (strpos($profile_image, '/assets/') === 0) {
+                                    $profile_image = '.' . $profile_image;
+                                }
+                                echo '<img src="' . htmlspecialchars($profile_image) . '" alt="' . htmlspecialchars($winner['username']) . '" class="profile-image">';
+                            } else {
+                                // Use default icon if no profile image
+                                echo '<i class="bi bi-person-circle"></i>';
+                            }
+                            ?>
                         </div>
                         <div class="winner-details">
                             <div class="position-badge">
