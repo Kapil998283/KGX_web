@@ -143,13 +143,6 @@ if (isset($_SESSION['user_id'])) {
 
 <body id="top">
 
-  <!-- Preloader -->
-  <div class="preloader">
-    <video class="preloader-video" autoplay muted>
-      <source src="/KGX/assets/images/kgx_preloader.mp4" type="video/mp4">
-    </video>
-  </div>
-
   <!-- HEADER -->
 <header class="header">
   <div class="overlay" data-overlay></div>
