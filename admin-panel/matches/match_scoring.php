@@ -63,7 +63,12 @@ function distributePrize($db, $match_id, $winner_id, $match) {
                              FROM match_participants mp 
                              LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id 
                              WHERE mp.match_id = ? 
-                             ORDER BY mp.position ASC NULLS LAST, uk.kills DESC");
+                             ORDER BY 
+                                CASE 
+                                    WHEN mp.position IS NULL THEN 999999 
+                                    ELSE mp.position 
+                                END ASC,
+                                uk.kills DESC");
         $stmt->execute([$match_id]);
         $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
