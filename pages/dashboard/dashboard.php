@@ -380,13 +380,64 @@ if ($stmt_redemption) {
             <div class="details">
                 <div class="tabs-container">
                     <div class="tabs-nav">
-                        <button class="tab-button active" data-tab="matches">Recent Matches</button>
-                        <button class="tab-button" data-tab="tournaments">Tournament History</button>
-                        <button class="tab-button" data-tab="top10">Top 10</button>
+                        <button class="tab-button active" data-tab="top10">Top 10</button>
+                        <button class="tab-button" data-tab="matches">Matches</button>
+                        <button class="tab-button" data-tab="tournaments">Tournaments</button>
+                    </div>
+
+                    <!-- Top 10 Tab -->
+                    <div class="tab-content active" id="top10-tab">
+                        <div class="recentCustomers">
+                            <div class="cardHeader">
+                                <h2>Top 10 Teams</h2>
+                            </div>
+
+                            <table>
+                                <?php
+                                // Get top 8 teams by score
+                                $top_teams_sql = "SELECT t.*, 
+                                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count
+                                    FROM teams t 
+                                    WHERE t.is_active = 1
+                                    ORDER BY t.total_score DESC 
+                                    LIMIT 8";
+                                $stmt = $conn->prepare($top_teams_sql);
+                                $stmt->execute();
+                                $top_teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                                if (count($top_teams) > 0):
+                                    foreach ($top_teams as $team):
+                                ?>
+                                <tr>
+                                    <td width="60px">
+                                        <div class="imgBx">
+                                            <img src="<?php echo htmlspecialchars($team['logo']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($team['name']); ?>"
+                                                 onerror="this.src='/KGX/assets/images/default-team.png'">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <h4><?php echo htmlspecialchars($team['name']); ?> 
+                                            <br> 
+                                            <span>
+                                                Score: <?php echo number_format($team['total_score']); ?> 
+                                                (<?php echo $team['member_count']; ?> members)
+                                            </span>
+                                        </h4>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="2" class="text-center">No teams found</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- Matches Tab -->
-                    <div class="tab-content active" id="matches-tab">
+                    <div class="tab-content" id="matches-tab">
                         <div class="recentMatches">
                             <div class="cardHeader">
                                 <h2>Recent Matches</h2>
@@ -562,51 +613,6 @@ if ($stmt_redemption) {
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Top 10 Tab -->
-                    <div class="tab-content" id="top10-tab">
-                        <div class="recentCustomers">
-                            <div class="cardHeader">
-                                <h2>Top 10 Teams</h2>
-                            </div>
-
-                            <table>
-                                <?php
-                                // Get top 8 teams by score
-                                $top_teams_sql = "SELECT t.*, 
-                                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count
-                                    FROM teams t 
-                                    WHERE t.is_active = 1
-                                    ORDER BY t.total_score DESC 
-                                    LIMIT 8";
-                                $stmt = $conn->prepare($top_teams_sql);
-                                $stmt->execute();
-                                $top_teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                                foreach ($top_teams as $team):
-                                ?>
-                                <tr>
-                                    <td width="60px">
-                                        <div class="imgBx">
-                                            <img src="<?php echo htmlspecialchars($team['logo']); ?>" 
-                                                 alt="<?php echo htmlspecialchars($team['name']); ?>"
-                                                 onerror="this.src='/newapp/assets/images/default-team.png'">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h4><?php echo htmlspecialchars($team['name']); ?> 
-                                            <br> 
-                                            <span>
-                                                Score: <?php echo number_format($team['total_score']); ?> 
-                                                (<?php echo $team['member_count']; ?> members)
-                                            </span>
-                                        </h4>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
                             </table>
                         </div>
                     </div>
