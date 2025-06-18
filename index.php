@@ -11,13 +11,6 @@ $stmt = $db->query("SELECT * FROM hero_settings WHERE is_active = 1 ORDER BY id 
 $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 
-<!-- Preloader -->
-<div class="preloader">
-    <video class="preloader-video" autoplay muted playsinline>
-        <source src="/KGX/assets/images/kgx_preloader.mp4" type="video/mp4">
-    </video>
-</div>
-
 <main>
     <article>
 

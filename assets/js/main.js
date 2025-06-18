@@ -113,27 +113,6 @@ document.querySelectorAll(".winner-card").forEach((card) => {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Preloader functionality
-  const preloader = document.querySelector(".preloader");
-  const preloaderVideo = document.querySelector(".preloader-video");
-
-  if (preloader && preloaderVideo) {
-    // Hide preloader after video ends or after 4 seconds (whichever comes first)
-    const hidePreloader = () => {
-      preloader.classList.add("hide");
-      // Remove preloader from DOM after animation
-      setTimeout(() => {
-        preloader.remove();
-      }, 500);
-    };
-
-    // Set maximum duration for preloader
-    setTimeout(hidePreloader, 4000);
-
-    // Also hide when video ends
-    preloaderVideo.addEventListener("ended", hidePreloader);
-  }
-
   // Navbar Dropdowns - Keep this section as it handles navigation dropdowns
   const navbarDropdowns = document.querySelectorAll(".navbar .dropdown");
   navbarDropdowns.forEach((dropdown) => {
