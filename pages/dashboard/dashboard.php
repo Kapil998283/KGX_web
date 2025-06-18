@@ -243,6 +243,15 @@ if ($stmt_redemption) {
                 </li>
 
                 <li>
+                    <a href="./game-profile.php">
+                        <span class="icon">
+                            <ion-icon name="game-controller-outline"></ion-icon>
+                        </span>
+                        <span class="title">Game Profile</span>
+                    </a>
+                </li>
+
+                <li>
                     <a href="./help-contact.php">
                         <span class="icon">
                             <ion-icon name="help-outline"></ion-icon>
