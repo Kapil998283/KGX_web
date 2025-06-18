@@ -1,3 +1,7 @@
+<?php
+session_start();
+require_once 'config/database.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,13 +59,37 @@
         <video id="preloader-video" autoplay muted>
             <source src="assets/images/kgx_preloader.mp4" type="video/mp4">
         </video>
-        <a href="intro1.php" class="next-btn">Get Started</a>
     </div>
 
     <script>
-        document.getElementById('preloader-video').addEventListener('ended', function() {
-            this.currentTime = 0;
-            this.play();
+        // Function to redirect based on session
+        function redirectUser() {
+            <?php if(isset($_SESSION['user_id'])): ?>
+                window.location.href = 'home.php';
+            <?php else: ?>
+                window.location.href = 'intro1.php';
+            <?php endif; ?>
+        }
+
+        // Play video and set up automatic redirect
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('preloader-video');
+            
+            // Set timeout for 4 seconds
+            setTimeout(redirectUser, 4000);
+
+            // If video ends before 4 seconds, redirect immediately
+            video.addEventListener('ended', function() {
+                redirectUser();
+            });
+
+            // Loop video if it's shorter than 4 seconds
+            video.addEventListener('ended', function() {
+                if(video.currentTime < 4) {
+                    video.currentTime = 0;
+                    video.play();
+                }
+            });
         });
     </script>
 </body>
