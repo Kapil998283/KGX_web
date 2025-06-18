@@ -23,8 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $phone = trim($_POST['full_phone'] ?? ''); // Using the full phone number with country code
+    $main_game = trim($_POST['main_game'] ?? ''); // Add main game field
     
-    if (empty($username) || empty($email) || empty($password) || empty($confirm_password) || empty($phone)) {
+    if (empty($username) || empty($email) || empty($password) || empty($confirm_password) || empty($phone) || empty($main_game)) {
         $error = "Please fill in all fields";
     } elseif ($password !== $confirm_password) {
         $error = "Passwords do not match";
@@ -68,6 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     
                     if ($stmt->execute()) {
                         $user_id = $conn->lastInsertId();
+                        
+                        // Add user's main game
+                        $sql = "INSERT INTO user_games (user_id, game_name, is_primary) VALUES (:user_id, :game_name, 1)";
+                        $stmt = $conn->prepare($sql);
+                        $stmt->bindParam(":user_id", $user_id);
+                        $stmt->bindParam(":game_name", $main_game);
+                        $stmt->execute();
                         
                         // Give new user 100 coins
                         $sql = "INSERT INTO user_coins (user_id, coins) VALUES (:user_id, 100)";
@@ -189,6 +197,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <input type="hidden" id="full_phone" name="full_phone">
                 <small class="phone-hint">Select country code and enter your 10-digit phone number</small>
                 <div id="phone-error" class="error-message" style="display: none;"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="main_game">Select Your Main Game</label>
+                <select id="main_game" name="main_game" required class="form-control">
+                    <option value="">Select a game</option>
+                    <option value="PUBG">PUBG</option>
+                    <option value="BGMI">BGMI</option>
+                    <option value="FREE FIRE">Free Fire</option>
+                    <option value="COD">Call of Duty Mobile</option>
+                </select>
+                <small class="game-hint">This will be set as your main game profile</small>
             </div>
             
             <div class="form-group">

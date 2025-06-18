@@ -604,8 +604,7 @@ INSERT INTO profile_images (image_path, is_active, is_default) VALUES
 ALTER TABLE match_participants
 ADD COLUMN position INT DEFAULT NULL;
 
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS user_game;
+
 
 -- Create user_game table
 CREATE TABLE user_game (

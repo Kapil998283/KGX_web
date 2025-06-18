@@ -22,6 +22,21 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Get user's current profile image
 $profile_image = $user['profile_image'] ?? '/assets/images/team-member-8.png';
+
+// Get user's games
+$sql = "SELECT game_name, is_primary FROM user_games WHERE user_id = :user_id";
+$stmt = $conn->prepare($sql);
+$stmt->bindParam(':user_id', $user_id);
+$stmt->execute();
+$user_games = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$main_game = '';
+foreach ($user_games as $game) {
+    if ($game['is_primary'] == 1) {
+        $main_game = $game['game_name'];
+        break;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -300,6 +315,27 @@ $profile_image = $user['profile_image'] ?? '/assets/images/team-member-8.png';
       <input type="text" id="username" placeholder="Enter your username" value="<?php echo htmlspecialchars($user['username']); ?>">
     </div>
 
+    <!-- Main Game -->
+    <div class="form-group">
+      <label for="main_game">Main Game</label>
+      <select id="main_game" name="main_game">
+        <?php foreach ($user_games as $game): ?>
+          <option value="<?php echo htmlspecialchars($game['game_name']); ?>" 
+                  <?php echo ($game['is_primary'] == 1) ? 'selected' : ''; ?>>
+            <?php 
+              switch($game['game_name']) {
+                case 'PUBG': echo 'PUBG'; break;
+                case 'BGMI': echo 'BGMI'; break;
+                case 'FREE FIRE': echo 'Free Fire'; break;
+                case 'COD': echo 'Call of Duty Mobile'; break;
+                default: echo htmlspecialchars($game['game_name']);
+              }
+            ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+
     <!-- Language Selection -->
     <div class="form-group">
       <label for="language">Display Language</label>
@@ -437,27 +473,48 @@ $profile_image = $user['profile_image'] ?? '/assets/images/team-member-8.png';
     function saveChanges() {
       const username = document.getElementById("username").value;
       const language = document.getElementById("language").value;
+      const mainGame = document.getElementById("main_game").value;
 
-      // Send username update request
-      fetch('update_username.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'username=' + encodeURIComponent(username)
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert('Username updated successfully!');
-        } else {
-          alert('Error: ' + data.message);
-        }
-      })
-      .catch(error => {
-        alert('Error updating username. Please try again.');
-        console.error('Error:', error);
-      });
+      // Create a promise for each update
+      const updates = [];
+
+      // Username update
+      updates.push(
+        fetch('update_username.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'username=' + encodeURIComponent(username)
+        })
+      );
+
+      // Main game update
+      updates.push(
+        fetch('update_main_game.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'game_name=' + encodeURIComponent(mainGame)
+        })
+      );
+
+      // Execute all updates
+      Promise.all(updates)
+        .then(responses => Promise.all(responses.map(r => r.json())))
+        .then(results => {
+          const errors = results.filter(r => !r.success);
+          if (errors.length === 0) {
+            alert('Settings updated successfully!');
+          } else {
+            alert('Some updates failed. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error updating settings. Please try again.');
+        });
 
       // For now, just show language change
       alert("Language changed to: " + language);

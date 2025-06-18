@@ -25,46 +25,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $game = $_POST['game_name'];
         $username = $_POST['game_username'];
         $uid = $_POST['game_uid'];
-        $is_primary = isset($_POST['is_primary']) ? 1 : 0;
         
         // Validate input
         if (empty($game) || empty($username) || empty($uid)) {
             throw new Exception('All fields are required');
         }
         
-        // Begin transaction
-        $db->beginTransaction();
+        // Update database
+        $stmt = $db->prepare("INSERT INTO user_game (user_id, game_name, game_username, game_uid) 
+                               VALUES (?, ?, ?, ?) 
+                               ON DUPLICATE KEY UPDATE 
+                               game_username = VALUES(game_username),
+                               game_uid = VALUES(game_uid)");
+                               
+        $stmt->bind_param("isss", $_SESSION['user_id'], $game, $username, $uid);
         
-        // If this game is set as primary, unset other primary games
-        if ($is_primary) {
-            $stmt = $db->prepare("UPDATE user_game SET is_primary = 0 WHERE user_id = ? AND game_name != ?");
-            $stmt->execute([$_SESSION['user_id'], $game]);
-        }
-        
-        // Check if profile for this game already exists
-        $stmt = $db->prepare("SELECT id FROM user_game WHERE user_id = ? AND game_name = ?");
-        $stmt->execute([$_SESSION['user_id'], $game]);
-        $existing = $stmt->fetch();
-        
-        if ($existing) {
-            // Update existing profile
-            $stmt = $db->prepare("UPDATE user_game SET game_username = ?, game_uid = ?, is_primary = ? WHERE id = ?");
-            $stmt->execute([$username, $uid, $is_primary, $existing['id']]);
+        if ($stmt->execute()) {
+            $response['success'] = true;
+            $response['message'] = 'Game profile saved successfully!';
         } else {
-            // Insert new profile
-            $stmt = $db->prepare("INSERT INTO user_game (user_id, game_name, game_username, game_uid, is_primary) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $game, $username, $uid, $is_primary]);
+            throw new Exception('Failed to save game profile');
         }
         
-        $db->commit();
-        $response['success'] = true;
-        $response['message'] = 'Game profile saved successfully!';
     } catch (Exception $e) {
-        $db->rollBack();
         $response['message'] = $e->getMessage();
     }
     
-    // Return JSON response
     header('Content-Type: application/json');
     echo json_encode($response);
     exit;
@@ -165,49 +151,27 @@ include '../../includes/header.php';
         <h2 class="modal-title">Game Profile</h2>
         
         <form class="game-details-form" method="POST" id="gameProfileForm">
-            <input type="hidden" name="game_name" id="selected_game" value="">
+            <input type="hidden" name="selected_game" id="selected_game">
             
             <div class="form-group">
-                <label for="game_username">
-                    <span class="label-text">In-Game Username</span>
-                    <span class="format-hint" id="username_pattern">Select a game first</span>
-                </label>
-                <div class="input-wrapper">
-                    <input type="text" id="game_username" name="game_username" 
-                        placeholder="Enter your in-game username" 
-                        required>
-                    <div class="character-count">
-                        <span id="username_count">0</span>/<span id="username_max">20</span>
-                    </div>
+                <label for="game_username">In-Game Username</label>
+                <input type="text" id="game_username" name="game_username" required>
+                <div class="character-count">
+                    <span id="username_count">0</span>/<span id="username_max">20</span>
                 </div>
             </div>
             
             <div class="form-group">
-                <label for="game_uid">
-                    <span class="label-text">Game UID</span>
-                    <span class="format-hint" id="uid_pattern">Select a game first</span>
-                </label>
-                <div class="input-wrapper">
-                    <input type="text" id="game_uid" name="game_uid" 
-                        placeholder="Enter your game UID (numbers only)" 
-                        pattern="\d*"
-                        required>
-                    <div class="character-count">
-                        <span id="uid_count">0</span>/<span id="uid_max">10</span>
-                    </div>
+                <label for="game_uid">Game UID</label>
+                <input type="text" id="game_uid" name="game_uid" required>
+                <div class="character-count">
+                    <span id="uid_count">0</span>/<span id="uid_max">10</span>
                 </div>
-            </div>
-
-            <div class="form-group checkbox-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="is_primary" id="is_primary">
-                    <span class="checkbox-text">Set as main game</span>
-                </label>
             </div>
             
             <button type="submit" class="submit-btn">
-                <span class="btn-text" id="submit_text">Add Game Profile</span>
-                <span class="btn-icon">→</span>
+                <span id="submit_text">Add Profile</span>
+                <span class="arrow">→</span>
             </button>
         </form>
     </div>
@@ -228,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const uidCount = document.getElementById('uid_count');
     const uidMax = document.getElementById('uid_max');
     const submitText = document.getElementById('submit_text');
-    const isPrimaryCheckbox = document.getElementById('is_primary');
     const modalClose = document.querySelector('.modal-close');
 
     // Store game profiles data
@@ -306,15 +269,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (gameProfiles[game]) {
                 gameUsernameInput.value = gameProfiles[game].game_username;
                 gameUidInput.value = gameProfiles[game].game_uid;
-                isPrimaryCheckbox.checked = parseInt(gameProfiles[game].is_primary) === 1;
-                submitText.textContent = 'Update Game Profile';
                 usernameCount.textContent = gameProfiles[game].game_username.length;
                 uidCount.textContent = gameProfiles[game].game_uid.length;
             } else {
                 gameUidInput.value = '';
                 gameUsernameInput.value = '';
-                isPrimaryCheckbox.checked = false;
-                submitText.textContent = 'Add Game Profile';
                 uidCount.textContent = '0';
                 usernameCount.textContent = '0';
             }
@@ -351,9 +310,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get form data
         const formData = new FormData(this);
         
-        // Add game name and is_primary
+        // Add game name
         formData.append('game_name', selectedGameInput.value);
-        formData.append('is_primary', isPrimaryCheckbox.checked ? '1' : '0');
         
         // Send AJAX request
         fetch(form.action, {
