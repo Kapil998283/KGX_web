@@ -85,109 +85,73 @@ include '../../includes/header.php';
         <?php endif; ?>
 
         <div class="game-cards">
-            <div class="game-card <?php echo isset($user_games['PUBG']) ? 'configured' : ''; ?>" data-game="PUBG" data-username-pattern="2-16 characters" data-uid-pattern="8-10 digits">
-                <div class="game-card-inner">
-                    <div class="game-image">
-                        <img src="../../assets/images/games/pubg.png" alt="PUBG">
-                    </div>
-                    <h3>PUBG</h3>
-                    <?php if (isset($user_games['PUBG'])): ?>
-                        <div class="game-info">
-                            <div class="info-row">
-                                <span class="info-label">Username:</span>
-                                <p class="game-username"><?php echo htmlspecialchars($user_games['PUBG']['game_username']); ?></p>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">UID:</span>
-                                <p class="game-uid"><?php echo htmlspecialchars($user_games['PUBG']['game_uid']); ?></p>
-                            </div>
-                            <?php if ($user_games['PUBG']['is_primary']): ?>
-                                <span class="primary-badge">Main</span>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                    <div class="game-overlay">
-                        <span class="select-text"><?php echo isset($user_games['PUBG']) ? 'Update Profile' : 'Add Profile'; ?></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="game-card <?php echo isset($user_games['BGMI']) ? 'configured' : ''; ?>" data-game="BGMI" data-username-pattern="2-16 characters" data-uid-pattern="8-10 digits">
-                <div class="game-card-inner">
-                    <div class="game-image">
-                        <img src="../../assets/images/games/bgmi.png" alt="BGMI">
-                    </div>
-                    <h3>BGMI</h3>
-                    <?php if (isset($user_games['BGMI'])): ?>
-                        <div class="game-info">
-                            <div class="info-row">
-                                <span class="info-label">Username:</span>
-                                <p class="game-username"><?php echo htmlspecialchars($user_games['BGMI']['game_username']); ?></p>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">UID:</span>
-                                <p class="game-uid"><?php echo htmlspecialchars($user_games['BGMI']['game_uid']); ?></p>
-                            </div>
-                            <?php if ($user_games['BGMI']['is_primary']): ?>
-                                <span class="primary-badge">Main</span>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                    <div class="game-overlay">
-                        <span class="select-text"><?php echo isset($user_games['BGMI']) ? 'Update Profile' : 'Add Profile'; ?></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="game-card <?php echo isset($user_games['FREE FIRE']) ? 'configured' : ''; ?>" data-game="FREE FIRE" data-username-pattern="1-12 characters" data-uid-pattern="7-9 digits">
-                <div class="game-card-inner">
-                    <div class="game-image">
-                        <img src="../../assets/images/games/freefire.png" alt="Free Fire">
-                    </div>
-                    <h3>Free Fire</h3>
-                    <?php if (isset($user_games['FREE FIRE'])): ?>
-                        <div class="game-info">
-                            <div class="info-row">
-                                <span class="info-label">Username:</span>
-                                <p class="game-username"><?php echo htmlspecialchars($user_games['FREE FIRE']['game_username']); ?></p>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">UID:</span>
-                            <p class="game-username"><?php echo htmlspecialchars($user_games['FREE FIRE']['game_username']); ?></p>
-                            <p class="game-uid">UID: <?php echo htmlspecialchars($user_games['FREE FIRE']['game_uid']); ?></p>
-                            <?php if ($user_games['FREE FIRE']['is_primary']): ?>
-                                <span class="primary-badge">Primary</span>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                    <div class="game-overlay">
-                        <span class="select-text"><?php echo isset($user_games['FREE FIRE']) ? 'Update Profile' : 'Add Profile'; ?></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="game-card <?php echo isset($user_games['COD']) ? 'configured' : ''; ?>" data-game="COD" data-username-pattern="3-20 characters" data-uid-pattern="6-8 digits">
-                <div class="game-card-inner">
-                    <div class="game-image">
-                        <img src="../../assets/images/games/cod.png" alt="COD">
-                    </div>
-                    <h3>Call of Duty</h3>
-                    <?php if (isset($user_games['COD'])): ?>
-                        <div class="game-info">
-                            <p class="game-username"><?php echo htmlspecialchars($user_games['COD']['game_username']); ?></p>
-                            <p class="game-uid">UID: <?php echo htmlspecialchars($user_games['COD']['game_uid']); ?></p>
-                            <?php if ($user_games['COD']['is_primary']): ?>
-                                <span class="primary-badge">Primary</span>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                    <div class="game-overlay">
-                        <span class="select-text"><?php echo isset($user_games['COD']) ? 'Update Profile' : 'Add Profile'; ?></span>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <?php
+            $games = [
+                'PUBG' => [
+                    'name' => 'PUBG',
+                    'image' => 'pubg.png',
+                    'username_pattern' => '2-16 characters',
+                    'uid_pattern' => '8-10 digits'
+                ],
+                'BGMI' => [
+                    'name' => 'BGMI',
+                    'image' => 'bgmi.png',
+                    'username_pattern' => '2-16 characters',
+                    'uid_pattern' => '8-10 digits'
+                ],
+                'FREE FIRE' => [
+                    'name' => 'Free Fire',
+                    'image' => 'freefire.png',
+                    'username_pattern' => '1-12 characters',
+                    'uid_pattern' => '7-9 digits'
+                ],
+                'COD' => [
+                    'name' => 'Call of Duty',
+                    'image' => 'cod.png',
+                    'username_pattern' => '3-20 characters',
+                    'uid_pattern' => '6-8 digits'
+                ]
+            ];
 
+            foreach ($games as $key => $game): ?>
+                <div class="game-card <?php echo isset($user_games[$key]) ? 'configured' : ''; ?>" 
+                     data-game="<?php echo $key; ?>"
+                     data-username-pattern="<?php echo $game['username_pattern']; ?>"
+                     data-uid-pattern="<?php echo $game['uid_pattern']; ?>">
+                    <div class="game-card-inner">
+                        <div class="game-image">
+                            <img src="../../assets/images/games/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>">
+                        </div>
+                        <h3><?php echo $game['name']; ?></h3>
+                        <div class="game-info">
+                            <div class="info-row">
+                                <span class="info-label">Username:</span>
+                                <p class="game-username"><?php echo isset($user_games[$key]) ? htmlspecialchars($user_games[$key]['game_username']) : '-'; ?></p>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">UID:</span>
+                                <p class="game-uid"><?php echo isset($user_games[$key]) ? htmlspecialchars($user_games[$key]['game_uid']) : '-'; ?></p>
+                            </div>
+                            <?php if (isset($user_games[$key]) && $user_games[$key]['is_primary']): ?>
+                                <span class="primary-badge">Main</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="game-overlay">
+                            <span class="select-text"><?php echo isset($user_games[$key]) ? 'Update Profile' : 'Add Profile'; ?></span>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Form -->
+<div class="modal" id="gameProfileModal">
+    <div class="modal-content">
+        <button class="modal-close">&times;</button>
+        <h2 class="modal-title">Game Profile</h2>
+        
         <form class="game-details-form" method="POST" id="gameProfileForm">
             <input type="hidden" name="game_name" id="selected_game" value="">
             
@@ -201,7 +165,7 @@ include '../../includes/header.php';
                         placeholder="Enter your in-game username" 
                         required>
                     <div class="character-count">
-                        <span id="username_count">0</span>/<span id="username_max">16</span>
+                        <span id="username_count">0</span>/<span id="username_max">20</span>
                     </div>
                 </div>
             </div>
@@ -225,7 +189,7 @@ include '../../includes/header.php';
             <div class="form-group checkbox-group">
                 <label class="checkbox-label">
                     <input type="checkbox" name="is_primary" id="is_primary">
-                    <span class="checkbox-text">Set as primary game</span>
+                    <span class="checkbox-text">Set as main game</span>
                 </label>
             </div>
             
@@ -240,6 +204,7 @@ include '../../includes/header.php';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const gameCards = document.querySelectorAll('.game-card');
+    const modal = document.getElementById('gameProfileModal');
     const form = document.querySelector('.game-details-form');
     const selectedGameInput = document.getElementById('selected_game');
     const usernamePattern = document.getElementById('username_pattern');
@@ -252,9 +217,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const uidMax = document.getElementById('uid_max');
     const submitText = document.getElementById('submit_text');
     const isPrimaryCheckbox = document.getElementById('is_primary');
+    const modalClose = document.querySelector('.modal-close');
 
     // Store game profiles data
     const gameProfiles = <?php echo json_encode($user_games); ?>;
+
+    // Close modal when clicking the close button or outside the modal
+    modalClose.addEventListener('click', function() {
+        modal.classList.remove('active');
+    });
+
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
 
     // Only allow numbers in UID field
     gameUidInput.addEventListener('input', function(e) {
@@ -275,8 +252,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add selected class to clicked card
             this.classList.add('selected');
             
-            // Show form with animation
-            form.classList.add('active');
+            // Show modal
+            modal.classList.add('active');
             
             // Get game name and update form
             const game = this.dataset.game;
