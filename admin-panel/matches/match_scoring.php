@@ -234,11 +234,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception("Selected user is not a participant in this match");
                     }
                     
-                    // Set position 1 for the winner
-                    $stmt = $db->prepare("UPDATE match_participants 
-                                        SET position = 1 
-                                        WHERE match_id = ? AND user_id = ?");
+                    // Check if all required positions are set based on prize distribution
+                    $requiredPositions = ($match['prize_distribution'] === 'top5') ? 5 : 
+                                       ($match['prize_distribution'] === 'top3' ? 3 : 1);
+                    
+                    $stmt = $db->prepare("SELECT COUNT(*) FROM match_participants 
+                                        WHERE match_id = ? AND position IS NOT NULL AND position <= ?");
+                    $stmt->execute([$match_id, $requiredPositions]);
+                    $positionsSet = $stmt->fetchColumn();
+                    
+                    if ($positionsSet < $requiredPositions) {
+                        throw new Exception("Please set positions for all winners (top " . $requiredPositions . ") before selecting the winner.");
+                    }
+                    
+                    // Verify the winner has position 1
+                    $stmt = $db->prepare("SELECT position FROM match_participants WHERE match_id = ? AND user_id = ?");
                     $stmt->execute([$match_id, $winner_id]);
+                    $winnerPosition = $stmt->fetchColumn();
+                    
+                    if ($winnerPosition != 1) {
+                        throw new Exception("The selected winner must be in position 1.");
+                    }
                     
                     // Update match status and winner
                     $stmt = $db->prepare("UPDATE matches SET 
@@ -462,6 +478,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     $user_id = $_POST['user_id'];
                     $position = $_POST['position'];
+                    
+                    // Check if this position is already taken by another player
+                    $stmt = $db->prepare("SELECT user_id FROM match_participants 
+                                        WHERE match_id = ? AND position = ? AND user_id != ?");
+                    $stmt->execute([$match_id, $position, $user_id]);
+                    $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($existingUser) {
+                        throw new Exception("Position " . $position . " is already taken by another player. Please choose a different position.");
+                    }
                     
                     // Update position in match_participants
                     $stmt = $db->prepare("UPDATE match_participants 
