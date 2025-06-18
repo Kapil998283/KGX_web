@@ -225,7 +225,7 @@ if ($stmt_redemption) {
                 </li>
 
                 <li>
-                    <a href="../../index.php">
+                    <a href="../../home.php">
                         <span class="icon">
                             <ion-icon name="home-outline"></ion-icon>
                         </span>
