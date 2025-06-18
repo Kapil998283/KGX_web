@@ -353,6 +353,99 @@ h2 {
   }
 }
 
+// ... existing code ...
+
+/* ====================== Redemption History ====================== */
+.redemption-history {
+    position: relative;
+    width: 100%;
+    padding: 20px;
+    background: var(--white);
+    box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    margin-top: 30px;
+}
+
+.redemption-history .cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.redemption-history .cardHeader h2 {
+    font-weight: 600;
+    color: var(--blue);
+}
+
+.redemption-history table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.redemption-history table thead td {
+    font-weight: 600;
+    color: var(--black1);
+    padding: 12px 10px;
+    border-bottom: 2px solid var(--blue);
+}
+
+.redemption-history table tr {
+    color: var(--black1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.redemption-history table tr:last-child {
+    border-bottom: none;
+}
+
+.redemption-history table tbody tr:hover {
+    background: var(--blue);
+    color: var(--white);
+}
+
+.redemption-history table tr td {
+    padding: 12px 10px;
+}
+
+.redemption-history .status {
+    padding: 4px 8px;
+    color: var(--white);
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.redemption-history .status.pending {
+    background: #f9ca3f;
+}
+
+.redemption-history .status.completed {
+    background: #8de02c;
+}
+
+.redemption-history .status.rejected {
+    background: #ff0000;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .redemption-history {
+        padding: 15px;
+    }
+    
+    .redemption-history table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+
 
   </style>
 </head>
@@ -424,6 +517,63 @@ h2 {
       document.getElementById("redeemModal").style.display = "none";
     }
   </script>
+
+  <!-- Add this before the closing </div> of your main content -->
+  <div class="redemption-history">
+    <div class="cardHeader">
+        <h2>Redemption History</h2>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <td>Name</td>
+                <td>Price</td>
+                <td>Status</td>
+                <td>Date</td>
+            </tr>
+        </thead>
+        <tbody>
+            <?php 
+            // Fetch redeemed items
+            $redemption_items = [];
+            $sql_redemption = "SELECT ri.name, rh.coins_spent, rh.status, rh.redeemed_at
+                            FROM redemption_history rh
+                            JOIN redeemable_items ri ON rh.item_id = ri.id
+                            WHERE rh.user_id = :user_id
+                            ORDER BY rh.redeemed_at DESC";
+            $stmt_redemption = $conn->prepare($sql_redemption);
+            if ($stmt_redemption) {
+                $stmt_redemption->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+                if (!$stmt_redemption->execute()) {
+                    error_log("Redeem: Error executing redemption statement: " . $stmt_redemption->errorInfo()[2]);
+                } else {
+                    $redemption_items = $stmt_redemption->fetchAll(PDO::FETCH_ASSOC);
+                }
+            } else {
+                error_log("Redeem: Failed to prepare redemption statement: " . $conn->errorInfo()[2]);
+            }
+
+            if (count($redemption_items) > 0):
+                foreach ($redemption_items as $row): 
+            ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($row['name']); ?></td>
+                    <td><?php echo $row['coins_spent']; ?> Coins</td>
+                    <td><span class="status <?php echo strtolower($row['status']); ?>"><?php echo $row['status']; ?></span></td>
+                    <td><?php echo date('M d, Y', strtotime($row['redeemed_at'])); ?></td>
+                </tr>
+            <?php 
+                endforeach; 
+            else:
+            ?>
+                <tr>
+                    <td colspan="4" class="text-center">No redemption history found</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+  </div>
 
 </body>
 </html>

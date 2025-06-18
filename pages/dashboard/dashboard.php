@@ -351,85 +351,143 @@ if ($stmt_redemption) {
                 
             </div>
         </section>
-            <!-- ================ Order Details List ================= -->
+            <!-- ================ Match & Tournament History ================= -->
             <div class="details">
-                <div class="recentOrders">
+                <div class="recentMatches">
                     <div class="cardHeader">
-                        <h2>Recent Orders</h2>
+                        <h2>Recent Matches</h2>
+                        <a href="../matches/my-matches.php" class="btn">View All</a>
                     </div>
 
                     <table>
                         <thead>
                             <tr>
-                                <td>Name</td>
-                                <td>Price</td>
-                                <td>Status</td>
+                                <td>Game</td>
+                                <td>Type</td>
+                                <td>Performance</td>
+                                <td>Rewards</td>
                                 <td>Date</td>
                             </tr>
                         </thead>
                         <tbody>
                             <?php 
-                            if (count($redemption_items) > 0):
-                                foreach ($redemption_items as $row): 
+                            // Get user's recent matches
+                            $match_history_sql = "SELECT 
+                                m.id,
+                                g.name as game_name,
+                                m.match_type,
+                                mp.position,
+                                COALESCE(uk.kills, 0) as kills,
+                                m.completed_at,
+                                m.website_currency_type,
+                                (COALESCE(uk.kills, 0) * m.coins_per_kill) as kill_rewards
+                            FROM matches m
+                            JOIN match_participants mp ON m.id = mp.match_id
+                            JOIN games g ON m.game_id = g.id
+                            LEFT JOIN user_kills uk ON uk.match_id = m.id AND uk.user_id = mp.user_id
+                            WHERE mp.user_id = ? AND m.status = 'completed'
+                            ORDER BY m.completed_at DESC
+                            LIMIT 5";
+                            
+                            $stmt = $conn->prepare($match_history_sql);
+                            $stmt->execute([$user_id]);
+                            $match_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                            if (count($match_history) > 0):
+                                foreach ($match_history as $match): 
+                                    // Get position suffix
+                                    $suffix = 'th';
+                                    if ($match['position'] == 1) $suffix = 'st';
+                                    else if ($match['position'] == 2) $suffix = 'nd';
+                                    else if ($match['position'] == 3) $suffix = 'rd';
                             ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($row['name']); ?></td>
-                                    <td><?php echo $row['coins_spent']; ?> Coins</td>
-                                    <td><span class="status <?php echo strtolower($row['status']); ?>"><?php echo $row['status']; ?></span></td>
-                                    <td><?php echo date('M d, Y', strtotime($row['redeemed_at'])); ?></td>
+                                    <td><?php echo htmlspecialchars($match['game_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($match['match_type']); ?></td>
+                                    <td>
+                                        Position: <?php echo $match['position'] . $suffix; ?><br>
+                                        Kills: <?php echo $match['kills']; ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        if ($match['kill_rewards'] > 0) {
+                                            echo $match['kill_rewards'] . ' Coins';
+                                        } else {
+                                            echo '-';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><?php echo date('M d, Y', strtotime($match['completed_at'])); ?></td>
                                 </tr>
                             <?php 
                                 endforeach; 
                             else:
                             ?>
                                 <tr>
-                                    <td colspan="4" class="text-center">No redemption history found</td>
+                                    <td colspan="5" class="text-center">No match history found</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- ================= New Customers ================ -->
-                <div class="recentCustomers">
+                <!-- ================= Tournament History ================ -->
+                <div class="recentTournaments">
                     <div class="cardHeader">
-                        <h2>Top 10</h2>
+                        <h2>Tournament History</h2>
+                        <a href="../tournaments/my-registrations.php" class="btn">View All</a>
                     </div>
 
                     <table>
-                        <?php
-                        // Get top 8 teams by score
-                        $top_teams_sql = "SELECT t.*, 
-                            (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count
-                            FROM teams t 
-                            WHERE t.is_active = 1
-                            ORDER BY t.total_score DESC 
-                            LIMIT 8";
-                        $stmt = $conn->prepare($top_teams_sql);
-                        $stmt->execute();
-                        $top_teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        <thead>
+                            <tr>
+                                <td>Tournament</td>
+                                <td>Game</td>
+                                <td>Team</td>
+                                <td>Status</td>
+                                <td>Date</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            // Get user's recent tournament participation
+                            $tournament_sql = "SELECT 
+                                t.name as tournament_name,
+                                g.name as game_name,
+                                tm.name as team_name,
+                                tr.status,
+                                tr.registered_at
+                            FROM tournament_registrations tr
+                            JOIN tournaments t ON tr.tournament_id = t.id
+                            JOIN games g ON t.game_id = g.id
+                            LEFT JOIN teams tm ON tr.team_id = tm.id
+                            WHERE tr.user_id = ?
+                            ORDER BY tr.registered_at DESC
+                            LIMIT 5";
+                            
+                            $stmt = $conn->prepare($tournament_sql);
+                            $stmt->execute([$user_id]);
+                            $tournament_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                        foreach ($top_teams as $team):
-                        ?>
-                        <tr>
-                            <td width="60px">
-                                <div class="imgBx">
-                                    <img src="<?php echo htmlspecialchars($team['logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($team['name']); ?>"
-                                         onerror="this.src='/KGX/assets/images/default-team.png'">
-                                </div>
-                            </td>
-                            <td>
-                                <h4><?php echo htmlspecialchars($team['name']); ?> 
-                                    <br> 
-                                    <span>
-                                        Score: <?php echo number_format($team['total_score']); ?> 
-                                        (<?php echo $team['member_count']; ?> members)
-                                    </span>
-                                </h4>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
+                            if (count($tournament_history) > 0):
+                                foreach ($tournament_history as $tournament): 
+                            ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($tournament['tournament_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($tournament['game_name']); ?></td>
+                                    <td><?php echo $tournament['team_name'] ? htmlspecialchars($tournament['team_name']) : 'Solo'; ?></td>
+                                    <td><span class="status <?php echo strtolower($tournament['status']); ?>"><?php echo $tournament['status']; ?></span></td>
+                                    <td><?php echo date('M d, Y', strtotime($tournament['registered_at'])); ?></td>
+                                </tr>
+                            <?php 
+                                endforeach; 
+                            else:
+                            ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">No tournament history found</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
                     </table>
                 </div>
             </div>
