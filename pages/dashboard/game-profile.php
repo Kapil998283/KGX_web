@@ -81,10 +81,6 @@ include '../../includes/header.php';
             <a href="dashboard.php" class="back-btn">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
             </a>
-            <div class="game-selection-title">
-                <h2>Your Game Profiles</h2>
-                <p>Add or update your game profiles - you can add multiple games!</p>
-            </div>
         </div>
 
         <div class="success-message" id="successMessage" style="display: none;">
@@ -95,64 +91,69 @@ include '../../includes/header.php';
             <div class="alert alert-danger"><?php echo $error; ?></div>
         <?php endif; ?>
 
-        <div class="game-cards">
-            <?php
-            $games = [
-                'PUBG' => [
-                    'name' => 'PUBG',
-                    'image' => 'pubg.png',
-                    'username_pattern' => '2-16 characters',
-                    'uid_pattern' => '8-10 digits'
-                ],
-                'BGMI' => [
-                    'name' => 'BGMI',
-                    'image' => 'bgmi.png',
-                    'username_pattern' => '2-16 characters',
-                    'uid_pattern' => '8-10 digits'
-                ],
-                'FREE FIRE' => [
-                    'name' => 'Free Fire',
-                    'image' => 'freefire.png',
-                    'username_pattern' => '1-12 characters',
-                    'uid_pattern' => '7-9 digits'
-                ],
-                'COD' => [
-                    'name' => 'Call of Duty',
-                    'image' => 'cod.png',
-                    'username_pattern' => '3-20 characters',
-                    'uid_pattern' => '6-8 digits'
-                ]
-            ];
+        <div class="container">
+            <h1>YOUR GAME PROFILES</h1>
+            <p class="subtitle">Add or update your game profiles - you can add multiple games!</p>
 
-            foreach ($games as $key => $game): ?>
-                <div class="game-card <?php echo isset($user_games[$key]) ? 'configured' : ''; ?>" 
-                     data-game="<?php echo $key; ?>"
-                     data-username-pattern="<?php echo $game['username_pattern']; ?>"
-                     data-uid-pattern="<?php echo $game['uid_pattern']; ?>">
-                    <div class="game-card-inner">
-                        <div class="game-image">
-                            <img src="../../assets/images/games/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>">
-                        </div>
-                        <h3><?php echo $game['name']; ?></h3>
-                        <div class="game-info">
-                            <div class="info-row">
-                                <span class="info-label">Username:</span>
-                                <p class="game-username"><?php echo isset($user_games[$key]) ? htmlspecialchars($user_games[$key]['game_username']) : '-'; ?></p>
+            <div class="game-cards">
+                <?php
+                $games = [
+                    'PUBG' => [
+                        'name' => 'PUBG',
+                        'image' => 'pubg.png',
+                        'username_pattern' => '2-16 characters',
+                        'uid_pattern' => '8-10 digits'
+                    ],
+                    'BGMI' => [
+                        'name' => 'BGMI',
+                        'image' => 'bgmi.png',
+                        'username_pattern' => '2-16 characters',
+                        'uid_pattern' => '8-10 digits'
+                    ],
+                    'FREE FIRE' => [
+                        'name' => 'Free Fire',
+                        'image' => 'freefire.png',
+                        'username_pattern' => '1-12 characters',
+                        'uid_pattern' => '7-9 digits'
+                    ],
+                    'COD' => [
+                        'name' => 'Call of Duty',
+                        'image' => 'cod.png',
+                        'username_pattern' => '3-20 characters',
+                        'uid_pattern' => '6-8 digits'
+                    ]
+                ];
+
+                foreach ($games as $key => $game): ?>
+                    <div class="game-card <?php echo isset($user_games[$key]) ? 'configured' : ''; ?>" 
+                         data-game="<?php echo $key; ?>"
+                         data-username-pattern="<?php echo $game['username_pattern']; ?>"
+                         data-uid-pattern="<?php echo $game['uid_pattern']; ?>">
+                        <div class="game-card-inner">
+                            <div class="game-image">
+                                <img src="../../assets/images/games/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>">
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">UID:</span>
-                                <p class="game-uid"><?php echo isset($user_games[$key]) ? htmlspecialchars($user_games[$key]['game_uid']) : '-'; ?></p>
+                            <h3><?php echo $game['name']; ?></h3>
+                            <div class="game-info">
+                                <div class="info-row">
+                                    <span class="info-label">Username:</span>
+                                    <p class="game-username"><?php echo isset($user_games[$key]) ? htmlspecialchars($user_games[$key]['game_username']) : '-'; ?></p>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">UID:</span>
+                                    <p class="game-uid"><?php echo isset($user_games[$key]) ? htmlspecialchars($user_games[$key]['game_uid']) : '-'; ?></p>
+                                </div>
+                                <?php if (isset($user_games[$key]) && $user_games[$key]['is_primary']): ?>
+                                    <span class="primary-badge">Main</span>
+                                <?php endif; ?>
                             </div>
-                            <?php if (isset($user_games[$key]) && $user_games[$key]['is_primary']): ?>
-                                <span class="primary-badge">Main</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="game-overlay">
-                            <span class="select-text"><?php echo isset($user_games[$key]) ? 'Update Profile' : 'Add Profile'; ?></span>
+                            <div class="game-overlay">
+                                <span class="select-text"><?php echo isset($user_games[$key]) ? 'Update Profile' : 'Add Profile'; ?></span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            </div>
         </div>
     </div>
 </div>
