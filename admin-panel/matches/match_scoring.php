@@ -498,6 +498,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         SET position = ? 
                                         WHERE match_id = ? AND user_id = ?");
                     $stmt->execute([$position, $match_id, $user_id]);
+
+                    // Get match and player details for notification
+                    $stmt = $db->prepare("
+                        SELECT m.id, m.match_type, g.name as game_name, u.username
+                        FROM matches m
+                        JOIN games g ON m.game_id = g.id
+                        JOIN users u ON u.id = ?
+                        WHERE m.id = ?
+                    ");
+                    $stmt->execute([$user_id, $match_id]);
+                    $matchInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    // Get position suffix
+                    $suffix = 'th';
+                    if ($position == 1) $suffix = 'st';
+                    else if ($position == 2) $suffix = 'nd';
+                    else if ($position == 3) $suffix = 'rd';
+
+                    // Create notification for the player
+                    $notificationMessage = "You secured {$position}{$suffix} position in {$matchInfo['game_name']} {$matchInfo['match_type']} match!";
+                    
+                    // Insert notification
+                    $stmt = $db->prepare("
+                        INSERT INTO notifications (
+                            user_id, 
+                            type, 
+                            message, 
+                            related_id, 
+                            related_type,
+                            created_at
+                        ) VALUES (
+                            ?, 
+                            'position_update', 
+                            ?, 
+                            ?, 
+                            'match',
+                            NOW()
+                        )
+                    ");
+                    $stmt->execute([
+                        $user_id,
+                        $notificationMessage,
+                        $match_id
+                    ]);
                     
                     $db->commit();
                     echo json_encode(['success' => true]);
