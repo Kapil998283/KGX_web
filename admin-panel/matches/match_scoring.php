@@ -298,35 +298,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Create notifications for participating users
                     $notificationMessage = "Match completed! {$matchInfo['winner_name']} won the {$matchInfo['game_name']} {$matchInfo['match_type']} match";
                     
-                    foreach ($users as $userId) {
-                        $stmt = $db->prepare("
-                            INSERT INTO notifications (
-                                user_id, 
-                                type, 
-                                message, 
-                                related_id, 
-                                related_type,
-                                created_at
-                            ) VALUES (
-                                ?, 
-                                'match_completed', 
-                                ?, 
-                                ?, 
-                                'match',
-                                NOW()
-                            )
-                        ");
-                        $stmt->execute([
-                            $userId, 
-                            $notificationMessage, 
-                            $match_id
-                        ]);
+                    foreach ($users as $user_id) {
+                        $stmt = $db->prepare("INSERT INTO notifications (user_id, message, type, match_id) VALUES (?, ?, 'match_completed', ?)");
+                        $stmt->execute([$user_id, $notificationMessage, $match_id]);
                     }
                     
                     $db->commit();
-                    // Redirect back to the game-specific page
-                    $game_page = strtolower($match['game_name']) . ".php";
-                    header("Location: $game_page?completed=1");
+                    header("Location: match_scoring.php?id=" . $match_id . "&success=1");
                     exit;
                 } catch (Exception $e) {
                     $db->rollBack();
@@ -485,31 +463,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->beginTransaction();
                     
                     $user_id = $_POST['user_id'];
-                    $position = $_POST['position'];
+                    $position = intval($_POST['position']);
+                    
+                    // Validate position is positive
+                    if ($position <= 0) {
+                        throw new Exception("Position must be a positive number");
+                    }
                     
                     // Check if this position is already taken by another player
                     $stmt = $db->prepare("SELECT user_id FROM match_participants 
                                         WHERE match_id = ? AND position = ? AND user_id != ?");
                     $stmt->execute([$match_id, $position, $user_id]);
-                    $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if ($existingUser) {
+                    if ($stmt->fetch()) {
                         throw new Exception("Position " . $position . " is already taken by another player. Please choose a different position.");
                     }
                     
-                    // Update position in match_participants
+                    // Update the position
                     $stmt = $db->prepare("UPDATE match_participants 
                                         SET position = ? 
                                         WHERE match_id = ? AND user_id = ?");
                     $stmt->execute([$position, $match_id, $user_id]);
                     
                     $db->commit();
-                    header("Location: match_scoring.php?id=" . $match_id . "&success=Position updated successfully");
+                    echo json_encode(['success' => true]);
                     exit;
                 } catch (Exception $e) {
                     $db->rollBack();
-                    error_log("Error updating position: " . $e->getMessage());
-                    header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
+                    http_response_code(400);
+                    echo json_encode(['error' => $e->getMessage()]);
                     exit;
                 }
                 break;
