@@ -553,6 +553,50 @@ if ($stmt_redemption) {
                         </tbody>
                     </table>
                 </div>
+
+                 <!-- ================= TOP 10 ================ -->
+                 <div class="recentCustomers">
+                    <div class="cardHeader">
+                        <h2>Top 10</h2>
+                    </div>
+
+                    <table>
+                        <?php
+                        // Get top 8 teams by score
+                        $top_teams_sql = "SELECT t.*, 
+                            (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count
+                            FROM teams t 
+                            WHERE t.is_active = 1
+                            ORDER BY t.total_score DESC 
+                            LIMIT 8";
+                        $stmt = $conn->prepare($top_teams_sql);
+                        $stmt->execute();
+                        $top_teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        foreach ($top_teams as $team):
+                        ?>
+                        <tr>
+                            <td width="60px">
+                                <div class="imgBx">
+                                    <img src="<?php echo htmlspecialchars($team['logo']); ?>" 
+                                         alt="<?php echo htmlspecialchars($team['name']); ?>"
+                                         onerror="this.src='/newapp/assets/images/default-team.png'">
+                                </div>
+                            </td>
+                            <td>
+                                <h4><?php echo htmlspecialchars($team['name']); ?> 
+                                    <br> 
+                                    <span>
+                                        Score: <?php echo number_format($team['total_score']); ?> 
+                                        (<?php echo $team['member_count']; ?> members)
+                                    </span>
+                                </h4>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </table>
+                </div>
+
             </div>
         </div>
     </div>
