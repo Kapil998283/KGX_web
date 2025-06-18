@@ -376,246 +376,240 @@ if ($stmt_redemption) {
                 
             </div>
         </section>
-            <!-- ================ Match & Tournament History ================= -->
-            <div class="details">
-                <div class="tabs-container">
-                    <div class="tabs-nav">
-                        <button class="tab-button active" data-tab="top10">Top 10</button>
-                        <button class="tab-button" data-tab="matches">Matches</button>
-                        <button class="tab-button" data-tab="tournaments">Tournaments</button>
+            <!-- ================ Labels & Content Sections ================= -->
+            <div class="labels-container">
+                <div class="labels-nav">
+                    <button class="label-btn active" data-section="top10">Top 10</button>
+                    <button class="label-btn" data-section="matches">Matches</button>
+                    <button class="label-btn" data-section="tournaments">Tournaments</button>
+                </div>
+
+                <!-- Top 10 Section -->
+                <div class="content-section active" id="top10-section">
+                    <div class="section-header">
+                        <h2>Top 10 Teams</h2>
                     </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Score</th>
+                                <th>Members</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // Get top 8 teams by score
+                            $top_teams_sql = "SELECT t.*, 
+                                (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count
+                                FROM teams t 
+                                WHERE t.is_active = 1
+                                ORDER BY t.total_score DESC 
+                                LIMIT 8";
+                            $stmt = $conn->prepare($top_teams_sql);
+                            $stmt->execute();
+                            $top_teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                    <!-- Top 10 Tab -->
-                    <div class="tab-content active" id="top10-tab">
-                        <div class="recentCustomers">
-                            <div class="cardHeader">
-                                <h2>Top 10 Teams</h2>
-                            </div>
-
-                            <table>
-                                <?php
-                                // Get top 8 teams by score
-                                $top_teams_sql = "SELECT t.*, 
-                                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count
-                                    FROM teams t 
-                                    WHERE t.is_active = 1
-                                    ORDER BY t.total_score DESC 
-                                    LIMIT 8";
-                                $stmt = $conn->prepare($top_teams_sql);
-                                $stmt->execute();
-                                $top_teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                                if (count($top_teams) > 0):
-                                    foreach ($top_teams as $team):
-                                ?>
+                            if (count($top_teams) > 0):
+                                foreach ($top_teams as $team):
+                            ?>
                                 <tr>
-                                    <td width="60px">
-                                        <div class="imgBx">
-                                            <img src="<?php echo htmlspecialchars($team['logo']); ?>" 
-                                                 alt="<?php echo htmlspecialchars($team['name']); ?>"
-                                                 onerror="this.src='/KGX/assets/images/default-team.png'">
+                                    <td>
+                                        <div class="team-info">
+                                            <?php if (!empty($team['logo'])): ?>
+                                                <img src="<?php echo htmlspecialchars($team['logo']); ?>" 
+                                                     alt="<?php echo htmlspecialchars($team['name']); ?>"
+                                                     class="team-logo">
+                                            <?php endif; ?>
+                                            <span><?php echo htmlspecialchars($team['name']); ?></span>
                                         </div>
                                     </td>
-                                    <td>
-                                        <h4><?php echo htmlspecialchars($team['name']); ?> 
-                                            <br> 
-                                            <span>
-                                                Score: <?php echo number_format($team['total_score']); ?> 
-                                                (<?php echo $team['member_count']; ?> members)
-                                            </span>
-                                        </h4>
-                                    </td>
+                                    <td><?php echo number_format($team['total_score']); ?></td>
+                                    <td><?php echo $team['member_count']; ?></td>
                                 </tr>
-                                <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="2" class="text-center">No teams found</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </table>
-                        </div>
+                            <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="3" class="text-center">No teams found</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Matches Section -->
+                <div class="content-section" id="matches-section">
+                    <div class="section-header">
+                        <h2>Recent Matches</h2>
+                        <a href="../matches/my-matches.php" class="btn">View All</a>
                     </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Game</th>
+                                <th>Type</th>
+                                <th>Performance</th>
+                                <th>Rewards</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            // Get user's recent matches
+                            $match_history_sql = "SELECT 
+                                m.id,
+                                g.name as game_name,
+                                m.match_type,
+                                mp.position,
+                                COALESCE(uk.kills, 0) as kills,
+                                m.completed_at,
+                                m.website_currency_type,
+                                (COALESCE(uk.kills, 0) * m.coins_per_kill) as kill_rewards
+                            FROM matches m
+                            JOIN match_participants mp ON m.id = mp.match_id
+                            JOIN games g ON m.game_id = g.id
+                            LEFT JOIN user_kills uk ON uk.match_id = m.id AND uk.user_id = mp.user_id
+                            WHERE mp.user_id = ? AND m.status = 'completed'
+                            ORDER BY m.completed_at DESC
+                            LIMIT 5";
+                            
+                            $stmt = $conn->prepare($match_history_sql);
+                            $stmt->execute([$user_id]);
+                            $match_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                    <!-- Matches Tab -->
-                    <div class="tab-content" id="matches-tab">
-                        <div class="recentMatches">
-                            <div class="cardHeader">
-                                <h2>Recent Matches</h2>
-                                <a href="../matches/my-matches.php" class="btn">View All</a>
-                            </div>
+                            if (count($match_history) > 0):
+                                foreach ($match_history as $match): 
+                                    // Get position suffix
+                                    $suffix = 'th';
+                                    if ($match['position'] == 1) $suffix = 'st';
+                                    else if ($match['position'] == 2) $suffix = 'nd';
+                                    else if ($match['position'] == 3) $suffix = 'rd';
+                            ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($match['game_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($match['match_type']); ?></td>
+                                    <td>
+                                        Position: <?php echo $match['position'] . $suffix; ?><br>
+                                        Kills: <?php echo $match['kills']; ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        if ($match['kill_rewards'] > 0) {
+                                            echo $match['kill_rewards'] . ' Coins';
+                                        } else {
+                                            echo '-';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><?php echo date('M d, Y', strtotime($match['completed_at'])); ?></td>
+                                </tr>
+                            <?php 
+                                endforeach; 
+                            else:
+                            ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">No match history found</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
 
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <td>Game</td>
-                                        <td>Type</td>
-                                        <td>Performance</td>
-                                        <td>Rewards</td>
-                                        <td>Date</td>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php 
-                                    // Get user's recent matches
-                                    $match_history_sql = "SELECT 
-                                        m.id,
-                                        g.name as game_name,
-                                        m.match_type,
-                                        mp.position,
-                                        COALESCE(uk.kills, 0) as kills,
-                                        m.completed_at,
-                                        m.website_currency_type,
-                                        (COALESCE(uk.kills, 0) * m.coins_per_kill) as kill_rewards
-                                    FROM matches m
-                                    JOIN match_participants mp ON m.id = mp.match_id
-                                    JOIN games g ON m.game_id = g.id
-                                    LEFT JOIN user_kills uk ON uk.match_id = m.id AND uk.user_id = mp.user_id
-                                    WHERE mp.user_id = ? AND m.status = 'completed'
-                                    ORDER BY m.completed_at DESC
-                                    LIMIT 5";
-                                    
-                                    $stmt = $conn->prepare($match_history_sql);
-                                    $stmt->execute([$user_id]);
-                                    $match_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                                    if (count($match_history) > 0):
-                                        foreach ($match_history as $match): 
-                                            // Get position suffix
-                                            $suffix = 'th';
-                                            if ($match['position'] == 1) $suffix = 'st';
-                                            else if ($match['position'] == 2) $suffix = 'nd';
-                                            else if ($match['position'] == 3) $suffix = 'rd';
-                                    ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($match['game_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($match['match_type']); ?></td>
-                                            <td>
-                                                Position: <?php echo $match['position'] . $suffix; ?><br>
-                                                Kills: <?php echo $match['kills']; ?>
-                                            </td>
-                                            <td>
-                                                <?php 
-                                                if ($match['kill_rewards'] > 0) {
-                                                    echo $match['kill_rewards'] . ' Coins';
-                                                } else {
-                                                    echo '-';
-                                                }
-                                                ?>
-                                            </td>
-                                            <td><?php echo date('M d, Y', strtotime($match['completed_at'])); ?></td>
-                                        </tr>
-                                    <?php 
-                                        endforeach; 
-                                    else:
-                                    ?>
-                                        <tr>
-                                            <td colspan="5" class="text-center">No match history found</td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                <!-- Tournaments Section -->
+                <div class="content-section" id="tournaments-section">
+                    <div class="section-header">
+                        <h2>Tournament History</h2>
+                        <a href="../tournaments/my-registrations.php" class="btn">View All</a>
                     </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tournament</th>
+                                <th>Game</th>
+                                <th>Team</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            // Get user's recent tournament participation
+                            $tournament_sql = "SELECT 
+                                t.name as tournament_name,
+                                t.game_name,
+                                tm.name as team_name,
+                                tph.status,
+                                tph.registration_date,
+                                tph.rounds_played,
+                                tph.total_kills,
+                                tph.total_points,
+                                tph.best_placement,
+                                tph.final_position,
+                                tph.prize_amount,
+                                tph.prize_currency,
+                                tph.website_currency_earned,
+                                tph.website_currency_type
+                            FROM tournament_player_history tph
+                            JOIN tournaments t ON tph.tournament_id = t.id
+                            JOIN teams tm ON tph.team_id = tm.id
+                            WHERE tph.user_id = ?
+                            ORDER BY tph.registration_date DESC
+                            LIMIT 5";
+                            
+                            $stmt = $conn->prepare($tournament_sql);
+                            $stmt->execute([$user_id]);
+                            $tournament_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                    <!-- Tournaments Tab -->
-                    <div class="tab-content" id="tournaments-tab">
-                        <div class="recentTournaments">
-                            <div class="cardHeader">
-                                <h2>Tournament History</h2>
-                                <a href="../tournaments/my-registrations.php" class="btn">View All</a>
-                            </div>
-
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <td>Tournament</td>
-                                        <td>Game</td>
-                                        <td>Team</td>
-                                        <td>Status</td>
-                                        <td>Date</td>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php 
-                                    // Get user's recent tournament participation
-                                    $tournament_sql = "SELECT 
-                                        t.name as tournament_name,
-                                        t.game_name,
-                                        tm.name as team_name,
-                                        tph.status,
-                                        tph.registration_date,
-                                        tph.rounds_played,
-                                        tph.total_kills,
-                                        tph.total_points,
-                                        tph.best_placement,
-                                        tph.final_position,
-                                        tph.prize_amount,
-                                        tph.prize_currency,
-                                        tph.website_currency_earned,
-                                        tph.website_currency_type
-                                    FROM tournament_player_history tph
-                                    JOIN tournaments t ON tph.tournament_id = t.id
-                                    JOIN teams tm ON tph.team_id = tm.id
-                                    WHERE tph.user_id = ?
-                                    ORDER BY tph.registration_date DESC
-                                    LIMIT 5";
-                                    
-                                    $stmt = $conn->prepare($tournament_sql);
-                                    $stmt->execute([$user_id]);
-                                    $tournament_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                                    if (count($tournament_history) > 0):
-                                        foreach ($tournament_history as $tournament): 
-                                            // Get performance details
-                                            $performance = [];
-                                            if ($tournament['rounds_played'] > 0) {
-                                                $performance[] = $tournament['rounds_played'] . ' rounds played';
-                                            }
-                                            if ($tournament['total_kills'] > 0) {
-                                                $performance[] = $tournament['total_kills'] . ' kills';
-                                            }
-                                            if ($tournament['total_points'] > 0) {
-                                                $performance[] = $tournament['total_points'] . ' points';
-                                            }
-                                            if ($tournament['best_placement']) {
-                                                $performance[] = 'Best: ' . $tournament['best_placement'] . getPositionSuffix($tournament['best_placement']);
-                                            }
-                                            if ($tournament['final_position'] && $tournament['status'] === 'completed') {
-                                                $performance[] = 'Final: ' . $tournament['final_position'] . getPositionSuffix($tournament['final_position']);
-                                            }
-                                            if ($tournament['prize_amount'] > 0) {
-                                                $performance[] = 'Prize: ' . $tournament['prize_currency'] . ' ' . number_format($tournament['prize_amount'], 2);
-                                            }
-                                            if ($tournament['website_currency_earned'] > 0) {
-                                                $performance[] = 'Earned: ' . $tournament['website_currency_earned'] . ' ' . $tournament['website_currency_type'];
-                                            }
-                                    ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($tournament['tournament_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($tournament['game_name']); ?></td>
-                                            <td>
-                                                <?php 
-                                                echo htmlspecialchars($tournament['team_name']);
-                                                if (!empty($performance)) {
-                                                    echo '<br><small class="text-muted">' . implode(', ', $performance) . '</small>';
-                                                }
-                                                ?>
-                                            </td>
-                                            <td><span class="status <?php echo strtolower($tournament['status']); ?>"><?php echo ucfirst($tournament['status']); ?></span></td>
-                                            <td><?php echo date('M d, Y', strtotime($tournament['registration_date'])); ?></td>
-                                        </tr>
-                                    <?php 
-                                        endforeach; 
-                                    else:
-                                    ?>
-                                        <tr>
-                                            <td colspan="5" class="text-center">No tournament history found</td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                            if (count($tournament_history) > 0):
+                                foreach ($tournament_history as $tournament): 
+                                    // Get performance details
+                                    $performance = [];
+                                    if ($tournament['rounds_played'] > 0) {
+                                        $performance[] = $tournament['rounds_played'] . ' rounds played';
+                                    }
+                                    if ($tournament['total_kills'] > 0) {
+                                        $performance[] = $tournament['total_kills'] . ' kills';
+                                    }
+                                    if ($tournament['total_points'] > 0) {
+                                        $performance[] = $tournament['total_points'] . ' points';
+                                    }
+                                    if ($tournament['best_placement']) {
+                                        $performance[] = 'Best: ' . $tournament['best_placement'] . getPositionSuffix($tournament['best_placement']);
+                                    }
+                                    if ($tournament['final_position'] && $tournament['status'] === 'completed') {
+                                        $performance[] = 'Final: ' . $tournament['final_position'] . getPositionSuffix($tournament['final_position']);
+                                    }
+                                    if ($tournament['prize_amount'] > 0) {
+                                        $performance[] = 'Prize: ' . $tournament['prize_currency'] . ' ' . number_format($tournament['prize_amount'], 2);
+                                    }
+                                    if ($tournament['website_currency_earned'] > 0) {
+                                        $performance[] = 'Earned: ' . $tournament['website_currency_earned'] . ' ' . $tournament['website_currency_type'];
+                                    }
+                            ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($tournament['tournament_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($tournament['game_name']); ?></td>
+                                    <td>
+                                        <?php 
+                                        echo htmlspecialchars($tournament['team_name']);
+                                        if (!empty($performance)) {
+                                            echo '<br><small class="text-muted">' . implode(', ', $performance) . '</small>';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><span class="status <?php echo strtolower($tournament['status']); ?>"><?php echo ucfirst($tournament['status']); ?></span></td>
+                                    <td><?php echo date('M d, Y', strtotime($tournament['registration_date'])); ?></td>
+                                </tr>
+                            <?php 
+                                endforeach; 
+                            else:
+                            ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">No tournament history found</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -628,24 +622,21 @@ if ($stmt_redemption) {
     <!-- Dashboard JavaScript -->
     <script src="dashboard.js"></script>
 
-    <!-- Tabs JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
+            const labelBtns = document.querySelectorAll('.label-btn');
+            const contentSections = document.querySelectorAll('.content-section');
 
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Remove active class from all buttons and contents
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
+            labelBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons and sections
+                    labelBtns.forEach(b => b.classList.remove('active'));
+                    contentSections.forEach(s => s.classList.remove('active'));
 
-                    // Add active class to clicked button
-                    button.classList.add('active');
-
-                    // Show corresponding content
-                    const tabId = button.getAttribute('data-tab');
-                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                    // Add active class to clicked button and corresponding section
+                    btn.classList.add('active');
+                    const sectionId = btn.getAttribute('data-section') + '-section';
+                    document.getElementById(sectionId).classList.add('active');
                 });
             });
         });
