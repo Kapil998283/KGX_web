@@ -67,8 +67,7 @@ include '../../includes/header.php';
     <div class="game-profile-container">
         <div class="page-header">
             <a href="dashboard.php" class="back-btn">
-                <span class="back-icon">←</span>
-                <span>Back to Dashboard</span>
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
             </a>
             <div class="game-selection-title">
                 <h2>Your Game Profiles</h2>
@@ -76,9 +75,9 @@ include '../../includes/header.php';
             </div>
         </div>
 
-        <?php if (isset($_GET['success'])): ?>
-            <div class="alert alert-success">Game profile saved successfully!</div>
-        <?php endif; ?>
+        <div class="success-message" id="successMessage" style="display: none;">
+            Game profile saved successfully!
+        </div>
 
         <?php if (isset($error)): ?>
             <div class="alert alert-danger"><?php echo $error; ?></div>
@@ -309,8 +308,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Form validation before submit
+    // Character count update function
+    function updateCharCount(input, countSpan, maxSpan) {
+        const currentLength = input.value.length;
+        const maxLength = input.getAttribute('maxlength');
+        countSpan.textContent = currentLength;
+        maxSpan.textContent = maxLength;
+    }
+
+    // Success message handling
+    function showSuccessMessage() {
+        const successMessage = document.getElementById('successMessage');
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+            successMessage.style.opacity = '0';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+                successMessage.style.opacity = '1';
+            }, 300);
+        }, 3000);
+    }
+
+    // Handle form submission
     form.addEventListener('submit', function(e) {
+        e.preventDefault();
         const game = selectedGameInput.value;
         const uid = gameUidInput.value;
         const username = gameUsernameInput.value;
@@ -352,10 +373,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (!isValid) {
-            e.preventDefault();
             alert(errorMessage);
+        } else {
+            const formData = new FormData(form);
+            formData.append('game_name', game);
+            formData.append('game_username', username);
+            formData.append('game_uid', uid);
+            formData.append('is_primary', isPrimaryCheckbox.checked ? '1' : '0');
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessMessage();
+                    modal.classList.remove('active');
+                    // Reload the page after a short delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                } else {
+                    alert(data.message || 'An error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
         }
     });
+
+    // Update character count on input
+    usernameInput.addEventListener('input', () => updateCharCount(usernameInput, usernameCount, usernameMax));
+    uidInput.addEventListener('input', () => updateCharCount(uidInput, uidCount, uidMax));
+
+    // Initial character count update
+    updateCharCount(usernameInput, usernameCount, usernameMax);
+    updateCharCount(uidInput, uidCount, uidMax);
 });
 </script>
 
