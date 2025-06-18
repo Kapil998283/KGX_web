@@ -268,15 +268,65 @@ body {
   grid-gap: 30px;
 }
 
+/* Tabs Container */
+.tabs-container {
+  position: relative;
+  width: 100%;
+  background: var(--white);
+  padding: 20px;
+  box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+}
+
+/* Tabs Navigation */
+.tabs-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--gray);
+  padding-bottom: 10px;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background: var(--white);
+  border: 2px solid var(--blue);
+  border-radius: 20px;
+  color: var(--blue);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.tab-button.active {
+  background: var(--blue);
+  color: var(--white);
+}
+
+/* Tab Content */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
 .details .recentMatches,
-.details .recentTournaments {
+.details .recentTournaments,
+.details .recentCustomers {
   position: relative;
   display: grid;
   min-height: 500px;
   background: var(--white);
   padding: 20px;
-  box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
-  border-radius: 20px;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .details .cardHeader {
