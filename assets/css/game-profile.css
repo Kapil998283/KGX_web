@@ -767,12 +767,21 @@
 }
 
 .success-message {
+    display: none;
     background: rgba(16, 185, 129, 0.1);
     color: #10b981;
     border: 1px solid rgba(16, 185, 129, 0.2);
     padding: 1rem;
     border-radius: 8px;
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin: 1rem auto;
+    max-width: 600px;
+    opacity: 0;
     transition: opacity 0.3s ease;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 } 

@@ -17,45 +17,57 @@ foreach ($game_profiles as $profile) {
     $user_games[$profile['game_name']] = $profile;
 }
 
-// Handle form submission
+// Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $game_name = $_POST['game_name'];
-    $game_username = $_POST['game_username'];
-    $game_uid = $_POST['game_uid'];
-    $is_primary = isset($_POST['is_primary']) ? 1 : 0;
+    $response = ['success' => false, 'message' => ''];
     
     try {
+        $game = $_POST['game_name'];
+        $username = $_POST['game_username'];
+        $uid = $_POST['game_uid'];
+        $is_primary = isset($_POST['is_primary']) ? 1 : 0;
+        
+        // Validate input
+        if (empty($game) || empty($username) || empty($uid)) {
+            throw new Exception('All fields are required');
+        }
+        
         // Begin transaction
         $db->beginTransaction();
         
         // If this game is set as primary, unset other primary games
         if ($is_primary) {
-            $stmt = $db->prepare("UPDATE user_game SET is_primary = 0 WHERE user_id = ?");
-            $stmt->execute([$_SESSION['user_id']]);
+            $stmt = $db->prepare("UPDATE user_game SET is_primary = 0 WHERE user_id = ? AND game_name != ?");
+            $stmt->execute([$_SESSION['user_id'], $game]);
         }
         
         // Check if profile for this game already exists
         $stmt = $db->prepare("SELECT id FROM user_game WHERE user_id = ? AND game_name = ?");
-        $stmt->execute([$_SESSION['user_id'], $game_name]);
+        $stmt->execute([$_SESSION['user_id'], $game]);
         $existing = $stmt->fetch();
         
         if ($existing) {
             // Update existing profile
             $stmt = $db->prepare("UPDATE user_game SET game_username = ?, game_uid = ?, is_primary = ? WHERE id = ?");
-            $stmt->execute([$game_username, $game_uid, $is_primary, $existing['id']]);
+            $stmt->execute([$username, $uid, $is_primary, $existing['id']]);
         } else {
             // Insert new profile
             $stmt = $db->prepare("INSERT INTO user_game (user_id, game_name, game_username, game_uid, is_primary) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $game_name, $game_username, $game_uid, $is_primary]);
+            $stmt->execute([$_SESSION['user_id'], $game, $username, $uid, $is_primary]);
         }
         
         $db->commit();
-        header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
-        exit;
+        $response['success'] = true;
+        $response['message'] = 'Game profile saved successfully!';
     } catch (Exception $e) {
         $db->rollBack();
-        $error = "Error saving game profile: " . $e->getMessage();
+        $response['message'] = $e->getMessage();
     }
+    
+    // Return JSON response
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit;
 }
 
 include '../../includes/header.php';
@@ -320,89 +332,50 @@ document.addEventListener('DOMContentLoaded', function() {
     function showSuccessMessage() {
         const successMessage = document.getElementById('successMessage');
         successMessage.style.display = 'block';
+        successMessage.style.opacity = '1';
+        
+        // Hide after 3 seconds
         setTimeout(() => {
             successMessage.style.opacity = '0';
             setTimeout(() => {
                 successMessage.style.display = 'none';
-                successMessage.style.opacity = '1';
-            }, 300);
+            }, 300); // Wait for fade out animation
         }, 3000);
     }
 
     // Handle form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        const game = selectedGameInput.value;
-        const uid = gameUidInput.value;
-        const username = gameUsernameInput.value;
-        let isValid = true;
-        let errorMessage = '';
-
-        switch(game) {
-            case 'PUBG':
-            case 'BGMI':
-                if (uid.length < 8 || uid.length > 10) {
-                    errorMessage = 'BGMI/PUBG UID must be between 8 and 10 digits';
-                    isValid = false;
-                }
-                if (username.length < 2 || username.length > 16) {
-                    errorMessage = 'BGMI/PUBG username must be between 2 and 16 characters';
-                    isValid = false;
-                }
-                break;
-            case 'FREE FIRE':
-                if (uid.length < 7 || uid.length > 9) {
-                    errorMessage = 'Free Fire UID must be between 7 and 9 digits';
-                    isValid = false;
-                }
-                if (username.length < 1 || username.length > 12) {
-                    errorMessage = 'Free Fire username must be between 1 and 12 characters';
-                    isValid = false;
-                }
-                break;
-            case 'COD':
-                if (uid.length < 6 || uid.length > 8) {
-                    errorMessage = 'COD UID must be between 6 and 8 digits';
-                    isValid = false;
-                }
-                if (username.length < 3 || username.length > 20) {
-                    errorMessage = 'COD username must be between 3 and 20 characters';
-                    isValid = false;
-                }
-                break;
-        }
-
-        if (!isValid) {
-            alert(errorMessage);
-        } else {
-            const formData = new FormData(form);
-            formData.append('game_name', game);
-            formData.append('game_username', username);
-            formData.append('game_uid', uid);
-            formData.append('is_primary', isPrimaryCheckbox.checked ? '1' : '0');
-
-            fetch(form.action, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showSuccessMessage();
-                    modal.classList.remove('active');
-                    // Reload the page after a short delay
-                    setTimeout(() => {
-                        location.reload();
-                    }, 500);
-                } else {
-                    alert(data.message || 'An error occurred');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred');
-            });
-        }
+        
+        // Get form data
+        const formData = new FormData(this);
+        
+        // Add game name and is_primary
+        formData.append('game_name', selectedGameInput.value);
+        formData.append('is_primary', isPrimaryCheckbox.checked ? '1' : '0');
+        
+        // Send AJAX request
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessMessage();
+                modal.classList.remove('active');
+                // Reload the page after a short delay
+                setTimeout(() => {
+                    location.reload();
+                }, 3500); // Wait for success message to fade
+            } else {
+                alert(data.message || 'An error occurred');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while saving the game profile');
+        });
     });
 
     // Update character count on input
