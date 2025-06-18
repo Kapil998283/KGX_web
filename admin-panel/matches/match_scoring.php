@@ -72,7 +72,28 @@ function distributePrize($db, $match_id, $winner_id, $match) {
             return;
         }
 
-        // Handle website currency distribution
+        // First, award kill rewards to all participants
+        if ($match['coins_per_kill'] > 0) {
+            foreach ($participants as $participant) {
+                if ($participant['kills'] > 0) {
+                    $kill_coins = $participant['kills'] * $match['coins_per_kill'];
+                    try {
+                        $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
+                                            VALUES (?, ?) 
+                                            ON DUPLICATE KEY UPDATE coins = coins + ?");
+                        $stmt->execute([$participant['user_id'], $kill_coins, $kill_coins]);
+                        
+                        // Log the kill rewards
+                        error_log("Awarded {$kill_coins} coins to user {$participant['user_id']} for {$participant['kills']} kills");
+                    } catch (Exception $e) {
+                        error_log("Error awarding kill coins: " . $e->getMessage());
+                        throw $e;
+                    }
+                }
+            }
+        }
+
+        // Then distribute position-based website currency prizes
         if ($match['website_currency_type'] && $match['website_currency_amount'] > 0) {
             $total_prize = $match['website_currency_amount'];
             $currency_type = $match['website_currency_type'];
@@ -91,23 +112,7 @@ function distributePrize($db, $match_id, $winner_id, $match) {
                     break;
             }
 
-            // First, award kill coins to all participants
-            foreach ($participants as $participant) {
-                if ($match['coins_per_kill'] > 0 && $participant['kills'] > 0) {
-                    $kill_coins = $participant['kills'] * $match['coins_per_kill'];
-                    try {
-                        $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
-                                            VALUES (?, ?) 
-                                            ON DUPLICATE KEY UPDATE coins = coins + ?");
-                        $stmt->execute([$participant['user_id'], $kill_coins, $kill_coins]);
-                    } catch (Exception $e) {
-                        error_log("Error awarding kill coins: " . $e->getMessage());
-                        throw $e;
-                    }
-                }
-            }
-
-            // Then distribute position-based prizes
+            // Distribute position-based prizes
             foreach ($participants as $index => $participant) {
                 if ($index >= count($distribution_percentages)) break;
                 
@@ -119,18 +124,15 @@ function distributePrize($db, $match_id, $winner_id, $match) {
                         $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
                                             VALUES (?, ?) 
                                             ON DUPLICATE KEY UPDATE coins = coins + ?");
-                    } else {
+                    } else { // tickets
                         $stmt = $db->prepare("INSERT INTO user_tickets (user_id, tickets) 
                                             VALUES (?, ?) 
                                             ON DUPLICATE KEY UPDATE tickets = tickets + ?");
                     }
                     $stmt->execute([$participant['user_id'], $prize_amount, $prize_amount]);
-
-                    // Update participant position if not already set
-                    $stmt = $db->prepare("UPDATE match_participants 
-                                        SET position = ? 
-                                        WHERE match_id = ? AND user_id = ? AND position IS NULL");
-                    $stmt->execute([$index + 1, $match_id, $participant['user_id']]);
+                    
+                    // Log the prize distribution
+                    error_log("Awarded {$prize_amount} {$currency_type} to user {$participant['user_id']} for position " . ($index + 1));
                 } catch (Exception $e) {
                     error_log("Error distributing website currency: " . $e->getMessage());
                     throw $e;
@@ -364,39 +366,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         WHERE id = ?");
                     $stmt->execute([$firstPlace['user_id'], $match_id]);
                     
-                    // Distribute prizes based on positions
-                    $stmt = $db->prepare("SELECT mp.user_id, mp.team_id, mp.position, COALESCE(uk.kills, 0) as kills 
-                                         FROM match_participants mp 
-                                         LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id 
-                                         WHERE mp.match_id = ? AND mp.position IS NOT NULL 
-                                         ORDER BY mp.position ASC");
-                    $stmt->execute([$match_id]);
-                    $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    
-                    // Distribute coins for kills and positions
-                    foreach ($winners as $winner) {
-                        // Calculate position-based prize
-                        $prizePercentage = 0;
-                        switch ($winner['position']) {
-                            case 1: $prizePercentage = 0.5; break; // 50%
-                            case 2: $prizePercentage = 0.3; break; // 30%
-                            case 3: $prizePercentage = 0.2; break; // 20%
-                            default: $prizePercentage = 0; break;
-                        }
-                        
-                        $positionPrize = floor($match['prize_pool'] * $prizePercentage);
-                        $killsPrize = $winner['kills'] * $match['coins_per_kill'];
-                        $totalPrize = $positionPrize + $killsPrize;
-                        
-                        if ($totalPrize > 0) {
-                            $stmt = $db->prepare("INSERT INTO user_coins (user_id, coins) 
-                                                VALUES (?, ?) 
-                                                ON DUPLICATE KEY UPDATE coins = coins + ?");
-                            $stmt->execute([$winner['user_id'], $totalPrize, $totalPrize]);
-                        }
-                    }
+                    // Distribute prizes
+                    distributePrize($db, $match_id, $firstPlace['user_id'], $match);
                     
                     $db->commit();
+                    
+                    // Get match and winner details for notification
+                    $stmt = $db->prepare("
+                        SELECT m.id, m.match_type, g.name as game_name, u.username as winner_name
+                        FROM matches m
+                        JOIN games g ON m.game_id = g.id
+                        JOIN users u ON u.id = ?
+                        WHERE m.id = ?
+                    ");
+                    $stmt->execute([$firstPlace['user_id'], $match_id]);
+                    $matchInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    // Get all users participating in this match
+                    $stmt = $db->prepare("
+                        SELECT DISTINCT u.id
+                        FROM users u
+                        JOIN match_participants mp ON u.id = mp.user_id
+                        WHERE mp.match_id = ?
+                    ");
+                    $stmt->execute([$match_id]);
+                    $users = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    // Create notifications for participating users
+                    $notificationMessage = "Match completed! {$matchInfo['winner_name']} won the {$matchInfo['game_name']} {$matchInfo['match_type']} match";
+                    
+                    foreach ($users as $user_id) {
+                        $stmt = $db->prepare("INSERT INTO notifications (user_id, message, type, match_id) VALUES (?, ?, 'match_completed', ?)");
+                        $stmt->execute([$user_id, $notificationMessage, $match_id]);
+                    }
+                    
                     // Redirect back to the game-specific page
                     $game_page = strtolower($match['game_name']) . ".php";
                     header("Location: $game_page?completed=1");

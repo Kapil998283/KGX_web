@@ -46,31 +46,25 @@ $stmt = $db->prepare("SELECT
                         u.email, 
                         u.phone,
                         COALESCE(uk.kills, 0) as total_kills,
+                        mp.position as winner_position,
                         CASE 
                             WHEN m.winner_user_id = mp.user_id THEN 1
                             WHEN m.winner_id = mp.team_id THEN 1
                             ELSE 0
-                        END as is_winner,
-                        CASE
-                            WHEN mr.position IS NOT NULL THEN mr.position
-                            ELSE 999999 -- Large number to push NULL positions to the end
-                        END as winner_position
+                        END as is_winner
                      FROM match_participants mp
                      JOIN users u ON mp.user_id = u.id
                      JOIN matches m ON m.id = mp.match_id
                      LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id
-                     LEFT JOIN (
-                        SELECT 
-                            match_id,
-                            user_id,
-                            @row_number:=@row_number + 1 as position
-                        FROM user_kills, (SELECT @row_number:=0) as r
-                        WHERE match_id = ?
-                        ORDER BY kills DESC
-                     ) mr ON mr.match_id = mp.match_id AND mr.user_id = mp.user_id
                      WHERE mp.match_id = ?
-                     ORDER BY winner_position ASC, uk.kills DESC, u.username ASC");
-$stmt->execute([$match_id, $match_id]);
+                     ORDER BY 
+                        CASE 
+                            WHEN mp.position IS NULL THEN 999999
+                            ELSE mp.position 
+                        END ASC,
+                        uk.kills DESC, 
+                        u.username ASC");
+$stmt->execute([$match_id]);
 $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get the number of winners based on prize distribution
@@ -79,6 +73,30 @@ if ($match['prize_distribution'] === 'top3') {
     $numWinners = 3;
 } else if ($match['prize_distribution'] === 'top5') {
     $numWinners = 5;
+}
+
+// Calculate prize amounts for each position
+$prizeAmounts = [];
+if ($match['prize_distribution']) {
+    $percentages = [];
+    switch($match['prize_distribution']) {
+        case 'top3':
+            $percentages = [60, 30, 10];
+            break;
+        case 'top5':
+            $percentages = [50, 25, 15, 7, 3];
+            break;
+        default:
+            $percentages = [100];
+    }
+
+    foreach ($percentages as $index => $percentage) {
+        if ($match['website_currency_type']) {
+            $prizeAmounts[$index + 1] = floor($match['website_currency_amount'] * $percentage / 100);
+        } else {
+            $prizeAmounts[$index + 1] = round($match['prize_pool'] * $percentage / 100, 2);
+        }
+    }
 }
 
 ?>
@@ -123,33 +141,12 @@ if ($match['prize_distribution'] === 'top3') {
                                         <div class="prize-distribution">
                                             <p class="text-muted mb-1">Prize Distribution:</p>
                                             <?php
-                                                $percentages = [];
-                                                switch($match['prize_distribution']) {
-                                                    case 'top3':
-                                                        $percentages = [60, 30, 10];
-                                                        break;
-                                                    case 'top5':
-                                                        $percentages = [50, 25, 15, 7, 3];
-                                                        break;
-                                                    default:
-                                                        $percentages = [100];
-                                                }
-
-                                                foreach ($percentages as $index => $percentage) {
-                                                    $position = $index + 1;
-                                                    $amount = $match['website_currency_type'] 
-                                                        ? floor($match['website_currency_amount'] * $percentage / 100)
-                                                        : round($match['prize_pool'] * $percentage / 100, 2);
-                                                    
+                                                foreach ($prizeAmounts as $position => $amount) {
                                                     $currency = $match['website_currency_type'] 
                                                         ? ucfirst($match['website_currency_type'])
                                                         : ($match['prize_type'] === 'USD' ? '$' : '₹');
                                                     
-                                                    if ($match['website_currency_type']) {
-                                                        echo "<p class='mb-0'>{$position}st Place: " . number_format($amount) . " {$currency}</p>";
-                                                    } else {
-                                                        echo "<p class='mb-0'>{$position}st Place: {$currency}" . number_format($amount, 2) . "</p>";
-                                                    }
+                                                    echo "<p class='mb-0'>{$position}st Place: " . number_format($amount) . " {$currency}</p>";
                                                 }
                                             ?>
                                         </div>
@@ -182,8 +179,10 @@ if ($match['prize_distribution'] === 'top3') {
                                 <?php foreach ($participants as $index => $participant): 
                                     $trophyColor = '';
                                     $trophyTitle = '';
-                                    if ($match['status'] === 'completed' && $participant['winner_position'] <= $numWinners) {
-                                        switch($participant['winner_position']) {
+                                    $position = $participant['winner_position'];
+                                    
+                                    if ($match['status'] === 'completed' && $position && $position <= $numWinners) {
+                                        switch($position) {
                                             case 1:
                                                 $trophyColor = 'gold';
                                                 $trophyTitle = '1st Place';
@@ -198,15 +197,15 @@ if ($match['prize_distribution'] === 'top3') {
                                                 break;
                                             default:
                                                 $trophyColor = '#2196F3';
-                                                $trophyTitle = $participant['winner_position'] . 'th Place';
+                                                $trophyTitle = $position . 'th Place';
                                         }
                                     }
                                 ?>
-                                <tr <?= $participant['winner_position'] <= $numWinners ? 'class="table-success"' : '' ?>>
+                                <tr <?= $position && $position <= $numWinners ? 'class="table-success"' : '' ?>>
                                     <td><?= $index + 1 ?></td>
                                     <td>
                                         <?= htmlspecialchars($participant['username']) ?>
-                                        <?php if ($match['status'] === 'completed' && $participant['winner_position'] <= $numWinners): ?>
+                                        <?php if ($match['status'] === 'completed' && $position && $position <= $numWinners): ?>
                                             <i class="bi bi-trophy-fill" style="color: <?= $trophyColor ?>;" title="<?= $trophyTitle ?>"></i>
                                         <?php endif; ?>
                                     </td>
@@ -215,10 +214,32 @@ if ($match['prize_distribution'] === 'top3') {
                                         <small class="text-muted"><?= htmlspecialchars($participant['phone']) ?></small>
                                     </td>
                                     <td><?= $participant['total_kills'] ?></td>
-                                    <td><?= $participant['total_kills'] * $match['coins_per_kill'] ?></td>
                                     <td>
-                                        <?php if ($match['status'] === 'completed' && $participant['winner_position'] <= $numWinners): ?>
-                                            <span class="badge bg-success"><?= $participant['winner_position'] ?></span>
+                                        <?php 
+                                            $killCoins = $participant['total_kills'] * $match['coins_per_kill'];
+                                            $positionPrize = isset($prizeAmounts[$position]) ? $prizeAmounts[$position] : 0;
+                                            $totalEarned = $killCoins + $positionPrize;
+                                            
+                                            if ($totalEarned > 0):
+                                        ?>
+                                            <div>
+                                                <?php if ($killCoins > 0): ?>
+                                                    <small class="text-muted">Kills: <?= number_format($killCoins) ?></small><br>
+                                                <?php endif; ?>
+                                                <?php if ($positionPrize > 0): ?>
+                                                    <small class="text-muted">Position: <?= number_format($positionPrize) ?></small><br>
+                                                <?php endif; ?>
+                                                <strong>Total: <?= number_format($totalEarned) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></strong>
+                                            </div>
+                                        <?php else: ?>
+                                            0
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($position): ?>
+                                            <span class="badge bg-<?= $position <= $numWinners ? 'success' : 'secondary' ?>">
+                                                <?= $position ?><?= getOrdinalSuffix($position) ?> Place
+                                            </span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -274,4 +295,18 @@ if ($match['prize_distribution'] === 'top3') {
 }
 </style>
 
-<?php include '../includes/admin-footer.php'; ?> 
+<?php include '../includes/admin-footer.php'; ?>
+
+<?php
+// Add this helper function at the bottom of the file
+function getOrdinalSuffix($number) {
+    if (!in_array(($number % 100), array(11,12,13))) {
+        switch ($number % 10) {
+            case 1:  return 'st';
+            case 2:  return 'nd';
+            case 3:  return 'rd';
+        }
+    }
+    return 'th';
+}
+?> 
