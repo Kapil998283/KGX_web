@@ -7,7 +7,7 @@ $database = new Database();
 $db = $database->connect();
 
 // Get all user's game profiles
-$stmt = $db->prepare("SELECT * FROM user_game WHERE user_id = ?");
+$stmt = $db->prepare("SELECT id, user_id, game_name, game_username, game_uid, COALESCE(is_primary, 0) as is_primary FROM user_game WHERE user_id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $game_profiles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (gameProfiles[game]) {
                 gameUsernameInput.value = gameProfiles[game].game_username;
                 gameUidInput.value = gameProfiles[game].game_uid;
-                isPrimaryCheckbox.checked = gameProfiles[game].is_primary === "1";
+                isPrimaryCheckbox.checked = parseInt(gameProfiles[game].is_primary) === 1;
                 submitText.textContent = 'Update Game Profile';
                 usernameCount.textContent = gameProfiles[game].game_username.length;
                 uidCount.textContent = gameProfiles[game].game_uid.length;
