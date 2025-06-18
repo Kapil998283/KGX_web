@@ -223,6 +223,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Award prizes based on distribution type
                     distributePrize($db, $match_id, $winner_id, $match);
                     
+                    // Get match and winner details for notification
+                    $stmt = $db->prepare("
+                        SELECT m.id, m.match_type, g.name as game_name, u.username as winner_name
+                        FROM matches m
+                        JOIN games g ON m.game_id = g.id
+                        JOIN users u ON u.id = ?
+                        WHERE m.id = ?
+                    ");
+                    $stmt->execute([$winner_id, $match_id]);
+                    $matchInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    // Get all users participating in this match
+                    $stmt = $db->prepare("
+                        SELECT DISTINCT u.id
+                        FROM users u
+                        JOIN match_participants mp ON u.id = mp.user_id
+                        WHERE mp.match_id = ?
+                    ");
+                    $stmt->execute([$match_id]);
+                    $users = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    // Create notifications for participating users
+                    $notificationMessage = "Match completed! {$matchInfo['winner_name']} won the {$matchInfo['game_name']} {$matchInfo['match_type']} match";
+                    
+                    foreach ($users as $userId) {
+                        $stmt = $db->prepare("
+                            INSERT INTO notifications (
+                                user_id, 
+                                type, 
+                                message, 
+                                related_id, 
+                                related_type,
+                                created_at
+                            ) VALUES (
+                                ?, 
+                                'match_completed', 
+                                ?, 
+                                ?, 
+                                'match',
+                                NOW()
+                            )
+                        ");
+                        $stmt->execute([
+                            $userId, 
+                            $notificationMessage, 
+                            $match_id
+                        ]);
+                    }
+                    
                     $db->commit();
                     // Redirect back to the game-specific page
                     $game_page = strtolower($match['game_name']) . ".php";

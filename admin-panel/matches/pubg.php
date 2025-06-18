@@ -127,6 +127,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $db->prepare("UPDATE matches SET status = 'in_progress', started_at = NOW(), room_code = ?, room_password = ?, room_details_added_at = NOW() WHERE id = ?");
                     $stmt->execute([$room_code, $room_password, $match_id]);
                     
+                    // Get match details for notification
+                    $stmt = $db->prepare("
+                        SELECT m.id, m.match_type, g.name as game_name
+                        FROM matches m
+                        JOIN games g ON m.game_id = g.id
+                        WHERE m.id = ?
+                    ");
+                    $stmt->execute([$match_id]);
+                    $matchInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    // Get all users participating in this match
+                    $stmt = $db->prepare("
+                        SELECT DISTINCT u.id
+                        FROM users u
+                        JOIN match_participants mp ON u.id = mp.user_id
+                        WHERE mp.match_id = ?
+                    ");
+                    $stmt->execute([$match_id]);
+                    $users = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    // Create notifications for participating users
+                    $notificationMessage = "Room details added for {$matchInfo['game_name']} {$matchInfo['match_type']} match";
+                    
+                    foreach ($users as $userId) {
+                        $stmt = $db->prepare("
+                            INSERT INTO notifications (
+                                user_id, 
+                                type, 
+                                message, 
+                                related_id, 
+                                related_type,
+                                created_at
+                            ) VALUES (
+                                ?, 
+                                'room_details', 
+                                ?, 
+                                ?, 
+                                'match',
+                                NOW()
+                            )
+                        ");
+                        $stmt->execute([
+                            $userId, 
+                            $notificationMessage, 
+                            $match_id
+                        ]);
+                    }
+                    
                     $db->commit();
                     header("Location: pubg.php");
                     exit;
