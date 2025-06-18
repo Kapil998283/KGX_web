@@ -140,20 +140,16 @@ if ($has_team) {
     $tournament_count = $count_data['count'];
 }
 
-// Get matches count for the user (only completed matches)
-$matches_stmt = $conn->prepare("SELECT COUNT(DISTINCT mp.match_id) as matches_count 
-                            FROM match_participants mp 
-                            JOIN matches m ON mp.match_id = m.id 
-                            WHERE mp.user_id = ? AND m.status = 'completed'");
-$matches_stmt->execute([$user_id]);
-$matches_count = $matches_stmt->fetch(PDO::FETCH_ASSOC)['matches_count'];
+// Get matches count and total kills from permanent stats
+$stats_stmt = $conn->prepare("SELECT COALESCE(total_matches_played, 0) as matches_count, 
+                                    COALESCE(total_kills, 0) as total_kills 
+                             FROM user_match_stats 
+                             WHERE user_id = ?");
+$stats_stmt->execute([$user_id]);
+$user_stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
 
-// Get total kills for the user
-$kills_stmt = $conn->prepare("SELECT COALESCE(SUM(kills), 0) as total_kills 
-                           FROM user_kills 
-                           WHERE user_id = ?");
-$kills_stmt->execute([$user_id]);
-$total_kills = $kills_stmt->fetch(PDO::FETCH_ASSOC)['total_kills'];
+$matches_count = $user_stats ? $user_stats['matches_count'] : 0;
+$total_kills = $user_stats ? $user_stats['total_kills'] : 0;
 
 // Fetch redeemed items
 $redemption_items = [];

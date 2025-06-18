@@ -508,6 +508,16 @@ CREATE TABLE IF NOT EXISTS user_kills (
     INDEX idx_user_kills (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Table for storing permanent user match statistics
+CREATE TABLE IF NOT EXISTS user_match_stats (
+    user_id INT NOT NULL,
+    total_matches_played INT DEFAULT 0,
+    total_kills INT DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Insert default data
 INSERT INTO admin_users (username, email, password, full_name, role) 
 VALUES ('admin', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Admin', 'super_admin');

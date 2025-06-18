@@ -77,6 +77,21 @@ function distributePrize($db, $match_id, $winner_id, $match) {
             return;
         }
 
+        // Update permanent statistics for each participant
+        foreach ($participants as $participant) {
+            // Update or insert user match stats
+            $stmt = $db->prepare("INSERT INTO user_match_stats (user_id, total_matches_played, total_kills) 
+                                VALUES (?, 1, ?) 
+                                ON DUPLICATE KEY UPDATE 
+                                total_matches_played = total_matches_played + 1,
+                                total_kills = total_kills + ?");
+            $stmt->execute([
+                $participant['user_id'], 
+                $participant['kills'],
+                $participant['kills']
+            ]);
+        }
+
         // First, award kill rewards to all participants
         if ($match['coins_per_kill'] > 0) {
             foreach ($participants as $participant) {
@@ -229,9 +244,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'select_winner':
+                $db->beginTransaction(); // Start transaction before any operations
                 try {
-                    $db->beginTransaction();
-                    
                     $winner_id = $_POST['winner_id'];
                     
                     // Verify the user is a participant in this match
@@ -307,17 +321,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header("Location: match_scoring.php?id=" . $match_id . "&success=1");
                     exit;
                 } catch (Exception $e) {
-                    $db->rollBack();
-                    error_log("Error selecting winner: " . $e->getMessage());
+                    if ($db->inTransaction()) {
+                        $db->rollBack();
+                    }
                     header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
                     exit;
                 }
                 break;
 
             case 'complete_match':
+                $db->beginTransaction(); // Start transaction before any operations
                 try {
-                    $db->beginTransaction();
-                    
                     // Check if positions have been set for the required number of winners
                     $requiredPositions = ($match['prize_distribution'] === 'top5') ? 5 : 
                                         ($match['prize_distribution'] === 'top3' ? 3 : 1);
@@ -388,7 +402,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header("Location: $game_page?completed=1");
                     exit;
                 } catch (Exception $e) {
-                    $db->rollBack();
+                    if ($db->inTransaction()) {
+                        $db->rollBack();
+                    }
                     error_log("Error completing match: " . $e->getMessage());
                     header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
                     exit;
@@ -459,9 +475,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'update_position':
+                $db->beginTransaction(); // Start transaction before any operations
                 try {
-                    $db->beginTransaction();
-                    
                     $user_id = $_POST['user_id'];
                     $position = intval($_POST['position']);
                     
@@ -488,7 +503,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo json_encode(['success' => true]);
                     exit;
                 } catch (Exception $e) {
-                    $db->rollBack();
+                    if ($db->inTransaction()) {
+                        $db->rollBack();
+                    }
                     http_response_code(400);
                     echo json_encode(['error' => $e->getMessage()]);
                     exit;
