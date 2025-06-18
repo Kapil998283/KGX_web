@@ -604,17 +604,20 @@ INSERT INTO profile_images (image_path, is_active, is_default) VALUES
 ALTER TABLE match_participants
 ADD COLUMN position INT DEFAULT NULL;
 
--- User Game table
-CREATE TABLE IF NOT EXISTS user_game (
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS user_game;
+
+-- Create user_game table
+CREATE TABLE user_game (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     game_name ENUM('PUBG', 'BGMI', 'FREE FIRE', 'COD') NOT NULL,
-    game_username VARCHAR(100) NOT NULL,
-    game_uid VARCHAR(50) NOT NULL,
+    game_username VARCHAR(20) NOT NULL,
+    game_uid VARCHAR(10) NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user (user_id),
-    UNIQUE KEY unique_game_uid (game_name, game_uid)
+    UNIQUE KEY unique_user_game (user_id, game_name)
 );
 

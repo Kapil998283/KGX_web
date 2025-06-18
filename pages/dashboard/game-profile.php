@@ -65,9 +65,15 @@ include '../../includes/header.php';
 
 <div class="game-profile-section">
     <div class="game-profile-container">
-        <div class="game-selection-title">
-            <h2>Your Game Profiles</h2>
-            <p>Add or update your game profiles - you can add multiple games!</p>
+        <div class="page-header">
+            <a href="dashboard.php" class="back-btn">
+                <span class="back-icon">←</span>
+                <span>Back to Dashboard</span>
+            </a>
+            <div class="game-selection-title">
+                <h2>Your Game Profiles</h2>
+                <p>Add or update your game profiles - you can add multiple games!</p>
+            </div>
         </div>
 
         <?php if (isset($_GET['success'])): ?>
