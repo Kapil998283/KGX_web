@@ -93,10 +93,16 @@ include '../../includes/header.php';
                     <h3>PUBG</h3>
                     <?php if (isset($user_games['PUBG'])): ?>
                         <div class="game-info">
-                            <p class="game-username"><?php echo htmlspecialchars($user_games['PUBG']['game_username']); ?></p>
-                            <p class="game-uid">UID: <?php echo htmlspecialchars($user_games['PUBG']['game_uid']); ?></p>
+                            <div class="info-row">
+                                <span class="info-label">Username:</span>
+                                <p class="game-username"><?php echo htmlspecialchars($user_games['PUBG']['game_username']); ?></p>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">UID:</span>
+                                <p class="game-uid"><?php echo htmlspecialchars($user_games['PUBG']['game_uid']); ?></p>
+                            </div>
                             <?php if ($user_games['PUBG']['is_primary']): ?>
-                                <span class="primary-badge">Primary</span>
+                                <span class="primary-badge">Main</span>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -114,10 +120,16 @@ include '../../includes/header.php';
                     <h3>BGMI</h3>
                     <?php if (isset($user_games['BGMI'])): ?>
                         <div class="game-info">
-                            <p class="game-username"><?php echo htmlspecialchars($user_games['BGMI']['game_username']); ?></p>
-                            <p class="game-uid">UID: <?php echo htmlspecialchars($user_games['BGMI']['game_uid']); ?></p>
+                            <div class="info-row">
+                                <span class="info-label">Username:</span>
+                                <p class="game-username"><?php echo htmlspecialchars($user_games['BGMI']['game_username']); ?></p>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">UID:</span>
+                                <p class="game-uid"><?php echo htmlspecialchars($user_games['BGMI']['game_uid']); ?></p>
+                            </div>
                             <?php if ($user_games['BGMI']['is_primary']): ?>
-                                <span class="primary-badge">Primary</span>
+                                <span class="primary-badge">Main</span>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -135,6 +147,12 @@ include '../../includes/header.php';
                     <h3>Free Fire</h3>
                     <?php if (isset($user_games['FREE FIRE'])): ?>
                         <div class="game-info">
+                            <div class="info-row">
+                                <span class="info-label">Username:</span>
+                                <p class="game-username"><?php echo htmlspecialchars($user_games['FREE FIRE']['game_username']); ?></p>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">UID:</span>
                             <p class="game-username"><?php echo htmlspecialchars($user_games['FREE FIRE']['game_username']); ?></p>
                             <p class="game-uid">UID: <?php echo htmlspecialchars($user_games['FREE FIRE']['game_uid']); ?></p>
                             <?php if ($user_games['FREE FIRE']['is_primary']): ?>
