@@ -455,22 +455,17 @@ if (!empty($teams)) {
                 }
 
                 .details-btn {
-                    position: absolute;
-                    bottom: 10px;
-                    right: 10px;
-                    padding: 5px 15px;
-                    background: rgba(37, 211, 102, 0.1);
-                    border: 1px solid #25d366;
+                    background: none;
+                    border: none;
                     color: #25d366;
-                    border-radius: 5px;
+                    font-size: 0.7em;  /* Reduced by 30% */
                     cursor: pointer;
-                    font-size: 12px;
-                    transition: all 0.3s ease;
+                    padding: 2px 4px;
+                    transition: color 0.3s ease;
                 }
 
                 .details-btn:hover {
-                    background: #25d366;
-                    color: white;
+                    color: #1a9248;
                 }
 
                 .modal {

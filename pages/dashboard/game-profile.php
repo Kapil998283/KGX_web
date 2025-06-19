@@ -33,20 +33,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception('All fields are required');
         }
         
-        // Update database
-        $stmt = $db->prepare("INSERT INTO user_game (user_id, game_name, game_username, game_uid) 
-                               VALUES (?, ?, ?, ?) 
-                               ON DUPLICATE KEY UPDATE 
-                               game_username = VALUES(game_username),
-                               game_uid = VALUES(game_uid)");
-                               
-        $stmt->bind_param("isss", $_SESSION['user_id'], $game, $username, $uid);
+        // Start transaction
+        $db->beginTransaction();
         
-        if ($stmt->execute()) {
+        try {
+            // Check if this game exists for the user
+            $stmt = $db->prepare("SELECT id FROM user_games WHERE user_id = ? AND game_name = ?");
+            $stmt->execute([$_SESSION['user_id'], $game]);
+            $existing = $stmt->fetch();
+            
+            if ($existing) {
+                // Update existing game profile
+                $stmt = $db->prepare("UPDATE user_games SET game_username = ?, game_uid = ? WHERE user_id = ? AND game_name = ?");
+                $stmt->execute([$username, $uid, $_SESSION['user_id'], $game]);
+            } else {
+                // Insert new game profile
+                $stmt = $db->prepare("INSERT INTO user_games (user_id, game_name, game_username, game_uid) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$_SESSION['user_id'], $game, $username, $uid]);
+            }
+            
+            // Commit transaction
+            $db->commit();
+            
             $response['success'] = true;
             $response['message'] = 'Game profile saved successfully!';
-        } else {
-            throw new Exception('Failed to save game profile');
+            
+        } catch (Exception $e) {
+            $db->rollBack();
+            throw $e;
         }
         
     } catch (Exception $e) {
