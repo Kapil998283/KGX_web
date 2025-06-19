@@ -317,8 +317,22 @@ if (!empty($teams)) {
                                         </button>
                                     </form>
                                 <?php endif; ?>
+                                <!-- Add Details Button -->
+                                <button class="details-btn" onclick="showGameProfile(<?php echo $member['id']; ?>)">
+                                    Details
+                                </button>
                             </div>
                         <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Game Profile Modal -->
+                <div id="gameProfileModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-modal">&times;</span>
+                        <div id="gameProfileContent">
+                            <!-- Content will be loaded here -->
+                        </div>
                     </div>
                 </div>
 
@@ -439,7 +453,189 @@ if (!empty($teams)) {
                     color: #ff6b76;
                     transform: scale(1.1);
                 }
+
+                .details-btn {
+                    position: absolute;
+                    bottom: 10px;
+                    right: 10px;
+                    padding: 5px 15px;
+                    background: rgba(37, 211, 102, 0.1);
+                    border: 1px solid #25d366;
+                    color: #25d366;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    transition: all 0.3s ease;
+                }
+
+                .details-btn:hover {
+                    background: #25d366;
+                    color: white;
+                }
+
+                .modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 1000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    backdrop-filter: blur(5px);
+                }
+
+                .modal-content {
+                    background-color: #1a1a1a;
+                    margin: 15% auto;
+                    padding: 20px;
+                    border: 1px solid #25d366;
+                    width: 80%;
+                    max-width: 500px;
+                    border-radius: 10px;
+                    position: relative;
+                    color: white;
+                }
+
+                .close-modal {
+                    color: #25d366;
+                    float: right;
+                    font-size: 28px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    position: absolute;
+                    right: 15px;
+                    top: 10px;
+                }
+
+                .close-modal:hover {
+                    color: white;
+                }
+
+                .game-profile-header {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid rgba(37, 211, 102, 0.2);
+                }
+
+                .game-profile-header img {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 10px;
+                    margin-right: 15px;
+                }
+
+                .game-profile-header .game-info h3 {
+                    margin: 0;
+                    color: #25d366;
+                }
+
+                .game-profile-header .game-info p {
+                    margin: 5px 0 0;
+                    font-size: 14px;
+                    color: #888;
+                }
+
+                .game-profile-details {
+                    padding: 15px 0;
+                }
+
+                .detail-row {
+                    margin-bottom: 15px;
+                }
+
+                .detail-row label {
+                    display: block;
+                    color: #888;
+                    font-size: 12px;
+                    margin-bottom: 5px;
+                }
+
+                .detail-row p {
+                    margin: 0;
+                    color: white;
+                    font-size: 14px;
+                    padding: 8px 12px;
+                    background: rgba(37, 211, 102, 0.1);
+                    border-radius: 5px;
+                }
+
+                .player-card {
+                    position: relative;
+                }
                 </style>
+
+                <script>
+                    function showGameProfile(userId) {
+                        const modal = document.getElementById('gameProfileModal');
+                        const content = document.getElementById('gameProfileContent');
+                        
+                        // Show loading state
+                        content.innerHTML = '<div style="text-align: center; padding: 20px;">Loading...</div>';
+                        modal.style.display = 'block';
+
+                        // Fetch game profile data
+                        fetch(`get_game_profile.php?user_id=${userId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const gameData = data.game_profile;
+                                    content.innerHTML = `
+                                        <div class="game-profile-header">
+                                            <img src="/KGX/assets/images/games/${gameData.game_name.toLowerCase()}.png" 
+                                                 alt="${gameData.game_name}"
+                                                 onerror="this.src='/KGX/assets/images/games/default.png'">
+                                            <div class="game-info">
+                                                <h3>${gameData.game_name}</h3>
+                                                <p>${gameData.is_primary ? 'Main Game' : 'Additional Game'}</p>
+                                            </div>
+                                        </div>
+                                        <div class="game-profile-details">
+                                            <div class="detail-row">
+                                                <label>In-Game Username</label>
+                                                <p>${gameData.game_username || 'Not set'}</p>
+                                            </div>
+                                            <div class="detail-row">
+                                                <label>Game UID</label>
+                                                <p>${gameData.game_uid || 'Not set'}</p>
+                                            </div>
+                                        </div>
+                                    `;
+                                } else {
+                                    content.innerHTML = `
+                                        <div style="text-align: center; padding: 20px; color: #888;">
+                                            No game profile found
+                                        </div>
+                                    `;
+                                }
+                            })
+                            .catch(error => {
+                                content.innerHTML = `
+                                    <div style="text-align: center; padding: 20px; color: #ff4444;">
+                                        Error loading game profile
+                                    </div>
+                                `;
+                            });
+                    }
+
+                    // Close modal when clicking the close button or outside the modal
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const modal = document.getElementById('gameProfileModal');
+                        const closeBtn = document.querySelector('.close-modal');
+
+                        closeBtn.onclick = function() {
+                            modal.style.display = 'none';
+                        }
+
+                        window.onclick = function(event) {
+                            if (event.target == modal) {
+                                modal.style.display = 'none';
+                            }
+                        }
+                    });
+                </script>
 
                 <!-- Tournament Content -->
                 <div class="tab-content <?php echo $active_tab === 'tournament' ? 'active' : ''; ?>" id="tournamentContent">
