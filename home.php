@@ -94,7 +94,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
           <div class="winner-card">
 
             <figure class="card-banner">
-              <img src="ui/assets/images/team-member-1.png" alt="Winner image">
+              <img src="/assets/images/team-member-1.png" alt="Winner image">
             </figure>
 
             <a href="pages/create_team.php"><button class="btn btn-secondary">Join a Team</button></a>

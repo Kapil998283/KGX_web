@@ -46,17 +46,17 @@ if (!$match) {
 $game_name_mapping = [
     'BGMI' => 'BGMI',
     'PUBG' => 'PUBG',
-    'Free Fire' => 'FREE FIRE',
+    'Free Fire' => 'FREE_FIRE',
     'Call of Duty Mobile' => 'COD'
 ];
 
 // Get the mapped game name
-$mapped_game_name = isset($game_name_mapping[$match['game_name']]) ? $game_name_mapping[$match['game_name']] : $match['game_name'];
+$mapped_game_name = isset($game_name_mapping[$match['game_name']]) ? $game_name_mapping[$match['game_name']] : strtoupper($match['game_name']);
 
 // Check if user has game profile for this game
 $stmt = $db->prepare("
     SELECT * FROM user_games 
-    WHERE user_id = ? AND game_name = ?
+    WHERE user_id = ? AND UPPER(REPLACE(game_name, ' ', '_')) = ?
 ");
 $stmt->execute([$user_id, $mapped_game_name]);
 $game_profile = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -69,10 +69,17 @@ if (!$game_profile) {
     exit();
 }
 
-// Check if user has already joined
-$stmt = $db->prepare("SELECT COUNT(*) FROM match_participants WHERE match_id = ? AND user_id = ?");
+// Check if user has already joined THIS SPECIFIC match (fixed the validation)
+$stmt = $db->prepare("
+    SELECT COUNT(*) 
+    FROM match_participants mp 
+    JOIN matches m ON mp.match_id = m.id 
+    WHERE mp.match_id = ? AND mp.user_id = ?
+");
 $stmt->execute([$match_id, $user_id]);
-if ($stmt->fetchColumn() > 0) {
+$already_joined = $stmt->fetchColumn() > 0;
+
+if ($already_joined) {
     $_SESSION['error'] = "You have already joined this match!";
     header("Location: index.php");
     exit();
