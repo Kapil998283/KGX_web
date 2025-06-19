@@ -134,9 +134,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([
             $match_id, 
             $user_id, 
-            $game_profile['in_game_name'],
-            $game_profile['game_id'],
-            $game_profile['experience_level']
+            $game_profile['game_username'] ?? 'Unknown',
+            $game_profile['game_uid'] ?? 'Unknown',
+            'Experienced'
         ]);
         
         // Create notification
@@ -366,15 +366,15 @@ include '../../includes/header.php';
                         <div class="profile-details">
                             <div class="detail-item">
                                 <i class="bi bi-person-badge"></i>
-                                <span>In-Game Name: <?= htmlspecialchars($game_profile['in_game_name']) ?></span>
+                                <span>In-Game Name: <?= htmlspecialchars($game_profile['game_username'] ?? 'Not set') ?></span>
                             </div>
                             <div class="detail-item">
                                 <i class="bi bi-fingerprint"></i>
-                                <span>Game UID: <?= htmlspecialchars($game_profile['game_id']) ?></span>
+                                <span>Game UID: <?= htmlspecialchars($game_profile['game_uid'] ?? 'Not set') ?></span>
                             </div>
                             <div class="detail-item">
                                 <i class="bi bi-star"></i>
-                                <span>Experience Level: <?= htmlspecialchars($game_profile['experience_level']) ?></span>
+                                <span>Experience Level: <?= htmlspecialchars('Experienced') ?></span>
                             </div>
                         </div>
                     </div>
@@ -387,8 +387,8 @@ include '../../includes/header.php';
                     </div>
                 <?php else: ?>
                     <form method="POST" class="match-actions">
-                        <input type="hidden" name="game_uid" value="<?= htmlspecialchars($game_profile['game_id']) ?>">
-                        <input type="hidden" name="in_game_name" value="<?= htmlspecialchars($game_profile['in_game_name']) ?>">
+                        <input type="hidden" name="game_uid" value="<?= htmlspecialchars($game_profile['game_uid'] ?? '') ?>">
+                        <input type="hidden" name="in_game_name" value="<?= htmlspecialchars($game_profile['game_username'] ?? '') ?>">
                         <button type="submit" class="btn-join btn-primary">
                             <i class="bi bi-plus-circle"></i>
                             Confirm Join (<?= number_format($match['entry_fee']) ?> <?= ucfirst($match['entry_type']) ?>)
