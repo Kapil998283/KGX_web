@@ -245,15 +245,20 @@ if (!empty($teams)) {
                     <div class="player-list">
                         <?php
                         // Get team members with proper ordering (captain first, then by join date)
-                        $sql = "SELECT u.id as user_id, u.username, u.profile_image, tm.role, tm.joined_at,
-                               CASE 
-                                   WHEN tm.role = 'captain' THEN 1 
-                                   ELSE 2 
-                               END as role_order
-                               FROM team_members tm 
-                               JOIN users u ON tm.user_id = u.id 
-                               WHERE tm.team_id = :team_id
-                               ORDER BY role_order ASC, tm.joined_at ASC";
+                        $sql = "SELECT 
+                            u.id as user_id,
+                            u.username,
+                            u.profile_image,
+                            tm.role,
+                            tm.joined_at,
+                            CASE 
+                                WHEN tm.role = 'captain' THEN 1 
+                                ELSE 2 
+                            END as role_order
+                            FROM team_members tm 
+                            JOIN users u ON tm.user_id = u.id 
+                            WHERE tm.team_id = :team_id
+                            ORDER BY role_order ASC, tm.joined_at ASC";
                         $stmt = $conn->prepare($sql);
                         $stmt->execute(['team_id' => $team['id']]);
                         $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -301,7 +306,7 @@ if (!empty($teams)) {
                                 </div>
                                 <?php if ($team['role'] === 'captain' && $member['role'] !== 'captain'): ?>
                                     <form action="remove_member.php" method="POST" class="remove-member-form">
-                                        <input type="hidden" name="member_id" value="<?php echo $member['id']; ?>">
+                                        <input type="hidden" name="member_id" value="<?php echo $member['user_id']; ?>">
                                         <input type="hidden" name="team_id" value="<?php echo $team['id']; ?>">
                                         <button type="submit" class="remove-member-btn" onclick="return confirm('Are you sure you want to remove this member?');">
                                             <i class="fas fa-times"></i>

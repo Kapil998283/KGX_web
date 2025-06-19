@@ -17,19 +17,20 @@ try {
     $database = new Database();
     $conn = $database->connect();
 
-    // Get user's primary game profile
-    $sql = "SELECT game_name, game_username, game_uid, is_primary 
-            FROM user_games 
-            WHERE user_id = :user_id AND is_primary = 1";
+    // Get user's primary game profile first
+    $sql = "SELECT ug.game_name, ug.game_username, ug.game_uid, ug.is_primary 
+            FROM user_games ug
+            WHERE ug.user_id = :user_id AND ug.is_primary = 1";
     $stmt = $conn->prepare($sql);
     $stmt->execute(['user_id' => $user_id]);
     $game_profile = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // If no primary game found, get any game profile
     if (!$game_profile) {
-        $sql = "SELECT game_name, game_username, game_uid, is_primary 
-                FROM user_games 
-                WHERE user_id = :user_id 
+        $sql = "SELECT ug.game_name, ug.game_username, ug.game_uid, ug.is_primary 
+                FROM user_games ug
+                WHERE ug.user_id = :user_id 
+                ORDER BY ug.created_at DESC
                 LIMIT 1";
         $stmt = $conn->prepare($sql);
         $stmt->execute(['user_id' => $user_id]);
@@ -40,7 +41,7 @@ try {
         $response['success'] = true;
         $response['game_profile'] = $game_profile;
     } else {
-        $response['message'] = 'No game profile found';
+        $response['message'] = 'No game profile found for this user';
     }
 
 } catch (Exception $e) {
