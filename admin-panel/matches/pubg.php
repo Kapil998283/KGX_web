@@ -458,9 +458,13 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <button class="btn btn-sm btn-success" onclick="startMatch(<?= $match['id'] ?>)">
                                         <i class="bi bi-play-fill"></i> Start
                                     </button>
-                                    <button class="btn btn-sm btn-warning" onclick="cancelMatch(<?= $match['id'] ?>)">
-                                        <i class="bi bi-x-circle"></i> Cancel Match
-                                    </button>
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="action" value="cancel_match">
+                                        <input type="hidden" name="match_id" value="<?= $match['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.');">
+                                            <i class="bi bi-x-circle"></i> Cancel Match
+                                        </button>
+                                    </form>
                                 <?php endif; ?>
                                 
                                 <?php if ($match['status'] === 'in_progress'): ?>
