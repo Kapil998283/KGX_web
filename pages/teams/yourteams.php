@@ -453,18 +453,20 @@ if (!empty($teams)) {
                     position: absolute;
                     bottom: 10px;
                     right: 10px;
-                    background: none;
+                    background: #25d366;
                     border: none;
-                    color: #25d366;
-                    font-size: 0.7em;
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-size: 0.8em;
                     cursor: pointer;
-                    padding: 2px 4px;
-                    transition: color 0.3s ease;
+                    transition: all 0.3s ease;
                     z-index: 10;
                 }
 
                 .details-btn:hover {
-                    color: #1a9248;
+                    background: #1a9248;
+                    transform: translateY(-2px);
                 }
 
                 .modal {
@@ -475,89 +477,48 @@ if (!empty($teams)) {
                     top: 0;
                     width: 100%;
                     height: 100%;
-                    background-color: rgba(0, 0, 0, 0.5);
+                    background-color: rgba(0, 0, 0, 0.7);
                     backdrop-filter: blur(5px);
                 }
 
                 .modal-content {
-                    background-color: #1a1a1a;
+                    background: #1a1a1a;
                     margin: 15% auto;
-                    padding: 20px;
+                    padding: 25px;
                     border: 1px solid #25d366;
-                    width: 80%;
+                    width: 90%;
                     max-width: 500px;
-                    border-radius: 10px;
+                    border-radius: 12px;
                     position: relative;
                     color: white;
+                    box-shadow: 0 0 20px rgba(37, 211, 102, 0.2);
                 }
 
                 .close-modal {
-                    color: #25d366;
-                    float: right;
-                    font-size: 28px;
-                    font-weight: bold;
-                    cursor: pointer;
                     position: absolute;
                     right: 15px;
                     top: 10px;
+                    color: #25d366;
+                    font-size: 24px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: color 0.3s ease;
                 }
 
                 .close-modal:hover {
-                    color: white;
+                    color: #1a9248;
                 }
 
-                .game-profile-header {
-                    display: flex;
-                    align-items: center;
-                    margin-bottom: 20px;
-                    padding-bottom: 15px;
-                    border-bottom: 1px solid rgba(37, 211, 102, 0.2);
+                #gameProfileContent {
+                    margin-top: 10px;
                 }
 
-                .game-profile-header img {
-                    width: 50px;
-                    height: 50px;
-                    border-radius: 10px;
-                    margin-right: 15px;
-                }
-
-                .game-profile-header .game-info h3 {
-                    margin: 0;
-                    color: #25d366;
-                }
-
-                .game-profile-header .game-info p {
-                    margin: 5px 0 0;
-                    font-size: 14px;
-                    color: #888;
-                }
-
-                .game-profile-details {
-                    padding: 15px 0;
-                }
-
-                .detail-row {
-                    margin-bottom: 15px;
-                }
-
-                .detail-row label {
-                    display: block;
-                    color: #888;
-                    font-size: 12px;
-                    margin-bottom: 5px;
-                }
-
-                .detail-row p {
-                    margin: 0;
-                    color: white;
-                    font-size: 14px;
-                    padding: 8px 12px;
-                    background: rgba(37, 211, 102, 0.1);
-                    border-radius: 5px;
-                }
-
-                .player-card {
-                    position: relative;
+                @media (max-width: 768px) {
+                    #gameProfileModal .modal-content {
+                        margin: 20% auto;
+                        width: 95%;
+                        padding: 20px;
+                    }
                 }
                 </style>
 
@@ -565,9 +526,10 @@ if (!empty($teams)) {
                     function showGameProfile(userId) {
                         const modal = document.getElementById('gameProfileModal');
                         const content = document.getElementById('gameProfileContent');
-                        
+                        const closeBtn = document.querySelector('.close-modal');
+
                         // Show loading state
-                        content.innerHTML = '<div style="text-align: center; padding: 20px;">Loading...</div>';
+                        content.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
                         modal.style.display = 'block';
 
                         // Fetch game profile data
@@ -575,63 +537,56 @@ if (!empty($teams)) {
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    const gameData = data.game_profile;
                                     content.innerHTML = `
-                                        <div class="game-profile-header">
-                                            <img src="/KGX/assets/images/games/${gameData.game_name.toLowerCase()}.png" 
-                                                 alt="${gameData.game_name}"
-                                                 onerror="this.src='/KGX/assets/images/games/default.png'">
-                                            <div class="game-info">
-                                                <h3>${gameData.game_name}</h3>
-                                                <p>${gameData.is_primary ? 'Main Game' : 'Additional Game'}</p>
-                                            </div>
+                                        <h3 style="margin-bottom: 20px; color: #fff;">Game Profile</h3>
+                                        <div style="margin-bottom: 15px;">
+                                            <strong style="color: #25d366;">Game:</strong>
+                                            <span style="color: #fff;">${data.game_name || 'Not specified'}</span>
                                         </div>
-                                        <div class="game-profile-details">
-                                            <div class="detail-row">
-                                                <label>In-Game Username</label>
-                                                <p>${gameData.game_username || 'Not set'}</p>
-                                            </div>
-                                            <div class="detail-row">
-                                                <label>Game UID</label>
-                                                <p>${gameData.game_uid || 'Not set'}</p>
-                                            </div>
+                                        <div style="margin-bottom: 15px;">
+                                            <strong style="color: #25d366;">In-Game Name:</strong>
+                                            <span style="color: #fff;">${data.in_game_name || 'Not specified'}</span>
+                                        </div>
+                                        <div style="margin-bottom: 15px;">
+                                            <strong style="color: #25d366;">Game ID:</strong>
+                                            <span style="color: #fff;">${data.game_id || 'Not specified'}</span>
+                                        </div>
+                                        <div style="margin-bottom: 15px;">
+                                            <strong style="color: #25d366;">Experience Level:</strong>
+                                            <span style="color: #fff;">${data.experience_level || 'Not specified'}</span>
                                         </div>
                                     `;
                                 } else {
                                     content.innerHTML = `
-                                        <div style="text-align: center; padding: 20px; color: #888;">
-                                            No game profile found
+                                        <div style="text-align: center; padding: 20px; color: #fff;">
+                                            <i class="fas fa-exclamation-circle" style="color: #ff4655; font-size: 24px; margin-bottom: 10px;"></i>
+                                            <p>${data.message || 'No game profile found'}</p>
                                         </div>
                                     `;
                                 }
                             })
                             .catch(error => {
                                 content.innerHTML = `
-                                    <div style="text-align: center; padding: 20px; color: #ff4444;">
-                                        Error loading game profile
+                                    <div style="text-align: center; padding: 20px; color: #ff4655;">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <p>Error loading game profile</p>
                                     </div>
                                 `;
                                 console.error('Error:', error);
                             });
-                    }
 
-                    // Close modal when clicking the close button or outside the modal
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const modal = document.getElementById('gameProfileModal');
-                        const closeBtn = document.querySelector('.close-modal');
-
-                        if (closeBtn) {
-                            closeBtn.onclick = function() {
-                                modal.style.display = 'none';
-                            }
+                        // Close modal when clicking the close button
+                        closeBtn.onclick = function() {
+                            modal.style.display = 'none';
                         }
 
+                        // Close modal when clicking outside
                         window.onclick = function(event) {
                             if (event.target == modal) {
                                 modal.style.display = 'none';
                             }
                         }
-                    });
+                    }
                 </script>
 
                 <!-- Tournament Content -->
