@@ -236,11 +236,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'cancel_match':
                 $match_id = $_POST['match_id'];
                 try {
-                    // Redirect to match_scoring.php to handle the cancellation
-                    header("Location: ../matches/match_scoring.php?action=cancel_match&match_id=" . $match_id);
+                    $db->beginTransaction();
+                    
+                    // Get match details first
+                    $stmt = $db->prepare("SELECT * FROM matches WHERE id = ? AND status = 'upcoming'");
+                    $stmt->execute([$match_id]);
+                    $match = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if (!$match) {
+                        throw new Exception("Match not found or cannot be cancelled!");
+                    }
+                    
+                    // Get all participants who paid entry fee
+                    $stmt = $db->prepare("SELECT user_id FROM match_participants WHERE match_id = ?");
+                    $stmt->execute([$match_id]);
+                    $participants = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    // Process refunds for each participant
+                    foreach ($participants as $user_id) {
+                        if ($match['entry_type'] === 'coins') {
+                            // Refund coins
+                            $stmt = $db->prepare("UPDATE user_coins SET coins = coins + ? WHERE user_id = ?");
+                        } else {
+                            // Refund tickets
+                            $stmt = $db->prepare("UPDATE user_tickets SET tickets = tickets + ? WHERE user_id = ?");
+                        }
+                        $stmt->execute([$match['entry_fee'], $user_id]);
+                        
+                        // Create refund notification
+                        $stmt = $db->prepare("
+                            INSERT INTO notifications (
+                                user_id, type, message, related_id, related_type, created_at
+                            ) VALUES (
+                                ?, 'match_cancelled', ?, ?, 'match', NOW()
+                            )
+                        ");
+                        $stmt->execute([
+                            $user_id,
+                            "Match cancelled: Refunded " . $match['entry_fee'] . " " . $match['entry_type'],
+                            $match_id
+                        ]);
+                    }
+                    
+                    // Update match status to cancelled
+                    $stmt = $db->prepare("
+                        UPDATE matches 
+                        SET status = 'cancelled',
+                            cancelled_at = NOW(),
+                            cancellation_reason = 'Cancelled by admin'
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([$match_id]);
+                    
+                    $db->commit();
+                    header("Location: " . basename($_SERVER['PHP_SELF']));
                     exit;
                 } catch (Exception $e) {
-                    error_log("Error redirecting to cancel match: " . $e->getMessage());
+                    $db->rollBack();
+                    error_log("Error cancelling match: " . $e->getMessage());
                 }
                 break;
         }
