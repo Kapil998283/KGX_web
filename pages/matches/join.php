@@ -123,21 +123,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             INSERT INTO match_participants (
                 match_id, 
                 user_id, 
-                join_date,
-                in_game_name,
-                game_uid,
-                experience_level
+                join_date
             ) VALUES (
-                ?, ?, NOW(), ?, ?, ?
+                ?, ?, NOW()
             )
         ");
         $stmt->execute([
             $match_id, 
-            $user_id, 
-            $game_profile['game_username'] ?? 'Unknown',
-            $game_profile['game_uid'] ?? 'Unknown',
-            'Experienced'
+            $user_id
         ]);
+        
+        // Store game profile info in session for reference
+        $_SESSION['last_match_game_info'] = [
+            'game_username' => $game_profile['game_username'] ?? 'Unknown',
+            'game_uid' => $game_profile['game_uid'] ?? 'Unknown'
+        ];
         
         // Create notification
         $notificationMessage = "You have successfully joined the {$match['game_name']} {$match['match_type']} match";
