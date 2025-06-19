@@ -38,10 +38,10 @@ $games = $games_stmt->fetchAll(PDO::FETCH_ASSOC);
 // If no games are found, let's insert them
 if (empty($games)) {
     $default_games = [
-        ['name' => 'BGMI', 'image_url' => '../../assets/images/games/bgmi.jpg'],
-        ['name' => 'PUBG', 'image_url' => '../../assets/images/games/pubg.jpg'],
-        ['name' => 'Free Fire', 'image_url' => '../../assets/images/games/freefire.jpg'],
-        ['name' => 'COD', 'image_url' => '../../assets/images/games/cod.jpg']
+        ['name' => 'BGMI', 'image_url' => '/KGX/assets/images/games/bgmi.png'],
+        ['name' => 'PUBG', 'image_url' => '/KGX/assets/images/games/pubg.png'],
+        ['name' => 'Free Fire', 'image_url' => '/KGX/assets/images/games/freefire.png'],
+        ['name' => 'COD', 'image_url' => '/KGX/assets/images/games/cod.png']
     ];
     
     foreach ($default_games as $game) {

@@ -24,7 +24,7 @@ if (!$match_id) {
 
 // Get match details first
 $stmt = $db->prepare("
-    SELECT m.*, g.name as game_name, g.image_url as game_image,
+    SELECT m.*, g.name as game_name, g.image_url as game_image, g.id as game_id,
     DATE(m.match_date) as match_date,
     TIME(m.match_date) as match_time,
     m.website_currency_type,
@@ -39,6 +39,22 @@ $match = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$match) {
     $_SESSION['error'] = "Match not found!";
     header("Location: index.php");
+    exit();
+}
+
+// Check if user has game profile for this game
+$stmt = $db->prepare("
+    SELECT * FROM user_game_profiles 
+    WHERE user_id = ? AND game_id = ?
+");
+$stmt->execute([$user_id, $match['game_id']]);
+$game_profile = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// If no game profile, redirect to game profile page
+if (!$game_profile) {
+    $_SESSION['error'] = "You need to set up your " . $match['game_name'] . " game profile before joining this match!";
+    $_SESSION['redirect_after_profile'] = $_SERVER['REQUEST_URI'];
+    header("Location: /KGX/pages/dashboard/game-profile.php?game=" . urlencode($match['game_name']));
     exit();
 }
 
@@ -92,8 +108,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$match['entry_fee'], $user_id]);
         
         // Add user to match participants
-        $stmt = $db->prepare("INSERT INTO match_participants (match_id, user_id, join_date) VALUES (?, ?, NOW())");
-        $stmt->execute([$match_id, $user_id]);
+        $stmt = $db->prepare("
+            INSERT INTO match_participants (
+                match_id, 
+                user_id, 
+                join_date,
+                in_game_name,
+                game_uid,
+                experience_level
+            ) VALUES (
+                ?, ?, NOW(), ?, ?, ?
+            )
+        ");
+        $stmt->execute([
+            $match_id, 
+            $user_id, 
+            $game_profile['in_game_name'],
+            $game_profile['game_id'],
+            $game_profile['experience_level']
+        ]);
         
         // Create notification
         $notificationMessage = "You have successfully joined the {$match['game_name']} {$match['match_type']} match";
@@ -174,6 +207,41 @@ include '../../includes/header.php';
 .coins-per-kill i {
     color: #ffd700;
     margin-right: 5px;
+}
+
+/* Add these styles for game profile section */
+.game-profile-info {
+    background: rgba(37, 211, 102, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.game-profile-info h4 {
+    color: #25d366;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.profile-details {
+    display: grid;
+    gap: 12px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+}
+
+.detail-item i {
+    color: #25d366;
+    font-size: 1.1em;
+}
+
+.detail-item span {
+    font-size: 0.95em;
 }
 </style>
 
@@ -280,6 +348,25 @@ include '../../includes/header.php';
                         <i class="bi bi-wallet2"></i>
                         Your Balance: <?= number_format($balance) ?> <?= ucfirst($match['entry_type']) ?>
                     </div>
+
+                    <!-- Add Game Profile Info -->
+                    <div class="game-profile-info">
+                        <h4>Your Game Profile</h4>
+                        <div class="profile-details">
+                            <div class="detail-item">
+                                <i class="bi bi-person-badge"></i>
+                                <span>In-Game Name: <?= htmlspecialchars($game_profile['in_game_name']) ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="bi bi-fingerprint"></i>
+                                <span>Game UID: <?= htmlspecialchars($game_profile['game_id']) ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="bi bi-star"></i>
+                                <span>Experience Level: <?= htmlspecialchars($game_profile['experience_level']) ?></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <?php if ($balance < $match['entry_fee']): ?>
@@ -289,6 +376,8 @@ include '../../includes/header.php';
                     </div>
                 <?php else: ?>
                     <form method="POST" class="match-actions">
+                        <input type="hidden" name="game_uid" value="<?= htmlspecialchars($game_profile['game_id']) ?>">
+                        <input type="hidden" name="in_game_name" value="<?= htmlspecialchars($game_profile['in_game_name']) ?>">
                         <button type="submit" class="btn-join btn-primary">
                             <i class="bi bi-plus-circle"></i>
                             Confirm Join (<?= number_format($match['entry_fee']) ?> <?= ucfirst($match['entry_type']) ?>)
