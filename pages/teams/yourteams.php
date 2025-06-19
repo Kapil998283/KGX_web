@@ -245,7 +245,7 @@ if (!empty($teams)) {
                     <div class="player-list">
                         <?php
                         // Get team members with proper ordering (captain first, then by join date)
-                        $sql = "SELECT u.*, tm.role, tm.joined_at,
+                        $sql = "SELECT u.id as user_id, u.username, u.profile_image, tm.role, tm.joined_at,
                                CASE 
                                    WHEN tm.role = 'captain' THEN 1 
                                    ELSE 2 
@@ -276,20 +276,11 @@ if (!empty($teams)) {
                                         $default_img = $default_img_stmt->fetch(PDO::FETCH_ASSOC);
                                         $profile_image = $default_img ? $default_img['image_path'] : '/KGX/assets/images/guest-icon.png';
                                     }
-                                    
-                                    // If the path is a full URL, use it as is
-                                    if (filter_var($profile_image, FILTER_VALIDATE_URL)) {
-                                        // URL is already complete, use as is
-                                    }
-                                    // If it's a local path and doesn't start with /KGX, add it
-                                    else if (strpos($profile_image, '/KGX') !== 0) {
-                                        $profile_image = '/KGX' . $profile_image;
-                                    }
                                     ?>
                                     <img src="<?php echo htmlspecialchars($profile_image); ?>" 
                                          alt="<?php echo htmlspecialchars($member['username']); ?>" 
                                          class="player-avatar"
-                                         onerror="this.src='/KGX/ui/assets/images/guest-icon.png'">
+                                         onerror="this.src='/KGX/assets/images/guest-icon.png'">
                                     <?php if ($member['role'] === 'captain'): ?>
                                         <div class="captain-badge">
                                             <i class="fas fa-crown"></i>
@@ -317,7 +308,6 @@ if (!empty($teams)) {
                                         </button>
                                     </form>
                                 <?php endif; ?>
-                                <!-- Add Details Button -->
                                 <button class="details-btn" onclick="showGameProfile(<?php echo $member['user_id']; ?>)">
                                     Details
                                 </button>
@@ -465,6 +455,7 @@ if (!empty($teams)) {
                     cursor: pointer;
                     padding: 2px 4px;
                     transition: color 0.3s ease;
+                    z-index: 10;
                 }
 
                 .details-btn:hover {
@@ -474,7 +465,7 @@ if (!empty($teams)) {
                 .modal {
                     display: none;
                     position: fixed;
-                    z-index: 1000;
+                    z-index: 9999;
                     left: 0;
                     top: 0;
                     width: 100%;
@@ -560,7 +551,7 @@ if (!empty($teams)) {
                     border-radius: 5px;
                 }
 
-                .member-card {
+                .player-card {
                     position: relative;
                 }
                 </style>
@@ -624,8 +615,10 @@ if (!empty($teams)) {
                         const modal = document.getElementById('gameProfileModal');
                         const closeBtn = document.querySelector('.close-modal');
 
-                        closeBtn.onclick = function() {
-                            modal.style.display = 'none';
+                        if (closeBtn) {
+                            closeBtn.onclick = function() {
+                                modal.style.display = 'none';
+                            }
                         }
 
                         window.onclick = function(event) {
