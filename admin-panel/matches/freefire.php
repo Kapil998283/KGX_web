@@ -981,14 +981,7 @@ function editMatch(matchId) {
 
 function cancelMatch(matchId) {
     if (confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.innerHTML = `
-            <input type="hidden" name="action" value="cancel_match">
-            <input type="hidden" name="match_id" value="${matchId}">
-        `;
-        document.body.appendChild(form);
-        form.submit();
+        window.location.href = 'match_scoring.php?action=cancel_match&match_id=' + matchId;
     }
 }
 </script>

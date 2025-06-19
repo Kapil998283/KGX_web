@@ -559,6 +559,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Handle match cancellation
+if (isset($_GET['action']) && $_GET['action'] === 'cancel_match' && isset($_GET['match_id'])) {
+    $match_id = (int)$_GET['match_id'];
+    
+    try {
+        $db->beginTransaction();
+        
+        // Get match details first
+        $stmt = $db->prepare("
+            SELECT m.*, g.name as game_name 
+            FROM matches m 
+            JOIN games g ON m.game_id = g.id 
+            WHERE m.id = ? AND m.status = 'upcoming'
+        ");
+        $stmt->execute([$match_id]);
+        $match = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$match) {
+            throw new Exception("Match not found or cannot be cancelled!");
+        }
+        
+        // Get all participants who paid entry fee
+        $stmt = $db->prepare("
+            SELECT user_id 
+            FROM match_participants 
+            WHERE match_id = ?
+        ");
+        $stmt->execute([$match_id]);
+        $participants = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Process refunds for each participant
+        foreach ($participants as $user_id) {
+            if ($match['entry_type'] === 'coins') {
+                // Refund coins
+                $stmt = $db->prepare("
+                    UPDATE user_coins 
+                    SET coins = coins + ? 
+                    WHERE user_id = ?
+                ");
+            } else {
+                // Refund tickets
+                $stmt = $db->prepare("
+                    UPDATE user_tickets 
+                    SET tickets = tickets + ? 
+                    WHERE user_id = ?
+                ");
+            }
+            $stmt->execute([$match['entry_fee'], $user_id]);
+            
+            // Create refund notification
+            $notificationMessage = "Match cancelled: Refunded " . $match['entry_fee'] . " " . 
+                                 $match['entry_type'] . " for " . $match['game_name'] . " match";
+            
+            $stmt = $db->prepare("
+                INSERT INTO notifications (
+                    user_id, 
+                    type, 
+                    message, 
+                    related_id, 
+                    related_type,
+                    created_at
+                ) VALUES (
+                    ?, 
+                    'match_cancelled', 
+                    ?, 
+                    ?, 
+                    'match',
+                    NOW()
+                )
+            ");
+            $stmt->execute([$user_id, $notificationMessage, $match_id]);
+        }
+        
+        // Update match status to cancelled
+        $stmt = $db->prepare("
+            UPDATE matches 
+            SET status = 'cancelled', 
+                cancelled_at = NOW(),
+                cancellation_reason = 'Cancelled by admin'
+            WHERE id = ?
+        ");
+        $stmt->execute([$match_id]);
+        
+        $db->commit();
+        $_SESSION['success'] = "Match cancelled successfully. All participants have been refunded.";
+        
+    } catch (Exception $e) {
+        $db->rollBack();
+        $_SESSION['error'] = "Error cancelling match: " . $e->getMessage();
+    }
+    
+    // Redirect back to the appropriate game page based on the game name
+    $redirect_page = strtolower(str_replace(' ', '', $match['game_name'])) . '.php';
+    header("Location: " . $redirect_page);
+    exit;
+}
+
 // Add success/error messages
 $success_message = '';
 $error_message = '';
