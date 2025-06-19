@@ -323,8 +323,8 @@ foreach ($user_games as $game) {
         $games = [
             'PUBG' => 'PUBG',
             'BGMI' => 'BGMI',
-            'FREE FIRE' => 'Free Fire',
-            'COD' => 'Call of Duty Mobile'
+            'FREE FIRE' => 'FREE FIRE',
+            'COD' => 'COD'
         ];
 
         // Get user's current main game
@@ -485,12 +485,6 @@ foreach ($user_games as $game) {
       const language = document.getElementById("language").value;
       const mainGame = document.getElementById("main_game").value;
 
-      // Create a FormData object
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('language', language);
-      formData.append('main_game', mainGame);
-
       // Send the updates
       Promise.all([
         // Username update
@@ -518,12 +512,15 @@ foreach ($user_games as $game) {
           // Reload the page to reflect changes
           location.reload();
         } else {
-          alert('Some updates failed. Please try again.');
+          // Show detailed error messages
+          const errorMessages = errors.map(e => e.message + (e.error_details ? '\n\nDetails: ' + e.error_details : '')).join('\n\n');
+          alert('Some updates failed:\n\n' + errorMessages);
+          console.error('Update errors:', errors);
         }
       })
       .catch(error => {
         console.error('Error:', error);
-        alert('Error updating settings. Please try again.');
+        alert('Error updating settings. Please try again.\n\nDetails: ' + error.message);
       });
     }
 

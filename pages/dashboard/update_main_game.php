@@ -21,40 +21,50 @@ try {
     $database = new Database();
     $conn = $database->connect();
     
+    // Enable PDO error mode
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
     // Start transaction
     $conn->beginTransaction();
 
-    // First, check if the user has this game
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM user_games WHERE user_id = :user_id AND game_name = :game_name");
-    $stmt->bindParam(':user_id', $_SESSION['user_id']);
-    $stmt->bindParam(':game_name', $game_name);
-    $stmt->execute();
-    $has_game = $stmt->fetchColumn() > 0;
-
-    // If user doesn't have this game, add it
-    if (!$has_game) {
-        $stmt = $conn->prepare("INSERT INTO user_games (user_id, game_name) VALUES (:user_id, :game_name)");
+    try {
+        // First, check if the user has this game
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM user_games WHERE user_id = :user_id AND game_name = :game_name");
         $stmt->bindParam(':user_id', $_SESSION['user_id']);
         $stmt->bindParam(':game_name', $game_name);
         $stmt->execute();
+        $has_game = $stmt->fetchColumn() > 0;
+
+        // If user doesn't have this game, add it
+        if (!$has_game) {
+            $stmt = $conn->prepare("INSERT INTO user_games (user_id, game_name) VALUES (:user_id, :game_name)");
+            $stmt->bindParam(':user_id', $_SESSION['user_id']);
+            $stmt->bindParam(':game_name', $game_name);
+            $stmt->execute();
+        }
+
+        // Set all games to non-primary
+        $stmt = $conn->prepare("UPDATE user_games SET is_primary = 0 WHERE user_id = :user_id");
+        $stmt->bindParam(':user_id', $_SESSION['user_id']);
+        $stmt->execute();
+
+        // Set the selected game as primary
+        $stmt = $conn->prepare("UPDATE user_games SET is_primary = 1 WHERE user_id = :user_id AND game_name = :game_name");
+        $stmt->bindParam(':user_id', $_SESSION['user_id']);
+        $stmt->bindParam(':game_name', $game_name);
+        $stmt->execute();
+
+        // Commit transaction
+        $conn->commit();
+
+        $response['success'] = true;
+        $response['message'] = 'Main game updated successfully';
+
+    } catch (PDOException $e) {
+        // Log the specific database error
+        $response['error_details'] = $e->getMessage();
+        throw new Exception('Database error occurred: ' . $e->getMessage());
     }
-
-    // Set all games to non-primary
-    $stmt = $conn->prepare("UPDATE user_games SET is_primary = 0 WHERE user_id = :user_id");
-    $stmt->bindParam(':user_id', $_SESSION['user_id']);
-    $stmt->execute();
-
-    // Set the selected game as primary
-    $stmt = $conn->prepare("UPDATE user_games SET is_primary = 1 WHERE user_id = :user_id AND game_name = :game_name");
-    $stmt->bindParam(':user_id', $_SESSION['user_id']);
-    $stmt->bindParam(':game_name', $game_name);
-    $stmt->execute();
-
-    // Commit transaction
-    $conn->commit();
-
-    $response['success'] = true;
-    $response['message'] = 'Main game updated successfully';
 
 } catch (Exception $e) {
     // Rollback transaction if there was an error
