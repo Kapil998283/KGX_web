@@ -615,17 +615,7 @@ CREATE TABLE IF NOT EXISTS user_games (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_game (user_id, game_name),
-    CONSTRAINT one_primary_game_per_user 
-        CHECK (
-            is_primary = 0 OR 
-            (is_primary = 1 AND NOT EXISTS (
-                SELECT 1 FROM user_games ug2 
-                WHERE ug2.user_id = user_id 
-                AND ug2.id != id 
-                AND ug2.is_primary = 1
-            ))
-        )
+    UNIQUE KEY unique_user_game (user_id, game_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Add trigger to ensure only one primary game per user
