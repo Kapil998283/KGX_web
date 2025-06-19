@@ -24,12 +24,27 @@ try {
     // Start transaction
     $conn->beginTransaction();
 
-    // First, set all games to non-primary
+    // First, check if the user has this game
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM user_games WHERE user_id = :user_id AND game_name = :game_name");
+    $stmt->bindParam(':user_id', $_SESSION['user_id']);
+    $stmt->bindParam(':game_name', $game_name);
+    $stmt->execute();
+    $has_game = $stmt->fetchColumn() > 0;
+
+    // If user doesn't have this game, add it
+    if (!$has_game) {
+        $stmt = $conn->prepare("INSERT INTO user_games (user_id, game_name) VALUES (:user_id, :game_name)");
+        $stmt->bindParam(':user_id', $_SESSION['user_id']);
+        $stmt->bindParam(':game_name', $game_name);
+        $stmt->execute();
+    }
+
+    // Set all games to non-primary
     $stmt = $conn->prepare("UPDATE user_games SET is_primary = 0 WHERE user_id = :user_id");
     $stmt->bindParam(':user_id', $_SESSION['user_id']);
     $stmt->execute();
 
-    // Then set the selected game as primary
+    // Set the selected game as primary
     $stmt = $conn->prepare("UPDATE user_games SET is_primary = 1 WHERE user_id = :user_id AND game_name = :game_name");
     $stmt->bindParam(':user_id', $_SESSION['user_id']);
     $stmt->bindParam(':game_name', $game_name);

@@ -320,13 +320,6 @@ foreach ($user_games as $game) {
       <label for="main_game">Main Game</label>
       <select id="main_game" name="main_game" class="form-control">
         <?php
-        // Get all games the user has added
-        $sql = "SELECT game_name, is_primary FROM user_games WHERE user_id = :user_id";
-        $stmt = $conn->prepare($sql);
-        $stmt->bindParam(':user_id', $user_id);
-        $stmt->execute();
-        $user_games = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
         $games = [
             'PUBG' => 'PUBG',
             'BGMI' => 'BGMI',
@@ -334,10 +327,18 @@ foreach ($user_games as $game) {
             'COD' => 'Call of Duty Mobile'
         ];
 
-        foreach ($user_games as $game) {
-            $display_name = $games[$game['game_name']] ?? $game['game_name'];
-            echo '<option value="' . htmlspecialchars($game['game_name']) . '"' . 
-                 ($game['is_primary'] ? ' selected' : '') . '>' . 
+        // Get user's current main game
+        $sql = "SELECT game_name, is_primary FROM user_games WHERE user_id = :user_id AND is_primary = 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':user_id', $user_id);
+        $stmt->execute();
+        $main_game = $stmt->fetch(PDO::FETCH_ASSOC);
+        $current_main_game = $main_game ? $main_game['game_name'] : '';
+
+        // Show all available games
+        foreach ($games as $game_key => $display_name) {
+            echo '<option value="' . htmlspecialchars($game_key) . '"' . 
+                 ($game_key === $current_main_game ? ' selected' : '') . '>' . 
                  htmlspecialchars($display_name) . '</option>';
         }
         ?>
