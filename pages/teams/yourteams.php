@@ -318,7 +318,7 @@ if (!empty($teams)) {
                                     </form>
                                 <?php endif; ?>
                                 <!-- Add Details Button -->
-                                <button class="details-btn" onclick="showGameProfile(<?php echo $member['id']; ?>)">
+                                <button class="details-btn" onclick="showGameProfile(<?php echo $member['user_id']; ?>)">
                                     Details
                                 </button>
                             </div>
@@ -455,10 +455,13 @@ if (!empty($teams)) {
                 }
 
                 .details-btn {
+                    position: absolute;
+                    bottom: 10px;
+                    right: 10px;
                     background: none;
                     border: none;
                     color: #25d366;
-                    font-size: 0.7em;  /* Reduced by 30% */
+                    font-size: 0.7em;
                     cursor: pointer;
                     padding: 2px 4px;
                     transition: color 0.3s ease;
@@ -557,7 +560,7 @@ if (!empty($teams)) {
                     border-radius: 5px;
                 }
 
-                .player-card {
+                .member-card {
                     position: relative;
                 }
                 </style>
@@ -612,6 +615,7 @@ if (!empty($teams)) {
                                         Error loading game profile
                                     </div>
                                 `;
+                                console.error('Error:', error);
                             });
                     }
 
