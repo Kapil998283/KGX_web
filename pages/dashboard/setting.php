@@ -318,22 +318,31 @@ foreach ($user_games as $game) {
     <!-- Main Game -->
     <div class="form-group">
       <label for="main_game">Main Game</label>
-      <select id="main_game" name="main_game">
-        <?php foreach ($user_games as $game): ?>
-          <option value="<?php echo htmlspecialchars($game['game_name']); ?>" 
-                  <?php echo ($game['is_primary'] == 1) ? 'selected' : ''; ?>>
-            <?php 
-              switch($game['game_name']) {
-                case 'PUBG': echo 'PUBG'; break;
-                case 'BGMI': echo 'BGMI'; break;
-                case 'FREE FIRE': echo 'Free Fire'; break;
-                case 'COD': echo 'Call of Duty Mobile'; break;
-                default: echo htmlspecialchars($game['game_name']);
-              }
-            ?>
-          </option>
-        <?php endforeach; ?>
+      <select id="main_game" name="main_game" class="form-control">
+        <?php
+        // Get all games the user has added
+        $sql = "SELECT game_name, is_primary FROM user_games WHERE user_id = :user_id";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':user_id', $user_id);
+        $stmt->execute();
+        $user_games = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $games = [
+            'PUBG' => 'PUBG',
+            'BGMI' => 'BGMI',
+            'FREE FIRE' => 'Free Fire',
+            'COD' => 'Call of Duty Mobile'
+        ];
+
+        foreach ($user_games as $game) {
+            $display_name = $games[$game['game_name']] ?? $game['game_name'];
+            echo '<option value="' . htmlspecialchars($game['game_name']) . '"' . 
+                 ($game['is_primary'] ? ' selected' : '') . '>' . 
+                 htmlspecialchars($display_name) . '</option>';
+        }
+        ?>
       </select>
+      <small class="form-text text-muted">This is the game that will be shown as your main game profile</small>
     </div>
 
     <!-- Language Selection -->
@@ -475,22 +484,23 @@ foreach ($user_games as $game) {
       const language = document.getElementById("language").value;
       const mainGame = document.getElementById("main_game").value;
 
-      // Create a promise for each update
-      const updates = [];
+      // Create a FormData object
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('language', language);
+      formData.append('main_game', mainGame);
 
-      // Username update
-      updates.push(
+      // Send the updates
+      Promise.all([
+        // Username update
         fetch('update_username.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: 'username=' + encodeURIComponent(username)
-        })
-      );
-
-      // Main game update
-      updates.push(
+        }),
+        // Main game update
         fetch('update_main_game.php', {
           method: 'POST',
           headers: {
@@ -498,26 +508,22 @@ foreach ($user_games as $game) {
           },
           body: 'game_name=' + encodeURIComponent(mainGame)
         })
-      );
-
-      // Execute all updates
-      Promise.all(updates)
-        .then(responses => Promise.all(responses.map(r => r.json())))
-        .then(results => {
-          const errors = results.filter(r => !r.success);
-          if (errors.length === 0) {
-            alert('Settings updated successfully!');
-          } else {
-            alert('Some updates failed. Please try again.');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error updating settings. Please try again.');
-        });
-
-      // For now, just show language change
-      alert("Language changed to: " + language);
+      ])
+      .then(responses => Promise.all(responses.map(r => r.json())))
+      .then(results => {
+        const errors = results.filter(r => !r.success);
+        if (errors.length === 0) {
+          alert('Settings updated successfully!');
+          // Reload the page to reflect changes
+          location.reload();
+        } else {
+          alert('Some updates failed. Please try again.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating settings. Please try again.');
+      });
     }
 
     // Close modal when clicking outside

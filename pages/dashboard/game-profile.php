@@ -6,15 +6,17 @@ require_once '../../includes/user-auth.php';
 $database = new Database();
 $db = $database->connect();
 
-// Get all user's game profiles
-$stmt = $db->prepare("SELECT id, user_id, game_name, game_username, game_uid, COALESCE(is_primary, 0) as is_primary FROM user_game WHERE user_id = ?");
+// Get user's games including main game status
+$sql = "SELECT game_name, game_username, game_uid, is_primary FROM user_games WHERE user_id = ?";
+$stmt = $db->prepare($sql);
 $stmt->execute([$_SESSION['user_id']]);
-$game_profiles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Create associative array for easy access
 $user_games = [];
-foreach ($game_profiles as $profile) {
-    $user_games[$profile['game_name']] = $profile;
+while ($row = $stmt->fetch()) {
+    $user_games[$row['game_name']] = [
+        'game_username' => $row['game_username'],
+        'game_uid' => $row['game_uid'],
+        'is_primary' => $row['is_primary']
+    ];
 }
 
 // Process form submission

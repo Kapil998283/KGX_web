@@ -608,13 +608,49 @@ ADD COLUMN position INT DEFAULT NULL;
 CREATE TABLE IF NOT EXISTS user_games (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
-    game_name VARCHAR(50) NOT NULL,
+    game_name ENUM('PUBG', 'BGMI', 'FREE FIRE', 'COD') NOT NULL,
     game_username VARCHAR(50),
     game_uid VARCHAR(20),
     is_primary BOOLEAN DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_game (user_id, game_name)
+    UNIQUE KEY unique_user_game (user_id, game_name),
+    CONSTRAINT one_primary_game_per_user 
+        CHECK (
+            is_primary = 0 OR 
+            (is_primary = 1 AND NOT EXISTS (
+                SELECT 1 FROM user_games ug2 
+                WHERE ug2.user_id = user_id 
+                AND ug2.id != id 
+                AND ug2.is_primary = 1
+            ))
+        )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Add trigger to ensure only one primary game per user
+DELIMITER //
+CREATE TRIGGER before_user_games_insert 
+BEFORE INSERT ON user_games
+FOR EACH ROW
+BEGIN
+    IF NEW.is_primary = 1 THEN
+        UPDATE user_games 
+        SET is_primary = 0 
+        WHERE user_id = NEW.user_id;
+    END IF;
+END//
+
+CREATE TRIGGER before_user_games_update
+BEFORE UPDATE ON user_games
+FOR EACH ROW
+BEGIN
+    IF NEW.is_primary = 1 AND OLD.is_primary = 0 THEN
+        UPDATE user_games 
+        SET is_primary = 0 
+        WHERE user_id = NEW.user_id 
+        AND id != NEW.id;
+    END IF;
+END//
+DELIMITER ;
 
