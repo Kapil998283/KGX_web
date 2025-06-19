@@ -42,12 +42,23 @@ if (!$match) {
     exit();
 }
 
+// Map game names from games table to user_games table format
+$game_name_mapping = [
+    'BGMI' => 'BGMI',
+    'PUBG' => 'PUBG',
+    'Free Fire' => 'FREE FIRE',
+    'Call of Duty Mobile' => 'COD'
+];
+
+// Get the mapped game name
+$mapped_game_name = isset($game_name_mapping[$match['game_name']]) ? $game_name_mapping[$match['game_name']] : $match['game_name'];
+
 // Check if user has game profile for this game
 $stmt = $db->prepare("
-    SELECT * FROM user_game_profiles 
-    WHERE user_id = ? AND game_id = ?
+    SELECT * FROM user_games 
+    WHERE user_id = ? AND game_name = ?
 ");
-$stmt->execute([$user_id, $match['game_id']]);
+$stmt->execute([$user_id, $mapped_game_name]);
 $game_profile = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // If no game profile, redirect to game profile page
@@ -389,4 +400,4 @@ include '../../includes/header.php';
     </div>
 </div>
 
-<?php include '../../includes/footer.php'; ?> 
+<?php include '../../includes/footer.php'; ?>
