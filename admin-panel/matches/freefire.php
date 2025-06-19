@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $match_id = $_POST['match_id'];
                 try {
                     // Redirect to match_scoring.php to handle the cancellation
-                    header("Location: match_scoring.php?action=cancel_match&match_id=" . $match_id);
+                    header("Location: ../matches/match_scoring.php?action=cancel_match&match_id=" . $match_id);
                     exit;
                 } catch (Exception $e) {
                     error_log("Error redirecting to cancel match: " . $e->getMessage());
@@ -981,7 +981,7 @@ function editMatch(matchId) {
 
 function cancelMatch(matchId) {
     if (confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.')) {
-        window.location.href = 'match_scoring.php?action=cancel_match&match_id=' + matchId;
+        window.location.href = '../matches/match_scoring.php?action=cancel_match&match_id=' + matchId;
     }
 }
 </script>
