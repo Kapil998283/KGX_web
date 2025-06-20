@@ -439,8 +439,8 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="main-content">
         <div class="streak-container">
             <div class="streak-header">
-                <div class="streak-count"><?php echo $streakInfo['current_streak'] ?? 0; ?></div>
-                <div class="streak-label">Day Streak</div>
+                <div class="streak-count"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
+                <div class="streak-label">Tasks Completed Today</div>
             </div>
 
             <div class="streak-stats">
@@ -449,8 +449,8 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="stat-label">Longest Streak</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
-                    <div class="stat-label">Tasks Completed Today</div>
+                    <div class="stat-number"><?php echo $streakInfo['total_tasks_completed'] ?? 0; ?></div>
+                    <div class="stat-label">Total Tasks Completed</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
@@ -545,39 +545,116 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <?php endif; ?>
 
-            <h2>Last 7 Days</h2>
+            <h2>Last 7 Days Activity</h2>
             <div class="history-section">
-                <div class="history-grid">
-                    <?php foreach ($streak_history as $day): ?>
-                    <div class="history-day <?php echo $day['tasks_completed'] > 0 ? 'completed' : ''; ?>">
-                        <div class="day-date"><?php echo date('M j', strtotime($day['date'])); ?></div>
-                        <div class="day-tasks"><?php echo $day['tasks_completed']; ?> Tasks</div>
-                        <div class="day-points"><?php echo $day['points_earned']; ?> Points</div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Tasks Completed</th>
+                            <th>Points Earned</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        // Get the last 7 days, including days with no activity
+                        $last7Days = array();
+                        for ($i = 0; $i < 7; $i++) {
+                            $date = date('Y-m-d', strtotime("-$i days"));
+                            $last7Days[$date] = array(
+                                'date' => $date,
+                                'tasks_completed' => 0,
+                                'points_earned' => 0
+                            );
+                        }
+                        
+                        // Fill in the actual data
+                        foreach ($streak_history as $day) {
+                            if (isset($last7Days[$day['date']])) {
+                                $last7Days[$day['date']] = $day;
+                            }
+                        }
+                        
+                        foreach ($last7Days as $day): 
+                        ?>
+                        <tr class="<?php echo $day['tasks_completed'] > 0 ? 'active-day' : 'inactive-day'; ?>">
+                            <td><?php echo date('D, M j', strtotime($day['date'])); ?></td>
+                            <td><?php echo $day['tasks_completed']; ?></td>
+                            <td><?php echo $day['points_earned'] ?? 0; ?></td>
+                            <td>
+                                <?php if ($day['tasks_completed'] > 0): ?>
+                                    <span class="status-badge success">
+                                        <ion-icon name="checkmark-circle"></ion-icon> Active
+                                    </span>
+                                <?php else: ?>
+                                    <span class="status-badge inactive">
+                                        <ion-icon name="close-circle"></ion-icon> Inactive
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
 
-            <h2>Achievements</h2>
+            <h2>Milestone Achievements</h2>
             <div class="achievements-section">
-                <?php foreach ($achievements as $achievement): ?>
-                <div class="achievement-card">
-                    <div class="achievement-icon">
-                        <ion-icon name="trophy-outline"></ion-icon>
-                    </div>
-                    <div class="achievement-info">
-                        <div class="achievement-name">
-                            <?php echo htmlspecialchars($achievement['name']); ?>
+                <?php if (empty($achievements)): ?>
+                    <div class="no-achievements">
+                        <ion-icon name="trophy-outline" class="large-icon"></ion-icon>
+                        <p>Complete tasks and earn points to unlock achievements!</p>
+                        <div class="upcoming-milestones">
+                            <h3>Upcoming Milestones:</h3>
+                            <ul>
+                                <li>Bronze Streak (100 points) - Earn exclusive profile badge</li>
+                                <li>Silver Streak (250 points) - Get 50 bonus coins</li>
+                                <li>Gold Streak (500 points) - Unlock special tournament access</li>
+                                <li>Diamond Streak (1000 points) - Earn premium membership benefits</li>
+                            </ul>
                         </div>
-                        <div class="achievement-date">
-                            Achieved on <?php echo date('M j, Y', strtotime($achievement['achieved_at'])); ?>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($achievements as $achievement): ?>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">
+                            <?php
+                            $iconName = 'trophy';
+                            switch($achievement['name']) {
+                                case 'Bronze Streak':
+                                    $iconName = 'medal';
+                                    break;
+                                case 'Silver Streak':
+                                    $iconName = 'ribbon';
+                                    break;
+                                case 'Gold Streak':
+                                    $iconName = 'star';
+                                    break;
+                                case 'Diamond Streak':
+                                    $iconName = 'diamond';
+                                    break;
+                            }
+                            ?>
+                            <ion-icon name="<?php echo $iconName; ?>-outline"></ion-icon>
+                        </div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">
+                                <?php echo htmlspecialchars($achievement['name']); ?>
+                            </div>
+                            <div class="achievement-description">
+                                <?php echo htmlspecialchars($achievement['description']); ?>
+                            </div>
+                            <div class="achievement-date">
+                                Achieved on <?php echo date('M j, Y', strtotime($achievement['achieved_at'])); ?>
+                            </div>
+                        </div>
+                        <div class="achievement-points">
+                            +<?php echo $achievement['reward_points']; ?> Points
                         </div>
                     </div>
-                    <div class="achievement-points">
-                        +<?php echo $achievement['reward_points']; ?> Points
-                    </div>
-                </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>

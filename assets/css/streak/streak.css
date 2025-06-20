@@ -183,4 +183,167 @@ h2 {
 
 h3 {
     font-size: 20px;
+}
+
+/* History Table Styles */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.history-table th,
+.history-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.history-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table .active-day {
+    background-color: #f8fff8;
+}
+
+.history-table .inactive-day {
+    background-color: #fff;
+    color: #666;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+.status-badge.success {
+    background-color: #e8fff0;
+    color: #19fb00;
+}
+
+.status-badge.inactive {
+    background-color: #f8f9fa;
+    color: #666;
+}
+
+.status-badge ion-icon {
+    font-size: 16px;
+}
+
+/* Achievement Styles */
+.no-achievements {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.no-achievements .large-icon {
+    font-size: 64px;
+    color: #19fb00;
+    margin-bottom: 20px;
+}
+
+.upcoming-milestones {
+    margin-top: 30px;
+    text-align: left;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.upcoming-milestones h3 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.upcoming-milestones ul {
+    list-style: none;
+    padding: 0;
+}
+
+.upcoming-milestones li {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    color: #333;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.achievement-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.achievement-card:hover {
+    transform: translateY(-2px);
+}
+
+.achievement-icon {
+    font-size: 32px;
+    color: #19fb00;
+    background: #e8fff0;
+    padding: 15px;
+    border-radius: 50%;
+}
+
+.achievement-info {
+    flex: 1;
+}
+
+.achievement-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.achievement-description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.achievement-date {
+    font-size: 12px;
+    color: #999;
+}
+
+.achievement-points {
+    font-size: 18px;
+    font-weight: 600;
+    color: #19fb00;
+    padding: 10px 20px;
+    background: #e8fff0;
+    border-radius: 20px;
 } 
