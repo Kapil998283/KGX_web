@@ -143,20 +143,31 @@ function checkTaskCompletion($user_id, $task_name) {
             
         case 'Join a Match':
             // Check if user joined any match today
-            $sql = "SELECT COUNT(*) as count FROM match_participants 
-                   WHERE user_id = ? AND DATE(join_date) = CURDATE()";
+            $sql = "SELECT COUNT(*) as count 
+                   FROM (
+                       SELECT user_id, join_date FROM match_participants 
+                       WHERE user_id = ? AND DATE(join_date) = CURDATE()
+                       UNION ALL
+                       SELECT user_id, join_date FROM match_player_history 
+                       WHERE user_id = ? AND DATE(join_date) = CURDATE()
+                   ) combined_matches";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([$user_id]);
+            $stmt->execute([$user_id, $user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'] > 0;
             
         case 'Win a Match':
             // Check if user won any match today
-            $sql = "SELECT COUNT(*) as count FROM match_participants 
-                   WHERE user_id = ? AND status = 'winner' 
-                   AND DATE(join_date) = CURDATE()";
+            $sql = "SELECT COUNT(*) as count 
+                   FROM (
+                       SELECT user_id, join_date FROM match_participants 
+                       WHERE user_id = ? AND status = 'winner' AND DATE(join_date) = CURDATE()
+                       UNION ALL
+                       SELECT user_id, join_date FROM match_player_history 
+                       WHERE user_id = ? AND status = 'winner' AND DATE(join_date) = CURDATE()
+                   ) combined_matches";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([$user_id]);
+            $stmt->execute([$user_id, $user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'] > 0;
 
@@ -173,18 +184,28 @@ function checkTaskCompletion($user_id, $task_name) {
             return $result['count'] > 0;
 
         case 'First Match':
-            // Check if user has played at least one match
-            $sql = "SELECT COUNT(*) as count FROM match_participants WHERE user_id = ?";
+            // Check if user has played at least one match (including history)
+            $sql = "SELECT COUNT(*) as count 
+                   FROM (
+                       SELECT user_id FROM match_participants WHERE user_id = ?
+                       UNION ALL
+                       SELECT user_id FROM match_player_history WHERE user_id = ?
+                   ) combined_matches";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([$user_id]);
+            $stmt->execute([$user_id, $user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'] > 0;
 
         case 'Team Membership':
-            // Check if user is in any team
-            $sql = "SELECT COUNT(*) as count FROM team_members WHERE user_id = ?";
+            // Check if user is in any team (current or history)
+            $sql = "SELECT COUNT(*) as count 
+                   FROM (
+                       SELECT user_id FROM team_members WHERE user_id = ?
+                       UNION ALL
+                       SELECT user_id FROM team_member_history WHERE user_id = ?
+                   ) combined_teams";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([$user_id]);
+            $stmt->execute([$user_id, $user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'] > 0;
 
@@ -203,11 +224,9 @@ function checkTaskCompletion($user_id, $task_name) {
             // Check if user has played 50 matches (including history)
             $sql = "SELECT COUNT(*) as count 
                    FROM (
-                       SELECT user_id FROM match_participants 
-                       WHERE user_id = ?
+                       SELECT user_id FROM match_participants WHERE user_id = ?
                        UNION ALL
-                       SELECT user_id FROM match_history 
-                       WHERE user_id = ?
+                       SELECT user_id FROM match_player_history WHERE user_id = ?
                    ) combined_matches";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id, $user_id]);
