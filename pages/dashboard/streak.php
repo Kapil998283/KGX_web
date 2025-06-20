@@ -148,8 +148,8 @@ function checkTaskCompletion($user_id, $task_name) {
                        SELECT user_id, join_date FROM match_participants 
                        WHERE user_id = ? AND DATE(join_date) = CURDATE()
                        UNION ALL
-                       SELECT user_id, join_date FROM match_player_history 
-                       WHERE user_id = ? AND DATE(join_date) = CURDATE()
+                       SELECT user_id, match_date as join_date FROM match_history_archive 
+                       WHERE user_id = ? AND DATE(match_date) = CURDATE()
                    ) combined_matches";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id, $user_id]);
@@ -163,8 +163,8 @@ function checkTaskCompletion($user_id, $task_name) {
                        SELECT user_id, join_date FROM match_participants 
                        WHERE user_id = ? AND status = 'winner' AND DATE(join_date) = CURDATE()
                        UNION ALL
-                       SELECT user_id, join_date FROM match_player_history 
-                       WHERE user_id = ? AND status = 'winner' AND DATE(join_date) = CURDATE()
+                       SELECT user_id, match_date as join_date FROM match_history_archive 
+                       WHERE user_id = ? AND position = 1 AND DATE(match_date) = CURDATE()
                    ) combined_matches";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id, $user_id]);
@@ -189,7 +189,7 @@ function checkTaskCompletion($user_id, $task_name) {
                    FROM (
                        SELECT user_id FROM match_participants WHERE user_id = ?
                        UNION ALL
-                       SELECT user_id FROM match_player_history WHERE user_id = ?
+                       SELECT user_id FROM match_history_archive WHERE user_id = ?
                    ) combined_matches";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id, $user_id]);
@@ -226,7 +226,7 @@ function checkTaskCompletion($user_id, $task_name) {
                    FROM (
                        SELECT user_id FROM match_participants WHERE user_id = ?
                        UNION ALL
-                       SELECT user_id FROM match_player_history WHERE user_id = ?
+                       SELECT user_id FROM match_history_archive WHERE user_id = ?
                    ) combined_matches";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id, $user_id]);
