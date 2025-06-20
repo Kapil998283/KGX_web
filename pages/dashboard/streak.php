@@ -438,10 +438,6 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="main-content">
         <div class="streak-container">
-            <div class="streak-header">
-                <div class="streak-count"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
-                <div class="streak-label">Tasks Completed Today</div>
-            </div>
 
             <div class="streak-stats">
                 <div class="stat-card">
@@ -449,8 +445,8 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="stat-label">Longest Streak</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number"><?php echo $streakInfo['total_tasks_completed'] ?? 0; ?></div>
-                    <div class="stat-label">Total Tasks Completed</div>
+                    <div class="stat-number"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
+                    <div class="stat-label">Tasks Completed Today</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
@@ -608,10 +604,26 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="upcoming-milestones">
                             <h3>Upcoming Milestones:</h3>
                             <ul>
-                                <li>Bronze Streak (100 points) - Earn exclusive profile badge</li>
-                                <li>Silver Streak (250 points) - Get 50 bonus coins</li>
-                                <li>Gold Streak (500 points) - Unlock special tournament access</li>
-                                <li>Diamond Streak (1000 points) - Earn premium membership benefits</li>
+                                <li>
+                                    <div class="milestone-name">Bronze Streak</div>
+                                    <div class="milestone-points">100 points</div>
+                                    <div class="milestone-reward">Earn exclusive profile badge</div>
+                                </li>
+                                <li>
+                                    <div class="milestone-name">Silver Streak</div>
+                                    <div class="milestone-points">250 points</div>
+                                    <div class="milestone-reward">Get 50 bonus coins</div>
+                                </li>
+                                <li>
+                                    <div class="milestone-name">Gold Streak</div>
+                                    <div class="milestone-points">500 points</div>
+                                    <div class="milestone-reward">Unlock special tournament access</div>
+                                </li>
+                                <li>
+                                    <div class="milestone-name">Diamond Streak</div>
+                                    <div class="milestone-points">1000 points</div>
+                                    <div class="milestone-reward">Earn premium membership benefits</div>
+                                </li>
                             </ul>
                         </div>
                     </div>

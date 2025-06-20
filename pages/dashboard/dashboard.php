@@ -346,8 +346,8 @@ $current_streak = $streak_data['current_streak'] ?? 0;
                 <div class="card">
                     <div>
                         <div class="numbers"><?php echo $streak_points; ?></div>
-                        <div class="cardName">Streak Points</div>
-                        <div class="cardSubtext"><?php echo $current_streak; ?> Day Streak</div>
+                        <div class="cardName">Total Streak Points</div>
+                        
                     </div>
 
                     <div class="iconBx">

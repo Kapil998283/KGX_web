@@ -186,30 +186,39 @@ h3 {
 }
 
 /* History Table Styles */
+.history-section {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin: 40px 0;
+}
+
 .history-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: white;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
-}
-
-.history-table th,
-.history-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
 }
 
 .history-table th {
     background: #f8f9fa;
+    padding: 20px;
     font-weight: 600;
     color: #333;
     text-transform: uppercase;
     font-size: 14px;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #eee;
+}
+
+.history-table td {
+    padding: 20px;
+    font-size: 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
 }
 
 .history-table tr:last-child td {
@@ -228,10 +237,12 @@ h3 {
 .status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    border-radius: 15px;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
     font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .status-badge.success {
@@ -245,76 +256,150 @@ h3 {
 }
 
 .status-badge ion-icon {
-    font-size: 16px;
+    font-size: 18px;
 }
 
 /* Achievement Styles */
+.achievements-section {
+    margin: 40px 0;
+    padding: 30px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
 .no-achievements {
     text-align: center;
-    padding: 40px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 50px 20px;
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
 .no-achievements .large-icon {
-    font-size: 64px;
+    font-size: 80px;
     color: #19fb00;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+.no-achievements p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 30px;
+    font-weight: 500;
 }
 
 .upcoming-milestones {
-    margin-top: 30px;
+    margin-top: 40px;
     text-align: left;
-    max-width: 600px;
+    max-width: 800px;
     margin-left: auto;
     margin-right: auto;
 }
 
 .upcoming-milestones h3 {
     color: #333;
-    margin-bottom: 15px;
+    margin-bottom: 25px;
+    font-size: 24px;
+    text-align: center;
+    position: relative;
+}
+
+.upcoming-milestones h3:after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: #19fb00;
+    margin: 15px auto 0;
+    border-radius: 2px;
 }
 
 .upcoming-milestones ul {
     list-style: none;
     padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
 }
 
 .upcoming-milestones li {
-    padding: 15px;
-    margin-bottom: 10px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
     color: #333;
     font-size: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border: 1px solid #eee;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.upcoming-milestones li:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+    border-color: #19fb00;
+}
+
+.milestone-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.milestone-points {
+    color: #19fb00;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.milestone-reward {
+    color: #666;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 .achievement-card {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 25px;
     background: white;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border: 1px solid #eee;
 }
 
 .achievement-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+    border-color: #19fb00;
 }
 
 .achievement-icon {
-    font-size: 32px;
+    font-size: 40px;
     color: #19fb00;
     background: #e8fff0;
-    padding: 15px;
+    padding: 20px;
     border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.achievement-card:hover .achievement-icon {
+    transform: scale(1.1) rotate(5deg);
 }
 
 .achievement-info {
@@ -322,28 +407,30 @@ h3 {
 }
 
 .achievement-name {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 600;
     color: #333;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 .achievement-description {
-    font-size: 14px;
+    font-size: 16px;
     color: #666;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
+    line-height: 1.5;
 }
 
 .achievement-date {
-    font-size: 12px;
+    font-size: 14px;
     color: #999;
 }
 
 .achievement-points {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     color: #19fb00;
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: #e8fff0;
-    border-radius: 20px;
+    border-radius: 25px;
+    white-space: nowrap;
 } 
