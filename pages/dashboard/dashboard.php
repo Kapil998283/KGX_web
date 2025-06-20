@@ -196,6 +196,14 @@ if ($stmt_redemption) {
     error_log("Dashboard: Failed to prepare redemption statement: " . $conn->errorInfo()[2]);
 }
 
+// Get user's streak points
+$streak_sql = "SELECT streak_points, current_streak FROM user_streaks WHERE user_id = ?";
+$streak_stmt = $conn->prepare($streak_sql);
+$streak_stmt->execute([$user_id]);
+$streak_data = $streak_stmt->fetch(PDO::FETCH_ASSOC);
+$streak_points = $streak_data['streak_points'] ?? 0;
+$current_streak = $streak_data['current_streak'] ?? 0;
+
 ?>
 
 <!DOCTYPE html>
@@ -337,8 +345,9 @@ if ($stmt_redemption) {
 
                 <div class="card">
                     <div>
-                        <div class="numbers"><?php echo $tickets; ?></div>
-                        <div class="cardName">STRIKE</div>
+                        <div class="numbers"><?php echo $streak_points; ?></div>
+                        <div class="cardName">Streak Points</div>
+                        <div class="cardSubtext"><?php echo $current_streak; ?> Day Streak</div>
                     </div>
 
                     <div class="iconBx">
@@ -395,7 +404,7 @@ if ($stmt_redemption) {
                 <div class="card">
                     <div>
                         <div class="numbers"><?php echo $matches_count; ?></div>
-                        <div class="cardName">videos watched</div>
+                        <div class="cardName">Videos atched</div>
                     </div>
 
                     <div class="iconBx">

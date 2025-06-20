@@ -258,6 +258,16 @@ body {
   color: var(--white);
 }
 
+.cardSubtext {
+  font-size: 0.8em;
+  color: #999;
+  margin-top: 5px;
+}
+
+.card .iconBx ion-icon[name="flame-outline"] {
+  color: #ff4444;
+}
+
 /* ================== Order Details List ============== */
 .details {
   position: relative;

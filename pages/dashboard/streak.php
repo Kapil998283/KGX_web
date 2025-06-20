@@ -63,10 +63,115 @@ $tasks_sql = "SELECT
         st.id = ust.task_id 
         AND ust.user_id = ? 
         AND DATE(ust.completion_date) = CURDATE()
+    WHERE st.name != 'Invite Friends' 
+    AND st.name != 'Complete Profile'
+    AND st.is_daily = 1
     ORDER BY st.reward_points ASC";
 $tasks_stmt = $conn->prepare($tasks_sql);
 $tasks_stmt->execute([$user_id]);
 $tasks = $tasks_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Check and record daily login if not already recorded today
+$login_check_sql = "SELECT COUNT(*) as logged_today 
+                    FROM user_streak_tasks ust 
+                    JOIN streak_tasks st ON ust.task_id = st.id 
+                    WHERE ust.user_id = ? 
+                    AND st.name = 'Daily Login' 
+                    AND DATE(ust.completion_date) = CURDATE()";
+$login_check_stmt = $conn->prepare($login_check_sql);
+$login_check_stmt->execute([$user_id]);
+$login_check = $login_check_stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($login_check['logged_today'] == 0) {
+    // Get the Daily Login task ID
+    $login_task_sql = "SELECT id, reward_points FROM streak_tasks WHERE name = 'Daily Login' AND is_daily = 1";
+    $login_task_stmt = $conn->prepare($login_task_sql);
+    $login_task_stmt->execute();
+    $login_task = $login_task_stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($login_task) {
+        // Record the daily login and award points
+        $record_login_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
+                            VALUES (?, ?, ?)";
+        $record_login_stmt = $conn->prepare($record_login_sql);
+        $record_login_stmt->execute([$user_id, $login_task['id'], $login_task['reward_points']]);
+        
+        // Update user streak points
+        $update_streak_sql = "UPDATE user_streaks 
+                            SET streak_points = streak_points + ?, 
+                                total_tasks_completed = total_tasks_completed + 1,
+                                current_streak = current_streak + 1,
+                                longest_streak = GREATEST(longest_streak, current_streak + 1),
+                                last_activity_date = CURDATE()
+                            WHERE user_id = ?";
+        $update_streak_stmt = $conn->prepare($update_streak_sql);
+        $update_streak_stmt->execute([$login_task['reward_points'], $user_id]);
+    }
+}
+
+// Function to check task completion
+function checkTaskCompletion($user_id, $task_name) {
+    global $conn;
+    
+    switch($task_name) {
+        case 'Daily Login':
+            // Check if login was recorded today
+            $sql = "SELECT COUNT(*) as count 
+                   FROM user_streak_tasks ust 
+                   JOIN streak_tasks st ON ust.task_id = st.id 
+                   WHERE ust.user_id = ? 
+                   AND st.name = 'Daily Login' 
+                   AND DATE(ust.completion_date) = CURDATE()";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] > 0;
+            
+        case 'Join a Match':
+            // Check if user joined any match today
+            $sql = "SELECT COUNT(*) as count FROM match_participants 
+                   WHERE user_id = ? AND DATE(joined_at) = CURDATE()";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] > 0;
+            
+        case 'Win a Match':
+            // Check if user won any match today
+            $sql = "SELECT COUNT(*) as count FROM match_results 
+                   WHERE user_id = ? AND position = 1 
+                   AND DATE(created_at) = CURDATE()";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] > 0;
+            
+        default:
+            return false;
+    }
+}
+
+// Automatically complete tasks and award points
+foreach($tasks as $task) {
+    if (!$task['completed']) {
+        $isCompleted = checkTaskCompletion($user_id, $task['name']);
+        if ($isCompleted) {
+            // Record task completion and award points
+            $complete_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
+                           VALUES (?, ?, ?)";
+            $complete_stmt = $conn->prepare($complete_sql);
+            $complete_stmt->execute([$user_id, $task['id'], $task['reward_points']]);
+            
+            // Update user streak points
+            $update_sql = "UPDATE user_streaks 
+                         SET streak_points = streak_points + ?, 
+                             total_tasks_completed = total_tasks_completed + 1
+                         WHERE user_id = ?";
+            $update_stmt = $conn->prepare($update_sql);
+            $update_stmt->execute([$task['reward_points'], $user_id]);
+        }
+    }
+}
 
 // Get streak history
 $history_sql = "SELECT 
@@ -113,6 +218,7 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
             top: 20px;
             left: 20px;
             padding: 10px 20px;
+            margin-top: 100px;
             background: #19fb00;
             color: #fff;
             border: none;
@@ -134,6 +240,50 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 80px 20px 20px 20px;
             max-width: 1200px;
             margin: 0 auto;
+        }
+
+        .task-status {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .status-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .status-icon ion-icon {
+            font-size: 24px;
+        }
+        
+        .status-icon.completed {
+            color: #19fb00;
+        }
+        
+        .status-icon.pending {
+            color: #ffa500;
+        }
+        
+        .status-icon.incomplete {
+            color: #ff4444;
+        }
+        
+        .task-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .task-card.completed::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            border-style: solid;
+            border-width: 0 50px 50px 0;
+            border-color: transparent #19fb00 transparent transparent;
         }
     </style>
 </head>
@@ -193,16 +343,25 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="task-description">
                         <?php echo htmlspecialchars($task['description']); ?>
                     </div>
-                    <?php if (!$task['completed']): ?>
-                    <form method="POST">
-                        <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                        <button type="submit" name="complete_task" class="complete-task-btn">
-                            Complete Task
-                        </button>
-                    </form>
-                    <?php else: ?>
-                    <button class="complete-task-btn" disabled>Completed</button>
-                    <?php endif; ?>
+                    <div class="task-status">
+                        <?php if ($task['completed']): ?>
+                            <div class="status-icon completed">
+                                <ion-icon name="checkmark-circle"></ion-icon>
+                                <span>Task Completed! +<?php echo $task['reward_points']; ?> points earned</span>
+                            </div>
+                        <?php else: ?>
+                            <?php $status = checkTaskCompletion($user_id, $task['name']); ?>
+                            <div class="status-icon <?php echo $status ? 'pending' : 'incomplete'; ?>">
+                                <?php if ($status): ?>
+                                    <ion-icon name="time"></ion-icon>
+                                    <span>Task completed! Points will be awarded soon.</span>
+                                <?php else: ?>
+                                    <ion-icon name="close-circle"></ion-icon>
+                                    <span>Task not completed yet</span>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <?php endforeach; ?>
             </div>

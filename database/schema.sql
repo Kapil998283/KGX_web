@@ -797,9 +797,20 @@ CREATE TABLE IF NOT EXISTS streak_tasks (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     reward_points INT NOT NULL DEFAULT 0,
+    is_daily BOOLEAN DEFAULT TRUE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Insert daily streak tasks
+INSERT INTO streak_tasks (name, description, reward_points, is_daily) VALUES
+('Daily Login', 'Log in to your account', 5, 1),
+('Join a Match', 'Participate in any match', 10, 1),
+('Win a Match', 'Win any match you participate in', 20, 1);
+
+-- Insert one-time tasks
+INSERT INTO streak_tasks (name, description, reward_points, is_daily) VALUES
+('Complete Profile', 'Update your game profiles', 50, 0);
 
 -- User Streaks Table
 CREATE TABLE IF NOT EXISTS user_streaks (
@@ -846,19 +857,4 @@ CREATE TABLE IF NOT EXISTS user_streak_milestones (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (milestone_id) REFERENCES streak_milestones(id) ON DELETE CASCADE
 );
-
--- Insert some default streak tasks
-INSERT INTO streak_tasks (name, description, reward_points) VALUES
-('Daily Login', 'Log in to your account', 5),
-('Join a Match', 'Participate in any match', 10),
-('Win a Match', 'Win any match you participate in', 20),
-('Complete Profile', 'Update your game profiles', 15),
-('Invite Friends', 'Invite new players to join', 25);
-
--- Insert some default streak milestones
-INSERT INTO streak_milestones (name, description, points_required, reward_points) VALUES
-('Bronze Streak', 'Reach 100 streak points', 100, 50),
-('Silver Streak', 'Reach 500 streak points', 500, 100),
-('Gold Streak', 'Reach 1000 streak points', 1000, 200),
-('Diamond Streak', 'Reach 5000 streak points', 5000, 500);
 
