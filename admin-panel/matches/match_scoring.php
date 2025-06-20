@@ -313,7 +313,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $notificationMessage = "Match completed! {$matchInfo['winner_name']} won the {$matchInfo['game_name']} {$matchInfo['match_type']} match";
                     
                     foreach ($users as $user_id) {
-                        $stmt = $db->prepare("INSERT INTO notifications (user_id, message, type, match_id) VALUES (?, ?, 'match_completed', ?)");
+                        $stmt = $db->prepare("
+                            INSERT INTO notifications (
+                                user_id, 
+                                type, 
+                                message, 
+                                related_id, 
+                                related_type,
+                                created_at
+                            ) VALUES (
+                                ?, 
+                                'match_completed', 
+                                ?, 
+                                ?, 
+                                'match',
+                                NOW()
+                            )
+                        ");
                         $stmt->execute([$user_id, $notificationMessage, $match_id]);
                     }
                     
@@ -393,7 +409,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $notificationMessage = "Match completed! {$matchInfo['winner_name']} won the {$matchInfo['game_name']} {$matchInfo['match_type']} match";
                     
                     foreach ($users as $user_id) {
-                        $stmt = $db->prepare("INSERT INTO notifications (user_id, message, type, match_id) VALUES (?, ?, 'match_completed', ?)");
+                        $stmt = $db->prepare("
+                            INSERT INTO notifications (
+                                user_id, 
+                                type, 
+                                message, 
+                                related_id, 
+                                related_type,
+                                created_at
+                            ) VALUES (
+                                ?, 
+                                'match_completed', 
+                                ?, 
+                                ?, 
+                                'match',
+                                NOW()
+                            )
+                        ");
                         $stmt->execute([$user_id, $notificationMessage, $match_id]);
                     }
                     
