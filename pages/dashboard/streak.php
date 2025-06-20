@@ -54,8 +54,8 @@ $today_tasks_stmt = $conn->prepare($today_tasks_sql);
 $today_tasks_stmt->execute([$user_id]);
 $today_tasks = $today_tasks_stmt->fetch(PDO::FETCH_ASSOC);
 
-// Get all available tasks and their completion status
-$tasks_sql = "SELECT 
+// Get daily tasks and their completion status
+$daily_tasks_sql = "SELECT 
     st.*,
     CASE WHEN ust.id IS NOT NULL THEN 1 ELSE 0 END as completed
     FROM streak_tasks st
@@ -63,13 +63,27 @@ $tasks_sql = "SELECT
         st.id = ust.task_id 
         AND ust.user_id = ? 
         AND DATE(ust.completion_date) = CURDATE()
-    WHERE st.name != 'Invite Friends' 
-    AND st.name != 'Complete Profile'
+    WHERE st.is_active = 1 
     AND st.is_daily = 1
     ORDER BY st.reward_points ASC";
-$tasks_stmt = $conn->prepare($tasks_sql);
-$tasks_stmt->execute([$user_id]);
-$tasks = $tasks_stmt->fetchAll(PDO::FETCH_ASSOC);
+$daily_tasks_stmt = $conn->prepare($daily_tasks_sql);
+$daily_tasks_stmt->execute([$user_id]);
+$daily_tasks = $daily_tasks_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get one-time tasks and their completion status
+$onetime_tasks_sql = "SELECT 
+    st.*,
+    CASE WHEN ust.id IS NOT NULL THEN 1 ELSE 0 END as completed
+    FROM streak_tasks st
+    LEFT JOIN user_streak_tasks ust ON 
+        st.id = ust.task_id 
+        AND ust.user_id = ?
+    WHERE st.is_active = 1 
+    AND st.is_daily = 0
+    ORDER BY st.reward_points ASC";
+$onetime_tasks_stmt = $conn->prepare($onetime_tasks_sql);
+$onetime_tasks_stmt->execute([$user_id]);
+$onetime_tasks = $onetime_tasks_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Check and record daily login if not already recorded today
 $login_check_sql = "SELECT COUNT(*) as logged_today 
@@ -84,7 +98,7 @@ $login_check = $login_check_stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($login_check['logged_today'] == 0) {
     // Get the Daily Login task ID
-    $login_task_sql = "SELECT id, reward_points FROM streak_tasks WHERE name = 'Daily Login' AND is_daily = 1";
+    $login_task_sql = "SELECT id, reward_points FROM streak_tasks WHERE name = 'Daily Login'";
     $login_task_stmt = $conn->prepare($login_task_sql);
     $login_task_stmt->execute();
     $login_task = $login_task_stmt->fetch(PDO::FETCH_ASSOC);
@@ -152,7 +166,28 @@ function checkTaskCompletion($user_id, $task_name) {
 }
 
 // Automatically complete tasks and award points
-foreach($tasks as $task) {
+foreach($daily_tasks as $task) {
+    if (!$task['completed']) {
+        $isCompleted = checkTaskCompletion($user_id, $task['name']);
+        if ($isCompleted) {
+            // Record task completion and award points
+            $complete_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
+                           VALUES (?, ?, ?)";
+            $complete_stmt = $conn->prepare($complete_sql);
+            $complete_stmt->execute([$user_id, $task['id'], $task['reward_points']]);
+            
+            // Update user streak points
+            $update_sql = "UPDATE user_streaks 
+                         SET streak_points = streak_points + ?, 
+                             total_tasks_completed = total_tasks_completed + 1
+                         WHERE user_id = ?";
+            $update_stmt = $conn->prepare($update_sql);
+            $update_stmt->execute([$task['reward_points'], $user_id]);
+        }
+    }
+}
+
+foreach($onetime_tasks as $task) {
     if (!$task['completed']) {
         $isCompleted = checkTaskCompletion($user_id, $task['name']);
         if ($isCompleted) {
@@ -334,7 +369,7 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
 
             <h2>Daily Tasks</h2>
             <div class="tasks-grid">
-                <?php foreach ($tasks as $task): ?>
+                <?php foreach ($daily_tasks as $task): ?>
                 <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
                     <div class="task-header">
                         <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
@@ -365,6 +400,42 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <?php endforeach; ?>
             </div>
+
+            <?php if (!empty($onetime_tasks)): ?>
+            <h2>One-Time Achievements</h2>
+            <div class="tasks-grid">
+                <?php foreach ($onetime_tasks as $task): ?>
+                <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
+                    <div class="task-header">
+                        <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
+                        <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
+                    </div>
+                    <div class="task-description">
+                        <?php echo htmlspecialchars($task['description']); ?>
+                    </div>
+                    <div class="task-status">
+                        <?php if ($task['completed']): ?>
+                            <div class="status-icon completed">
+                                <ion-icon name="checkmark-circle"></ion-icon>
+                                <span>Achievement Unlocked! +<?php echo $task['reward_points']; ?> points earned</span>
+                            </div>
+                        <?php else: ?>
+                            <?php $status = checkTaskCompletion($user_id, $task['name']); ?>
+                            <div class="status-icon <?php echo $status ? 'pending' : 'incomplete'; ?>">
+                                <?php if ($status): ?>
+                                    <ion-icon name="time"></ion-icon>
+                                    <span>Completed! Points will be awarded soon.</span>
+                                <?php else: ?>
+                                    <ion-icon name="close-circle"></ion-icon>
+                                    <span>Not completed yet</span>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
 
             <h2>Last 7 Days</h2>
             <div class="history-section">

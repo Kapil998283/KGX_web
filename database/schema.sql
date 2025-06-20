@@ -848,6 +848,13 @@ CREATE TABLE IF NOT EXISTS streak_milestones (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Insert default streak milestones
+INSERT INTO streak_milestones (name, description, points_required, reward_points) VALUES
+('Bronze Streak', 'Reach 100 streak points', 100, 50),
+('Silver Streak', 'Reach 500 streak points', 500, 100),
+('Gold Streak', 'Reach 1000 streak points', 1000, 200),
+('Diamond Streak', 'Reach 5000 streak points', 5000, 500);
+
 -- User Streak Milestones Table
 CREATE TABLE IF NOT EXISTS user_streak_milestones (
     id INT PRIMARY KEY AUTO_INCREMENT,
