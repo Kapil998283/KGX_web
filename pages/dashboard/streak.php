@@ -1,11 +1,13 @@
 <?php
 require_once '../../config/database.php';
 require_once '../../includes/auth.php';
-require_once '../../includes/user-auth.php';
+require_once '../../includes/header.php';
 
 // Initialize database connection
 $database = new Database();
 $conn = $database->connect();
+
+require_once '../../includes/user-auth.php';
 
 // Check if user is logged in
 if(!isset($_SESSION['user_id'])) {
@@ -14,13 +16,6 @@ if(!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-
-// Get user profile image
-$profile_sql = "SELECT profile_image FROM users WHERE id = ?";
-$profile_stmt = $conn->prepare($profile_sql);
-$profile_stmt->execute([$user_id]);
-$profile_data = $profile_stmt->fetch(PDO::FETCH_ASSOC);
-$profile_image = $profile_data['profile_image'] ?? '../../assets/images/default-profile.png';
 
 // Get user's streak information
 $streak_sql = "SELECT current_streak, longest_streak, streak_points, total_tasks_completed 
@@ -45,7 +40,7 @@ $milestone_sql = "SELECT sm.*
                  FROM streak_milestones sm
                  LEFT JOIN user_streak_milestones usm ON sm.id = usm.milestone_id AND usm.user_id = ?
                  WHERE usm.id IS NULL AND sm.is_active = 1
-                 ORDER BY sm.days_required ASC
+                 ORDER BY sm.points_required ASC
                  LIMIT 1";
 $milestone_stmt = $conn->prepare($milestone_sql);
 $milestone_stmt->execute([$user_id]);
@@ -234,14 +229,17 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <?php if ($next_milestone): ?>
                 <div class="milestone-progress">
-                    <h3>Next Milestone: <?php echo $next_milestone['days_required']; ?> Days</h3>
+                    <h3>Next Milestone: <?php echo htmlspecialchars($next_milestone['name']); ?></h3>
                     <div class="progress-bar">
                         <div class="progress" style="width: <?php 
-                            echo min(100, (($streakInfo['current_streak'] ?? 0) / $next_milestone['days_required']) * 100);
+                            echo min(100, (($streakInfo['streak_points'] ?? 0) / $next_milestone['points_required']) * 100);
                         ?>%"></div>
                     </div>
                     <div class="milestone-reward">
                         Reward: <?php echo $next_milestone['reward_points']; ?> Points
+                    </div>
+                    <div class="milestone-description">
+                        <?php echo htmlspecialchars($next_milestone['description']); ?>
                     </div>
                 </div>
                 <?php endif; ?>
