@@ -1,89 +1,63 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Function to update streak info in the UI
     function updateStreakInfo(streakInfo) {
-        // Update streak count
-        document.querySelector('.streak-count').textContent = streakInfo.current_streak;
+        document.getElementById('current-streak').textContent = streakInfo.current_streak;
+        document.getElementById('streak-points').textContent = streakInfo.streak_points;
         
-        // Update tasks completed
-        document.querySelector('.tasks-completed').textContent = streakInfo.tasks_completed_today;
-        
-        // Update total points
-        document.querySelector('.total-points').textContent = streakInfo.total_points;
-        
-        // Update milestone progress if exists
-        if (streakInfo.next_milestone) {
-            const progressBar = document.querySelector('.progress');
-            const progressText = document.querySelector('.progress-text');
-            const milestoneReward = document.querySelector('.milestone-reward');
+        // Update progress bar if it exists
+        const progressBar = document.querySelector('.progress');
+        if (progressBar) {
+            const requiredPoints = parseInt(document.querySelector('.progress-text').textContent.split('/')[1]);
+            const progress = Math.min(100, (streakInfo.streak_points / requiredPoints) * 100);
+            progressBar.style.width = `${progress}%`;
             
-            const progressPercent = Math.min(100, (streakInfo.current_streak / streakInfo.next_milestone.required_streak) * 100);
-            progressBar.style.width = progressPercent + '%';
-            progressText.textContent = `Next Milestone: ${streakInfo.next_milestone.required_streak} Days`;
-            milestoneReward.textContent = `Reward: ${streakInfo.next_milestone.reward_points} Points`;
+            // Update points text
+            document.querySelector('.progress-text').textContent = 
+                `${streakInfo.streak_points} / ${requiredPoints} points`;
         }
     }
     
     // Function to handle task completion
-    function completeTask(taskId, button) {
-        // Disable the button to prevent double submission
-        button.disabled = true;
+    function completeTask(taskId) {
+        const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+        const completeButton = taskCard.querySelector('.complete-task-btn');
         
-        // Create form data
-        const formData = new FormData();
-        formData.append('action', 'complete_task');
-        formData.append('task_id', taskId);
+        // Disable button while processing
+        completeButton.disabled = true;
         
-        // Send AJAX request
         fetch('streak_actions.php', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=complete_task&task_id=${taskId}`
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Update UI
+                // Update task card
+                taskCard.classList.add('completed');
+                const taskFooter = taskCard.querySelector('.task-footer');
+                taskFooter.innerHTML = `
+                    <span class="points">${taskCard.querySelector('.points').textContent}</span>
+                    <span class="completed-label">Completed</span>
+                `;
+                
+                // Update streak info
                 updateStreakInfo(data.streak_info);
                 
-                // Update task card
-                const taskCard = button.closest('.task-card');
-                const pointsElement = taskCard.querySelector('.task-points');
-                pointsElement.classList.add('task-complete');
-                button.remove();
-                
                 // Show success message
-                const alertContainer = document.createElement('div');
-                alertContainer.className = 'alert alert-success';
-                alertContainer.textContent = data.message;
-                document.querySelector('.tasks-container').insertBefore(
-                    alertContainer,
-                    document.querySelector('.streak-summary')
-                );
-                
-                // Remove alert after 3 seconds
-                setTimeout(() => {
-                    alertContainer.remove();
-                }, 3000);
+                showAlert('Task completed successfully! Keep up the great work!');
             } else {
                 throw new Error(data.error || 'Failed to complete task');
             }
         })
         .catch(error => {
             // Re-enable button
-            button.disabled = false;
+            completeButton.disabled = false;
             
             // Show error message
-            const alertContainer = document.createElement('div');
-            alertContainer.className = 'alert alert-error';
-            alertContainer.textContent = error.message;
-            document.querySelector('.tasks-container').insertBefore(
-                alertContainer,
-                document.querySelector('.streak-summary')
-            );
-            
-            // Remove alert after 3 seconds
-            setTimeout(() => {
-                alertContainer.remove();
-            }, 3000);
+            showAlert(error.message, 'error');
         });
     }
     
@@ -92,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             const taskId = this.closest('form').querySelector('input[name="task_id"]').value;
-            completeTask(taskId, this);
+            completeTask(taskId);
         });
     });
     
@@ -117,4 +91,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Refresh streak info every 5 minutes
     setInterval(refreshStreakInfo, 5 * 60 * 1000);
-}); 
+});
+
+function showAlert(message, type = 'success') {
+    const alertContainer = document.getElementById('alert-container');
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.textContent = message;
+    
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+} 

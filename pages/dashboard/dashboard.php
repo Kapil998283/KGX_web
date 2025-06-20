@@ -244,11 +244,11 @@ if ($stmt_redemption) {
 
                 
                 <li>
-                    <a href="./strike.php">
+                    <a href="./streak.php">
                         <span class="icon">
                             <ion-icon name="flame-outline"></ion-icon>
                         </span>
-                        <span class="title">Strike</span>
+                        <span class="title">Streak</span>
                     </a>
                 </li>
 

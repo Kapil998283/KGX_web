@@ -1,0 +1,473 @@
+<?php
+require_once '../../config/database.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/header.php';
+
+// Initialize database connection
+$database = new Database();
+$conn = $database->connect();
+
+session_start();
+require_once '../../includes/user-auth.php';
+
+// Check if user is logged in
+if(!isset($_SESSION['user_id'])) {
+    header("Location: /KGX/pages/login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+
+// Get user's streak information
+$streak_sql = "SELECT current_streak, longest_streak, streak_points, total_tasks_completed 
+               FROM user_streaks 
+               WHERE user_id = ?";
+$streak_stmt = $conn->prepare($streak_sql);
+$streak_stmt->execute([$user_id]);
+$streak_data = $streak_stmt->fetch(PDO::FETCH_ASSOC);
+
+// Get next milestone
+$milestone_sql = "SELECT sm.* 
+                 FROM streak_milestones sm
+                 LEFT JOIN user_streak_milestones usm ON sm.id = usm.milestone_id AND usm.user_id = ?
+                 WHERE usm.id IS NULL AND sm.is_active = 1
+                 ORDER BY sm.days_required ASC
+                 LIMIT 1";
+$milestone_stmt = $conn->prepare($milestone_sql);
+$milestone_stmt->execute([$user_id]);
+$next_milestone = $milestone_stmt->fetch(PDO::FETCH_ASSOC);
+
+// Get today's completed tasks
+$today_tasks_sql = "SELECT COUNT(*) as completed_count
+                    FROM user_streak_tasks 
+                    WHERE user_id = ? AND DATE(completion_date) = CURDATE()";
+$today_tasks_stmt = $conn->prepare($today_tasks_sql);
+$today_tasks_stmt->execute([$user_id]);
+$today_tasks = $today_tasks_stmt->fetch(PDO::FETCH_ASSOC);
+
+// Get all available tasks and their completion status
+$tasks_sql = "SELECT 
+    t.*,
+    CASE WHEN ut.id IS NOT NULL THEN 1 ELSE 0 END as completed
+    FROM streak_tasks t
+    LEFT JOIN user_streak_tasks ut ON 
+        t.id = ut.task_id 
+        AND ut.user_id = ? 
+        AND DATE(ut.completion_date) = CURDATE()
+    ORDER BY t.points ASC";
+$tasks_stmt = $conn->prepare($tasks_sql);
+$tasks_stmt->execute([$user_id]);
+$tasks = $tasks_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get streak history
+$history_sql = "SELECT 
+    DATE(completion_date) as date,
+    COUNT(*) as tasks_completed,
+    SUM(points_earned) as points_earned
+    FROM user_streak_tasks
+    WHERE user_id = ?
+    GROUP BY DATE(completion_date)
+    ORDER BY date DESC
+    LIMIT 7";
+$history_stmt = $conn->prepare($history_sql);
+$history_stmt->execute([$user_id]);
+$streak_history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get milestone achievements
+$achievements_sql = "SELECT 
+    sm.*,
+    usm.achieved_at
+    FROM user_streak_milestones usm
+    JOIN streak_milestones sm ON usm.milestone_id = sm.id
+    WHERE usm.user_id = ?
+    ORDER BY usm.achieved_at DESC";
+$achievements_stmt = $conn->prepare($achievements_sql);
+$achievements_stmt->execute([$user_id]);
+$achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streak Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <style>
+        .streak-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .streak-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .streak-count {
+            font-size: 72px;
+            font-weight: bold;
+            color: var(--blue);
+            margin: 10px 0;
+        }
+
+        .streak-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--blue);
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .task-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .task-points {
+            background: var(--blue);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        .task-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .complete-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .complete-btn:hover {
+            background: var(--dark-blue);
+        }
+
+        .complete-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .history-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .history-day {
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f5f5f5;
+        }
+
+        .history-day.completed {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .achievements-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .achievement-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .achievement-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+        }
+
+        .achievement-info {
+            flex: 1;
+        }
+
+        .achievement-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .achievement-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .achievement-points {
+            font-weight: bold;
+            color: var(--blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="navigation">
+            <ul>
+                <li>
+                    <a href="#">
+                        <span class="icon">
+                            <ion-icon name="game-controller-outline"></ion-icon>
+                        </span>
+                        <span class="title">web site name </span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="../../home.php">
+                        <span class="icon">
+                            <ion-icon name="home-outline"></ion-icon>
+                        </span>
+                        <span class="title">Home</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="./dashboard.php">
+                        <span class="icon">
+                            <ion-icon name="grid-outline"></ion-icon>
+                        </span>
+                        <span class="title">Dashboard</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="./redeem.php">
+                        <span class="icon">
+                            <ion-icon name="gift-outline"></ion-icon>
+                        </span>
+                        <span class="title">Redeem</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="./game-profile.php">
+                        <span class="icon">
+                            <ion-icon name="game-controller-outline"></ion-icon>
+                        </span>
+                        <span class="title">Game Profile</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="./help-contact.php">
+                        <span class="icon">
+                            <ion-icon name="help-outline"></ion-icon>
+                        </span>
+                        <span class="title">Help</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="setting.php">
+                        <span class="icon">
+                            <ion-icon name="settings-outline"></ion-icon>
+                        </span>
+                        <span class="title">Settings</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="../../pages/forgot-password.php">
+                        <span class="icon">
+                            <ion-icon name="lock-closed-outline"></ion-icon>
+                        </span>
+                        <span class="title">Password Reset</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="main">
+            <div class="topbar">
+                <div class="toggle">
+                    <ion-icon name="menu-outline"></ion-icon>
+                </div>
+
+                <div class="search">
+                    <label>
+                        <input type="text" placeholder="Search here">
+                        <ion-icon name="search-outline"></ion-icon>
+                    </label>
+                </div>
+
+                <div class="user">
+                    <img src="<?php echo htmlspecialchars($profile_image); ?>" alt="User Profile">
+                </div>
+            </div>
+
+            <div class="streak-container">
+                <div class="streak-header">
+                    <div class="streak-count"><?php echo $streak_data['current_streak'] ?? 0; ?></div>
+                    <div class="streak-label">Day Streak</div>
+                </div>
+
+                <div class="streak-stats">
+                    <div class="stat-card">
+                        <div class="stat-number"><?php echo $streak_data['longest_streak'] ?? 0; ?></div>
+                        <div class="stat-label">Longest Streak</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
+                        <div class="stat-label">Tasks Completed Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number"><?php echo $streak_data['streak_points'] ?? 0; ?></div>
+                        <div class="stat-label">Total Points</div>
+                    </div>
+                </div>
+
+                <?php if ($next_milestone): ?>
+                <div class="milestone-progress">
+                    <h3>Next Milestone: <?php echo $next_milestone['days_required']; ?> Days</h3>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: <?php 
+                            echo min(100, (($streak_data['current_streak'] ?? 0) / $next_milestone['days_required']) * 100);
+                        ?>%"></div>
+                    </div>
+                    <div class="milestone-reward">
+                        Reward: <?php echo $next_milestone['reward_points']; ?> Points
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <h2>Daily Tasks</h2>
+                <div class="tasks-grid">
+                    <?php foreach ($tasks as $task): ?>
+                    <div class="task-card">
+                        <div class="task-header">
+                            <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
+                            <div class="task-points"><?php echo $task['points']; ?> Points</div>
+                        </div>
+                        <div class="task-description">
+                            <?php echo htmlspecialchars($task['description']); ?>
+                        </div>
+                        <?php if (!$task['completed']): ?>
+                        <form method="POST">
+                            <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                            <button type="submit" name="complete_task" class="complete-btn">
+                                Complete Task
+                            </button>
+                        </form>
+                        <?php else: ?>
+                        <button class="complete-btn" disabled>Completed</button>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <h2>Last 7 Days</h2>
+                <div class="history-section">
+                    <div class="history-grid">
+                        <?php foreach ($streak_history as $day): ?>
+                        <div class="history-day <?php echo $day['tasks_completed'] > 0 ? 'completed' : ''; ?>">
+                            <div class="day-date"><?php echo date('M j', strtotime($day['date'])); ?></div>
+                            <div class="day-tasks"><?php echo $day['tasks_completed']; ?> Tasks</div>
+                            <div class="day-points"><?php echo $day['points_earned']; ?> Points</div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <h2>Achievements</h2>
+                <div class="achievements-section">
+                    <?php foreach ($achievements as $achievement): ?>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">
+                            <ion-icon name="trophy-outline"></ion-icon>
+                        </div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">
+                                <?php echo htmlspecialchars($achievement['name']); ?>
+                            </div>
+                            <div class="achievement-date">
+                                Achieved on <?php echo date('M j, Y', strtotime($achievement['achieved_at'])); ?>
+                            </div>
+                        </div>
+                        <div class="achievement-points">
+                            +<?php echo $achievement['reward_points']; ?> Points
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>
