@@ -57,13 +57,34 @@ $stmt = $db->prepare("SELECT
                         t.name as team_name,
                         mp.position,
                         COALESCE(uk.kills, 0) as kills,
-                        COALESCE(uk.kills * m.coins_per_kill + 
-                            CASE 
-                                WHEN mp.position = 1 THEN m.prize_pool * 0.5
-                                WHEN mp.position = 2 THEN m.prize_pool * 0.3
-                                WHEN mp.position = 3 THEN m.prize_pool * 0.2
-                                ELSE 0
-                            END, 0) as coins_earned
+                        (COALESCE(uk.kills, 0) * m.coins_per_kill) as kill_coins,
+                        CASE 
+                            WHEN m.website_currency_type IS NOT NULL THEN
+                                CASE 
+                                    WHEN m.prize_distribution = 'top3' THEN
+                                        CASE 
+                                            WHEN mp.position = 1 THEN m.website_currency_amount * 0.6
+                                            WHEN mp.position = 2 THEN m.website_currency_amount * 0.3
+                                            WHEN mp.position = 3 THEN m.website_currency_amount * 0.1
+                                            ELSE 0
+                                        END
+                                    WHEN m.prize_distribution = 'top5' THEN
+                                        CASE 
+                                            WHEN mp.position = 1 THEN m.website_currency_amount * 0.5
+                                            WHEN mp.position = 2 THEN m.website_currency_amount * 0.25
+                                            WHEN mp.position = 3 THEN m.website_currency_amount * 0.15
+                                            WHEN mp.position = 4 THEN m.website_currency_amount * 0.07
+                                            WHEN mp.position = 5 THEN m.website_currency_amount * 0.03
+                                            ELSE 0
+                                        END
+                                    ELSE
+                                        CASE 
+                                            WHEN mp.position = 1 THEN m.website_currency_amount
+                                            ELSE 0
+                                        END
+                                END
+                            ELSE 0
+                        END as position_prize
                     FROM match_participants mp
                     JOIN users u ON mp.user_id = u.id
                     JOIN matches m ON m.id = mp.match_id
@@ -183,8 +204,14 @@ include '../../includes/header.php';
                                 </div>
                                 <div class="stat-item">
                                     <i class="bi bi-coin"></i>
-                                    <span><?= number_format($winner['coins_earned']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></span>
+                                    <span><?= number_format($winner['kill_coins']) ?> Coins</span>
                                 </div>
+                                <?php if ($winner['position_prize'] > 0): ?>
+                                <div class="stat-item">
+                                    <i class="bi bi-trophy-fill"></i>
+                                    <span><?= number_format($winner['position_prize']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></span>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -216,8 +243,14 @@ include '../../includes/header.php';
                                         </div>
                                         <div class="stat-item">
                                             <i class="bi bi-coin"></i>
-                                            <span><?= number_format($winner['coins_earned']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></span>
+                                            <span><?= number_format($winner['kill_coins']) ?> Coins</span>
                                         </div>
+                                        <?php if ($winner['position_prize'] > 0): ?>
+                                        <div class="stat-item">
+                                            <i class="bi bi-trophy-fill"></i>
+                                            <span><?= number_format($winner['position_prize']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></span>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php 
