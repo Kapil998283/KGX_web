@@ -68,7 +68,8 @@ $nextMilestone = $stmt->fetch(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Streak Tasks</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="../../assets/css/streak/streak.css">
+    <link rel="stylesheet" href="../../assets/css/streak/alerts.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="streak.js"></script>
 </head>

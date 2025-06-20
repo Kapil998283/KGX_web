@@ -708,70 +708,32 @@ body {
 .status.eliminated { background: #f44336; color: white; }
 
 /* Streak Card Styles */
-.streak-card {
-    position: relative;
-    overflow: visible;
-}
-
-.streak-progress {
-    margin-top: 10px;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-}
-
-.progress-text {
-    font-size: 12px;
-    color: var(--black2);
-    margin-bottom: 5px;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 6px;
-    background: #f0f0f0;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.progress-bar .progress {
-    height: 100%;
-    background: var(--blue);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-
-.milestone-reward {
-    font-size: 11px;
-    color: var(--black2);
-    margin-top: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.streak-points {
-    font-size: 14px;
-    color: var(--blue);
-    margin-top: 5px;
-    font-weight: 500;
-}
-
-.card:hover .streak-points {
-    color: var(--white);
-}
-
-.card:hover .progress-text,
-.card:hover .milestone-reward {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.card:hover .progress-bar {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.card:hover .progress {
-    background: var(--white);
+.streak-card,
+.streak-progress,
+.progress-text,
+.progress-bar,
+.progress-bar .progress,
+.milestone-reward,
+.streak-points,
+.streak-info-card,
+.streak-stats,
+.stat,
+.stat .label,
+.stat .value,
+.milestone-progress,
+.tasks-container,
+.tasks-grid,
+.task-card,
+.task-footer,
+.points,
+.complete-task-btn,
+.completed,
+.completed-label,
+#alert-container,
+.alert,
+.alert-success,
+.alert-error {
+    /* Remove these classes as they are now in separate CSS files */
 }
 
 /* Performance Text */
@@ -808,180 +770,5 @@ body {
     .section-header {
         flex-direction: column;
         gap: 10px;
-    }
-}
-
-/* Streak Info Card */
-.streak-info-card {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.streak-stats {
-    display: flex;
-    justify-content: space-around;
-    margin: 20px 0;
-}
-
-.stat {
-    text-align: center;
-}
-
-.stat .label {
-    display: block;
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.stat .value {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.milestone-progress {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-}
-
-.milestone-progress h3 {
-    font-size: 16px;
-    margin-bottom: 10px;
-}
-
-.progress-bar {
-    background: #eee;
-    height: 10px;
-    border-radius: 5px;
-    overflow: hidden;
-    margin: 10px 0;
-}
-
-.progress-bar .progress {
-    background: var(--primary-color);
-    height: 100%;
-    transition: width 0.3s ease;
-}
-
-.progress-text {
-    font-size: 14px;
-    color: #666;
-}
-
-/* Tasks Container */
-.tasks-container {
-    margin-top: 30px;
-}
-
-.tasks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.task-card {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
-}
-
-.task-card:hover {
-    transform: translateY(-2px);
-}
-
-.task-card h3 {
-    font-size: 16px;
-    margin-bottom: 10px;
-}
-
-.task-card p {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 15px;
-}
-
-.task-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.points {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--primary-color);
-}
-
-.complete-task-btn {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.complete-task-btn:hover {
-    background: var(--primary-dark);
-}
-
-.complete-task-btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
-
-.completed {
-    background: #f8f8f8;
-}
-
-.completed-label {
-    color: #4CAF50;
-    font-weight: 500;
-}
-
-/* Alert Styles */
-#alert-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.alert {
-    padding: 15px 20px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    animation: slideIn 0.3s ease;
-}
-
-.alert-success {
-    background: #E8F5E9;
-    color: #2E7D32;
-    border: 1px solid #A5D6A7;
-}
-
-.alert-error {
-    background: #FFEBEE;
-    color: #C62828;
-    border: 1px solid #FFCDD2;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
     }
 }

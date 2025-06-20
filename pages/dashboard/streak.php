@@ -92,186 +92,15 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Streak Dashboard</title>
-    <link rel="stylesheet" href="dashboard.css">
-    <style>
-        .streak-container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .streak-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .streak-count {
-            font-size: 72px;
-            font-weight: bold;
-            color: var(--blue);
-            margin: 10px 0;
-        }
-
-        .streak-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 36px;
-            font-weight: bold;
-            color: var(--blue);
-            margin: 10px 0;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .tasks-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .task-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .task-name {
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .task-points {
-            background: var(--blue);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 14px;
-        }
-
-        .task-description {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-
-        .complete-btn {
-            width: 100%;
-            padding: 10px;
-            background: var(--blue);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .complete-btn:hover {
-            background: var(--dark-blue);
-        }
-
-        .complete-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .history-section {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
-        .history-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-        }
-
-        .history-day {
-            text-align: center;
-            padding: 10px;
-            border-radius: 5px;
-            background: #f5f5f5;
-        }
-
-        .history-day.completed {
-            background: #E8F5E9;
-            color: #2E7D32;
-        }
-
-        .achievements-section {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .achievement-card {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .achievement-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--blue);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            color: white;
-        }
-
-        .achievement-info {
-            flex: 1;
-        }
-
-        .achievement-name {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .achievement-date {
-            font-size: 12px;
-            color: #666;
-        }
-
-        .achievement-points {
-            font-weight: bold;
-            color: var(--blue);
-        }
-    </style>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/streak/streak.css">
+    <link rel="stylesheet" href="../../assets/css/streak/alerts.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="streak.js"></script>
 </head>
 <body>
+    <?php include '../../includes/header.php'; ?>
+
     <div class="container">
         <div class="navigation">
             <ul>
@@ -405,7 +234,7 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                 <h2>Daily Tasks</h2>
                 <div class="tasks-grid">
                     <?php foreach ($tasks as $task): ?>
-                    <div class="task-card">
+                    <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
                         <div class="task-header">
                             <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
                             <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
@@ -416,12 +245,12 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php if (!$task['completed']): ?>
                         <form method="POST">
                             <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                            <button type="submit" name="complete_task" class="complete-btn">
+                            <button type="submit" name="complete_task" class="complete-task-btn">
                                 Complete Task
                             </button>
                         </form>
                         <?php else: ?>
-                        <button class="complete-btn" disabled>Completed</button>
+                        <button class="complete-task-btn" disabled>Completed</button>
                         <?php endif; ?>
                     </div>
                     <?php endforeach; ?>
