@@ -618,6 +618,153 @@ CREATE TABLE IF NOT EXISTS user_games (
     UNIQUE KEY unique_user_game (user_id, game_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Create match_history_archive table
+CREATE TABLE IF NOT EXISTS match_history_archive (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_match_id INT,
+    user_id INT NOT NULL,
+    game_name VARCHAR(50) NOT NULL,
+    match_type VARCHAR(50) NOT NULL,
+    match_date DATETIME NOT NULL,
+    entry_type VARCHAR(20),
+    entry_fee INT,
+    position INT,
+    kills INT DEFAULT 0,
+    coins_earned INT DEFAULT 0,
+    coins_per_kill INT DEFAULT 0,
+    prize_amount DECIMAL(10,2) DEFAULT 0,
+    prize_type VARCHAR(20),
+    participation_status VARCHAR(20),
+    match_status VARCHAR(20),
+    archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    INDEX idx_user_matches (user_id, game_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create tournament_history_archive table
+CREATE TABLE IF NOT EXISTS tournament_history_archive (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_tournament_id INT,
+    user_id INT NOT NULL,
+    tournament_name VARCHAR(255) NOT NULL,
+    game_name VARCHAR(50) NOT NULL,
+    team_name VARCHAR(100),
+    registration_date DATETIME NOT NULL,
+    rounds_played INT DEFAULT 0,
+    total_kills INT DEFAULT 0,
+    total_points INT DEFAULT 0,
+    best_placement INT,
+    final_position INT,
+    prize_amount DECIMAL(10,2) DEFAULT 0,
+    prize_currency VARCHAR(20),
+    website_currency_earned INT DEFAULT 0,
+    website_currency_type VARCHAR(20),
+    participation_status VARCHAR(20),
+    archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    INDEX idx_user_tournaments (user_id, game_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create triggers to archive match history before deletion
+DELIMITER //
+
+CREATE TRIGGER before_match_delete
+BEFORE DELETE ON matches
+FOR EACH ROW
+BEGIN
+    INSERT INTO match_history_archive (
+        original_match_id,
+        user_id,
+        game_name,
+        match_type,
+        match_date,
+        entry_type,
+        entry_fee,
+        position,
+        kills,
+        coins_earned,
+        coins_per_kill,
+        prize_amount,
+        prize_type,
+        participation_status,
+        match_status
+    )
+    SELECT 
+        m.id,
+        mp.user_id,
+        g.name,
+        m.match_type,
+        m.match_date,
+        m.entry_type,
+        m.entry_fee,
+        mp.position,
+        COALESCE(uk.kills, 0),
+        (COALESCE(uk.kills, 0) * m.coins_per_kill),
+        m.coins_per_kill,
+        CASE 
+            WHEN mp.position = 1 AND m.prize_distribution = 'single' THEN m.prize_pool
+            WHEN mp.position <= 3 AND m.prize_distribution = 'top3' THEN m.prize_pool / 3
+            WHEN mp.position <= 5 AND m.prize_distribution = 'top5' THEN m.prize_pool / 5
+            ELSE 0
+        END,
+        m.prize_type,
+        mp.status,
+        m.status
+    FROM matches m
+    JOIN games g ON m.game_id = g.id
+    JOIN match_participants mp ON m.id = mp.match_id
+    LEFT JOIN user_kills uk ON uk.match_id = m.id AND uk.user_id = mp.user_id
+    WHERE m.id = OLD.id;
+END //
+
+-- Create trigger to archive tournament history before deletion
+CREATE TRIGGER before_tournament_delete
+BEFORE DELETE ON tournaments
+FOR EACH ROW
+BEGIN
+    INSERT INTO tournament_history_archive (
+        original_tournament_id,
+        user_id,
+        tournament_name,
+        game_name,
+        team_name,
+        registration_date,
+        rounds_played,
+        total_kills,
+        total_points,
+        best_placement,
+        final_position,
+        prize_amount,
+        prize_currency,
+        website_currency_earned,
+        website_currency_type,
+        participation_status
+    )
+    SELECT 
+        t.id,
+        tph.user_id,
+        t.name,
+        t.game_name,
+        tm.name,
+        tph.registration_date,
+        tph.rounds_played,
+        tph.total_kills,
+        tph.total_points,
+        tph.best_placement,
+        tph.final_position,
+        tph.prize_amount,
+        tph.prize_currency,
+        tph.website_currency_earned,
+        tph.website_currency_type,
+        tph.status
+    FROM tournaments t
+    JOIN tournament_player_history tph ON t.id = tph.tournament_id
+    JOIN teams tm ON tph.team_id = tm.id
+    WHERE t.id = OLD.id;
+END //
+
+DELIMITER ;
+
 -- Add trigger to ensure only one primary game per user
 DELIMITER //
 CREATE TRIGGER before_user_games_insert 
