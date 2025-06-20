@@ -428,6 +428,82 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
             border-width: 0 50px 50px 0;
             border-color: transparent #19fb00 transparent transparent;
         }
+
+        .convert-card {
+            position: relative;
+        }
+
+        .convert-btn {
+            background: #19fb00;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 10px auto 0;
+            transition: all 0.3s ease;
+        }
+
+        .convert-btn:hover {
+            background: #16e100;
+            transform: translateY(-2px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .cancel-btn, .confirm-btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .confirm-btn {
+            background: #19fb00;
+            color: white;
+        }
+
+        .cancel-btn:hover, .confirm-btn:hover {
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -450,7 +526,35 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <div class="stat-card">
                     <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
-                    <div class="stat-label">Total Points</div>
+                    <div class="stat-label">Available Points</div>
+                </div>
+                <div class="stat-card convert-card">
+                    <div class="stat-number">
+                        <?php 
+                        $convertible_coins = floor(($streakInfo['streak_points'] ?? 0) / 10);
+                        echo $convertible_coins;
+                        ?>
+                    </div>
+                    <div class="stat-label">Convertible Coins</div>
+                    <?php if ($convertible_coins > 0): ?>
+                    <button class="convert-btn" onclick="convertPoints()">
+                        Convert to Coins
+                        <ion-icon name="swap-horizontal-outline"></ion-icon>
+                    </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div id="conversion-modal" class="modal">
+                <div class="modal-content">
+                    <h3>Convert Points to Coins</h3>
+                    <p>Available Points: <span id="available-points"><?php echo $streakInfo['streak_points'] ?? 0; ?></span></p>
+                    <p>Conversion Rate: 10 points = 1 coin</p>
+                    <p>You can get <span id="convertible-coins"><?php echo $convertible_coins; ?></span> coins</p>
+                    <div class="modal-buttons">
+                        <button onclick="closeModal()" class="cancel-btn">Cancel</button>
+                        <button onclick="confirmConversion()" class="confirm-btn">Convert</button>
+                    </div>
                 </div>
             </div>
 
@@ -673,5 +777,35 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script>
+        function convertPoints() {
+            document.getElementById('conversion-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('conversion-modal').style.display = 'none';
+        }
+
+        function confirmConversion() {
+            fetch('streak_convert.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error converting points');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error converting points');
+            });
+        }
+    </script>
 </body>
 </html>

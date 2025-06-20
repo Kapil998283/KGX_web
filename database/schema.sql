@@ -825,6 +825,7 @@ CREATE TABLE IF NOT EXISTS user_streaks (
     current_streak INT DEFAULT 0,
     longest_streak INT DEFAULT 0,
     streak_points INT DEFAULT 0,
+    total_earned_points INT DEFAULT 0,
     total_tasks_completed INT DEFAULT 0,
     last_activity_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -869,5 +870,15 @@ CREATE TABLE IF NOT EXISTS user_streak_milestones (
     achieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (milestone_id) REFERENCES streak_milestones(id) ON DELETE CASCADE
+);
+
+-- Create streak_conversion_log table
+CREATE TABLE IF NOT EXISTS streak_conversion_log (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    points_converted INT NOT NULL,
+    coins_received INT NOT NULL,
+    conversion_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
