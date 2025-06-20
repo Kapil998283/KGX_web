@@ -346,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'complete_match':
-                $db->beginTransaction(); // Start transaction before any operations
+                $db->beginTransaction();
                 try {
                     // Check if positions have been set for the required number of winners
                     $requiredPositions = ($match['prize_distribution'] === 'top5') ? 5 : 
@@ -381,8 +381,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Distribute prizes
                     distributePrize($db, $match_id, $firstPlace['user_id'], $match);
-                    
-                    $db->commit();
                     
                     // Get match and winner details for notification
                     $stmt = $db->prepare("
@@ -429,15 +427,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$user_id, $notificationMessage, $match_id]);
                     }
                     
-                    // Redirect back to the game-specific page
-                    $game_page = strtolower($match['game_name']) . ".php";
-                    header("Location: $game_page?completed=1");
+                    $db->commit();
+                    header("Location: match_scoring.php?id=" . $match_id . "&success=completed");
                     exit;
                 } catch (Exception $e) {
                     if ($db->inTransaction()) {
                         $db->rollBack();
                     }
-                    error_log("Error completing match: " . $e->getMessage());
                     header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
                     exit;
                 }
@@ -576,14 +572,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
                     
                     $db->commit();
-                    echo json_encode(['success' => true]);
+                    header("Location: match_scoring.php?id=" . $match_id . "&success=position");
                     exit;
                 } catch (Exception $e) {
                     if ($db->inTransaction()) {
                         $db->rollBack();
                     }
-                    http_response_code(400);
-                    echo json_encode(['error' => $e->getMessage()]);
+                    header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
                     exit;
                 }
                 break;
@@ -693,7 +688,16 @@ $success_message = '';
 $error_message = '';
 
 if (isset($_GET['success'])) {
-    $success_message = 'Kills updated successfully!';
+    switch($_GET['success']) {
+        case 'position':
+            $success_message = 'Position updated successfully!';
+            break;
+        case 'completed':
+            $success_message = 'Match completed successfully!';
+            break;
+        default:
+            $success_message = 'Operation completed successfully!';
+    }
 } elseif (isset($_GET['error'])) {
     $error_message = isset($_GET['error']) && $_GET['error'] !== '1' 
         ? urldecode($_GET['error']) 
@@ -749,17 +753,12 @@ if (isset($_GET['success'])) {
                     <!-- Add Complete Match Button -->
                     <?php if ($match['status'] === 'in_progress'): ?>
                     <div class="text-end mb-4">
-                        <form method="POST" style="display: inline;">
+                        <form method="POST" id="completeMatchForm">
                             <input type="hidden" name="action" value="complete_match">
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to complete this match? This will finalize scores and award prizes.')">
+                            <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check-lg"></i> Complete Match
                             </button>
                         </form>
-                        <?php if (!isset($match['winner_user_id']) || !$match['winner_user_id']): ?>
-                        <div class="text-danger mt-2">
-                            <small><i class="bi bi-exclamation-triangle"></i> Please select a winner before completing the match.</small>
-                        </div>
-                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
 
@@ -946,9 +945,8 @@ if (isset($_GET['success'])) {
 </div>
 
 <script>
-// Initialize modals for kills and winner selection
+// Initialize modals
 const updateKillsModal = new bootstrap.Modal(document.getElementById('updateKillsModal'));
-const selectWinnerModal = new bootstrap.Modal(document.getElementById('selectWinnerModal'));
 const positionModal = new bootstrap.Modal(document.getElementById('updatePositionModal'));
 
 function updateKills(userId, username, currentKills) {
@@ -958,38 +956,28 @@ function updateKills(userId, username, currentKills) {
     updateKillsModal.show();
 }
 
-function selectWinner(userId, username) {
-    document.getElementById('winner_user_id').value = userId;
-    document.getElementById('winner_username').textContent = username;
-    selectWinnerModal.show();
-}
-
 function updatePosition(userId, username) {
     document.getElementById('position_user_id').value = userId;
     document.getElementById('position_username').textContent = username;
     positionModal.show();
 }
 
-function cancelMatch(matchId) {
-    if (confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.innerHTML = `
-            <input type="hidden" name="action" value="cancel_match">
-            <input type="hidden" name="match_id" value="${matchId}">
-        `;
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-// Add form validation
+// Add form validation and confirmation
 document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', function(e) {
         if (!form.checkValidity()) {
             e.preventDefault();
             e.stopPropagation();
         }
+        
+        // Add confirmation for complete match
+        if (form.id === 'completeMatchForm') {
+            if (!confirm('Are you sure you want to complete this match? This will finalize scores and award prizes.')) {
+                e.preventDefault();
+                return;
+            }
+        }
+        
         form.classList.add('was-validated');
     });
 });
@@ -1004,6 +992,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 });
+
+function cancelMatch(matchId) {
+    if (confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="cancel_match">
+            <input type="hidden" name="match_id" value="${matchId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 
 <style>
