@@ -154,14 +154,17 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         <?php if ($match['status'] === 'upcoming' || $match['status'] === 'in_progress'): ?>
                             <div class="match-actions">
-                                <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-primary">
+                                <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
                                     <i class="bi bi-people"></i> View Participants
                                 </a>
                             </div>
                         <?php elseif ($match['status'] === 'completed'): ?>
                             <div class="match-actions">
                                 <a href="view-winner.php?match_id=<?= $match['id'] ?>" class="btn-join btn-success">
-                                    <i class="bi bi-trophy"></i> Check Winner
+                                    <i class="bi bi-trophy"></i> View Winner
+                                </a>
+                                <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                                    <i class="bi bi-people"></i> View Participants
                                 </a>
                             </div>
                         <?php endif; ?>
