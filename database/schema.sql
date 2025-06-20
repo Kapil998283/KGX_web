@@ -791,26 +791,32 @@ BEGIN
 END//
 DELIMITER ;
 
--- Streak Tasks Table
+-- Streak Tasks
 CREATE TABLE IF NOT EXISTS streak_tasks (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    reward_points INT NOT NULL DEFAULT 0,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    reward_points INT NOT NULL,
     is_daily BOOLEAN DEFAULT TRUE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert daily streak tasks
+-- Insert default streak tasks
 INSERT INTO streak_tasks (name, description, reward_points, is_daily) VALUES
+-- Daily Tasks
 ('Daily Login', 'Log in to your account', 5, 1),
 ('Join a Match', 'Participate in any match', 10, 1),
-('Win a Match', 'Win any match you participate in', 20, 1);
+('Win a Match', 'Win any match you participate in', 20, 1),
 
--- Insert one-time tasks
-INSERT INTO streak_tasks (name, description, reward_points, is_daily) VALUES
-('Complete Profile', 'Update your game profiles', 50, 0);
+-- One-Time Achievements
+('Account Registration', 'Register an account on KGX', 10, 0),
+('Game Profile Setup', 'Add at least one game profile', 15, 0),
+('First Match', 'Play your first match', 20, 0),
+('Team Membership', 'Join a team or create one as captain', 25, 0),
+('First Tournament', 'Participate in your first tournament', 30, 0),
+('Match Veteran', 'Play 50 matches', 50, 0),
+('Tournament Veteran', 'Play 50 tournaments', 100, 0);
 
 -- User Streaks Table
 CREATE TABLE IF NOT EXISTS user_streaks (

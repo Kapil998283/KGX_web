@@ -159,30 +159,97 @@ function checkTaskCompletion($user_id, $task_name) {
             $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'] > 0;
+
+        case 'Account Registration':
+            // Always true since user is registered
+            return true;
+
+        case 'Game Profile Setup':
+            // Check if user has at least one game profile
+            $sql = "SELECT COUNT(*) as count FROM user_games WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] > 0;
+
+        case 'First Match':
+            // Check if user has played at least one match
+            $sql = "SELECT COUNT(*) as count FROM match_participants WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] > 0;
+
+        case 'Team Membership':
+            // Check if user is in any team
+            $sql = "SELECT COUNT(*) as count FROM team_members WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] > 0;
+
+        case 'First Tournament':
+            // Check if user has participated in any tournament
+            $sql = "SELECT COUNT(*) as count FROM tournament_participants WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] > 0;
+
+        case 'Match Veteran':
+            // Check if user has played 50 matches
+            $sql = "SELECT COUNT(*) as count FROM match_participants WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] >= 50;
+
+        case 'Tournament Veteran':
+            // Check if user has played 50 tournaments
+            $sql = "SELECT COUNT(*) as count FROM tournament_participants WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] >= 50;
             
         default:
             return false;
     }
 }
 
+// Initialize user_streaks record if it doesn't exist
+$init_streak_sql = "INSERT IGNORE INTO user_streaks (user_id, current_streak, longest_streak, streak_points, total_tasks_completed) 
+                    VALUES (?, 0, 0, 0, 0)";
+$init_streak_stmt = $conn->prepare($init_streak_sql);
+$init_streak_stmt->execute([$user_id]);
+
 // Automatically complete tasks and award points
 foreach($daily_tasks as $task) {
     if (!$task['completed']) {
         $isCompleted = checkTaskCompletion($user_id, $task['name']);
         if ($isCompleted) {
-            // Record task completion and award points
-            $complete_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
-                           VALUES (?, ?, ?)";
-            $complete_stmt = $conn->prepare($complete_sql);
-            $complete_stmt->execute([$user_id, $task['id'], $task['reward_points']]);
-            
-            // Update user streak points
-            $update_sql = "UPDATE user_streaks 
-                         SET streak_points = streak_points + ?, 
-                             total_tasks_completed = total_tasks_completed + 1
-                         WHERE user_id = ?";
-            $update_stmt = $conn->prepare($update_sql);
-            $update_stmt->execute([$task['reward_points'], $user_id]);
+            try {
+                $conn->beginTransaction();
+                
+                // Record task completion and award points
+                $complete_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
+                               VALUES (?, ?, ?)";
+                $complete_stmt = $conn->prepare($complete_sql);
+                $complete_stmt->execute([$user_id, $task['id'], $task['reward_points']]);
+                
+                // Update user streak points
+                $update_sql = "UPDATE user_streaks 
+                             SET streak_points = streak_points + ?, 
+                                 total_tasks_completed = total_tasks_completed + 1
+                             WHERE user_id = ?";
+                $update_stmt = $conn->prepare($update_sql);
+                $update_stmt->execute([$task['reward_points'], $user_id]);
+                
+                $conn->commit();
+            } catch (Exception $e) {
+                $conn->rollBack();
+                error_log("Error completing task: " . $e->getMessage());
+            }
         }
     }
 }
@@ -191,19 +258,28 @@ foreach($onetime_tasks as $task) {
     if (!$task['completed']) {
         $isCompleted = checkTaskCompletion($user_id, $task['name']);
         if ($isCompleted) {
-            // Record task completion and award points
-            $complete_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
-                           VALUES (?, ?, ?)";
-            $complete_stmt = $conn->prepare($complete_sql);
-            $complete_stmt->execute([$user_id, $task['id'], $task['reward_points']]);
-            
-            // Update user streak points
-            $update_sql = "UPDATE user_streaks 
-                         SET streak_points = streak_points + ?, 
-                             total_tasks_completed = total_tasks_completed + 1
-                         WHERE user_id = ?";
-            $update_stmt = $conn->prepare($update_sql);
-            $update_stmt->execute([$task['reward_points'], $user_id]);
+            try {
+                $conn->beginTransaction();
+                
+                // Record task completion and award points
+                $complete_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
+                               VALUES (?, ?, ?)";
+                $complete_stmt = $conn->prepare($complete_sql);
+                $complete_stmt->execute([$user_id, $task['id'], $task['reward_points']]);
+                
+                // Update user streak points
+                $update_sql = "UPDATE user_streaks 
+                             SET streak_points = streak_points + ?, 
+                                 total_tasks_completed = total_tasks_completed + 1
+                             WHERE user_id = ?";
+                $update_stmt = $conn->prepare($update_sql);
+                $update_stmt->execute([$task['reward_points'], $user_id]);
+                
+                $conn->commit();
+            } catch (Exception $e) {
+                $conn->rollBack();
+                error_log("Error completing task: " . $e->getMessage());
+            }
         }
     }
 }
