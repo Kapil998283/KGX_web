@@ -6,7 +6,6 @@ require_once '../../includes/auth.php';
 $database = new Database();
 $conn = $database->connect();
 
-session_start();
 require_once '../../includes/user-auth.php';
 
 if (!isset($_SESSION['user_id'])) {
@@ -48,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$stmt->fetch()) {
                     // Get task points
                     $stmt = $conn->prepare("
-                        SELECT points FROM streak_tasks WHERE id = ?
+                        SELECT reward_points FROM streak_tasks WHERE id = ?
                     ");
                     $stmt->execute([$taskId]);
                     $task = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -62,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             points_earned
                         ) VALUES (?, ?, NOW(), ?)
                     ");
-                    $stmt->execute([$user_id, $taskId, $task['points']]);
+                    $stmt->execute([$user_id, $taskId, $task['reward_points']]);
 
                     // Update user streak
                     $stmt = $conn->prepare("
@@ -71,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             total_tasks_completed = total_tasks_completed + 1
                         WHERE user_id = ?
                     ");
-                    $stmt->execute([$task['points'], $user_id]);
+                    $stmt->execute([$task['reward_points'], $user_id]);
 
                     $conn->commit();
                     

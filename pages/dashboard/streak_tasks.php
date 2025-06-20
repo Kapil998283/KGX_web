@@ -6,7 +6,6 @@ require_once '../../includes/auth.php';
 $database = new Database();
 $conn = $database->connect();
 
-session_start();
 require_once '../../includes/user-auth.php';
 
 if (!isset($_SESSION['user_id'])) {
@@ -29,7 +28,7 @@ $stmt = $conn->prepare("
         ust.task_id = st.id 
         AND ust.user_id = ? 
         AND DATE(ust.completion_date) = CURDATE()
-    ORDER BY st.points ASC
+    ORDER BY st.reward_points ASC
 ");
 $stmt->execute([$user_id]);
 $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -117,7 +116,7 @@ $nextMilestone = $stmt->fetch(PDO::FETCH_ASSOC);
                         <h3><?php echo htmlspecialchars($task['name']); ?></h3>
                         <p><?php echo htmlspecialchars($task['description']); ?></p>
                         <div class="task-footer">
-                            <span class="points"><?php echo $task['points']; ?> points</span>
+                            <span class="points"><?php echo $task['reward_points']; ?> points</span>
                             <?php if (!$task['completed']): ?>
                             <button class="complete-task-btn" onclick="completeTask(<?php echo $task['id']; ?>)">Complete</button>
                             <?php else: ?>

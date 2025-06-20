@@ -7,7 +7,6 @@ require_once '../../includes/header.php';
 $database = new Database();
 $conn = $database->connect();
 
-session_start();
 require_once '../../includes/user-auth.php';
 
 // Check if user is logged in
@@ -47,14 +46,14 @@ $today_tasks = $today_tasks_stmt->fetch(PDO::FETCH_ASSOC);
 
 // Get all available tasks and their completion status
 $tasks_sql = "SELECT 
-    t.*,
-    CASE WHEN ut.id IS NOT NULL THEN 1 ELSE 0 END as completed
-    FROM streak_tasks t
-    LEFT JOIN user_streak_tasks ut ON 
-        t.id = ut.task_id 
-        AND ut.user_id = ? 
-        AND DATE(ut.completion_date) = CURDATE()
-    ORDER BY t.points ASC";
+    st.*,
+    CASE WHEN ust.id IS NOT NULL THEN 1 ELSE 0 END as completed
+    FROM streak_tasks st
+    LEFT JOIN user_streak_tasks ust ON 
+        st.id = ust.task_id 
+        AND ust.user_id = ? 
+        AND DATE(ust.completion_date) = CURDATE()
+    ORDER BY st.reward_points ASC";
 $tasks_stmt = $conn->prepare($tasks_sql);
 $tasks_stmt->execute([$user_id]);
 $tasks = $tasks_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -409,7 +408,7 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="task-card">
                         <div class="task-header">
                             <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
-                            <div class="task-points"><?php echo $task['points']; ?> Points</div>
+                            <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
                         </div>
                         <div class="task-description">
                             <?php echo htmlspecialchars($task['description']); ?>
