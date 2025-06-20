@@ -269,10 +269,22 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <a href="../auth/login.php" class="btn-join btn-primary">
                                 <i class="bi bi-box-arrow-in-right"></i> Login to Join
                             </a>
+                        <?php elseif ($match['status'] === 'completed'): ?>
+                            <?php if ($match['has_joined']): ?>
+                            <a href="view-winner.php?match_id=<?= $match['id'] ?>" class="btn-join btn-success">
+                                <i class="bi bi-trophy"></i> View Winner
+                            </a>
+                            <?php endif; ?>
+                            <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                                <i class="bi bi-people"></i> View Participants
+                            </a>
                         <?php elseif ($match['has_joined']): ?>
                             <button class="btn-join btn-success" disabled>
                                 <i class="bi bi-check2-circle"></i> Already Joined
                             </button>
+                            <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                                <i class="bi bi-people"></i> View Participants
+                            </a>
                         <?php elseif ($match['status'] === 'upcoming'): ?>
                             <?php
                             $can_join = true;
@@ -299,10 +311,19 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <i class="bi bi-exclamation-circle"></i> <?= $error_message ?>
                                 </button>
                             <?php endif; ?>
+                            
+                            <?php if ($match['current_participants'] > 0): ?>
+                            <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                                <i class="bi bi-people"></i> View Participants
+                            </a>
+                            <?php endif; ?>
                         <?php else: ?>
                             <button class="btn-join btn-primary" disabled>
                                 <i class="bi bi-clock"></i> Match Started
                             </button>
+                            <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                                <i class="bi bi-people"></i> View Participants
+                            </a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -324,5 +345,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+/* Add these styles to your existing CSS */
+.match-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-join {
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-join i {
+    font-size: 1.1em;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+    color: white;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    color: white;
+}
+</style>
 
 <?php include '../../includes/footer.php'; ?> 

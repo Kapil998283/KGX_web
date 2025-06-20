@@ -34,12 +34,16 @@ if (!$match) {
 }
 
 // Get participants
-$stmt = $db->prepare("SELECT u.username, 
+$stmt = $db->prepare("SELECT 
+                            u.username, 
+                            ug.game_username,
+                            ug.game_uid,
                             COALESCE(uk.kills, 0) as kills,
                             COALESCE(uk.kills * m.coins_per_kill, 0) as coins_earned
                      FROM match_participants mp
                      JOIN users u ON mp.user_id = u.id
                      JOIN matches m ON mp.match_id = m.id
+                     LEFT JOIN user_games ug ON ug.user_id = u.id AND ug.game_name = m.game_id
                      LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id
                      WHERE mp.match_id = ?
                      ORDER BY uk.kills DESC, u.username ASC");
@@ -78,6 +82,8 @@ include '../../includes/header.php';
                     <tr>
                         <th>#</th>
                         <th>Player</th>
+                        <th>Game UID</th>
+                        <th>In-Game Name</th>
                         <th>Kills</th>
                         <th>Coins Earned</th>
                     </tr>
@@ -85,15 +91,17 @@ include '../../includes/header.php';
                 <tbody>
                     <?php if (empty($participants)): ?>
                         <tr>
-                            <td colspan="4" class="no-data">No participants found</td>
+                            <td colspan="6" class="no-data">No participants found</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($participants as $index => $participant): ?>
                             <tr>
                                 <td><?= $index + 1 ?></td>
                                 <td><?= htmlspecialchars($participant['username']) ?></td>
+                                <td><?= htmlspecialchars($participant['game_uid']) ?></td>
+                                <td><?= htmlspecialchars($participant['game_username']) ?></td>
                                 <td><?= $participant['kills'] ?></td>
-                                <td><?= $participant['coins_earned'] ?></td>
+                                <td><?= $participant['coins_earned'] ?> Coins</td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
