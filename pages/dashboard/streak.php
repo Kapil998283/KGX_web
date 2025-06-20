@@ -107,208 +107,144 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="../../assets/css/streak/alerts.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="streak.js"></script>
+    <style>
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #19fb00;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: #16e100;
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            padding: 80px 20px 20px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
-    <?php include '../../includes/header.php'; ?>
+    <a href="dashboard.php" class="back-button">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+        Back to Dashboard
+    </a>
 
-    <div class="container">
-        <div class="navigation">
-            <ul>
-                <li>
-                    <a href="#">
-                        <span class="icon">
-                            <ion-icon name="game-controller-outline"></ion-icon>
-                        </span>
-                        <span class="title">web site name </span>
-                    </a>
-                </li>
+    <div class="main-content">
+        <div class="streak-container">
+            <div class="streak-header">
+                <div class="streak-count"><?php echo $streakInfo['current_streak'] ?? 0; ?></div>
+                <div class="streak-label">Day Streak</div>
+            </div>
 
-                <li>
-                    <a href="../../home.php">
-                        <span class="icon">
-                            <ion-icon name="home-outline"></ion-icon>
-                        </span>
-                        <span class="title">Home</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="./dashboard.php">
-                        <span class="icon">
-                            <ion-icon name="grid-outline"></ion-icon>
-                        </span>
-                        <span class="title">Dashboard</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="./redeem.php">
-                        <span class="icon">
-                            <ion-icon name="gift-outline"></ion-icon>
-                        </span>
-                        <span class="title">Redeem</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="./game-profile.php">
-                        <span class="icon">
-                            <ion-icon name="game-controller-outline"></ion-icon>
-                        </span>
-                        <span class="title">Game Profile</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="./help-contact.php">
-                        <span class="icon">
-                            <ion-icon name="help-outline"></ion-icon>
-                        </span>
-                        <span class="title">Help</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="setting.php">
-                        <span class="icon">
-                            <ion-icon name="settings-outline"></ion-icon>
-                        </span>
-                        <span class="title">Settings</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="../../pages/forgot-password.php">
-                        <span class="icon">
-                            <ion-icon name="lock-closed-outline"></ion-icon>
-                        </span>
-                        <span class="title">Password Reset</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="main">
-            <div class="topbar">
-                <div class="toggle">
-                    <ion-icon name="menu-outline"></ion-icon>
+            <div class="streak-stats">
+                <div class="stat-card">
+                    <div class="stat-number"><?php echo $streakInfo['longest_streak'] ?? 0; ?></div>
+                    <div class="stat-label">Longest Streak</div>
                 </div>
-
-                <div class="search">
-                    <label>
-                        <input type="text" placeholder="Search here">
-                        <ion-icon name="search-outline"></ion-icon>
-                    </label>
+                <div class="stat-card">
+                    <div class="stat-number"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
+                    <div class="stat-label">Tasks Completed Today</div>
                 </div>
-
-                <div class="user">
-                    <img src="<?php echo htmlspecialchars($profile_image); ?>" alt="User Profile">
+                <div class="stat-card">
+                    <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
+                    <div class="stat-label">Total Points</div>
                 </div>
             </div>
 
-            <div class="streak-container">
-                <div class="streak-header">
-                    <div class="streak-count"><?php echo $streakInfo['current_streak'] ?? 0; ?></div>
-                    <div class="streak-label">Day Streak</div>
+            <?php if ($next_milestone): ?>
+            <div class="milestone-progress">
+                <h3>Next Milestone: <?php echo htmlspecialchars($next_milestone['name']); ?></h3>
+                <div class="progress-bar">
+                    <div class="progress" style="width: <?php 
+                        echo min(100, (($streakInfo['streak_points'] ?? 0) / $next_milestone['points_required']) * 100);
+                    ?>%"></div>
                 </div>
-
-                <div class="streak-stats">
-                    <div class="stat-card">
-                        <div class="stat-number"><?php echo $streakInfo['longest_streak'] ?? 0; ?></div>
-                        <div class="stat-label">Longest Streak</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
-                        <div class="stat-label">Tasks Completed Today</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
-                        <div class="stat-label">Total Points</div>
-                    </div>
+                <div class="milestone-reward">
+                    Reward: <?php echo $next_milestone['reward_points']; ?> Points
                 </div>
-
-                <?php if ($next_milestone): ?>
-                <div class="milestone-progress">
-                    <h3>Next Milestone: <?php echo htmlspecialchars($next_milestone['name']); ?></h3>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: <?php 
-                            echo min(100, (($streakInfo['streak_points'] ?? 0) / $next_milestone['points_required']) * 100);
-                        ?>%"></div>
-                    </div>
-                    <div class="milestone-reward">
-                        Reward: <?php echo $next_milestone['reward_points']; ?> Points
-                    </div>
-                    <div class="milestone-description">
-                        <?php echo htmlspecialchars($next_milestone['description']); ?>
-                    </div>
+                <div class="milestone-description">
+                    <?php echo htmlspecialchars($next_milestone['description']); ?>
                 </div>
-                <?php endif; ?>
+            </div>
+            <?php endif; ?>
 
-                <h2>Daily Tasks</h2>
-                <div class="tasks-grid">
-                    <?php foreach ($tasks as $task): ?>
-                    <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
-                        <div class="task-header">
-                            <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
-                            <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
-                        </div>
-                        <div class="task-description">
-                            <?php echo htmlspecialchars($task['description']); ?>
-                        </div>
-                        <?php if (!$task['completed']): ?>
-                        <form method="POST">
-                            <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                            <button type="submit" name="complete_task" class="complete-task-btn">
-                                Complete Task
-                            </button>
-                        </form>
-                        <?php else: ?>
-                        <button class="complete-task-btn" disabled>Completed</button>
-                        <?php endif; ?>
+            <h2>Daily Tasks</h2>
+            <div class="tasks-grid">
+                <?php foreach ($tasks as $task): ?>
+                <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
+                    <div class="task-header">
+                        <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
+                        <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
+                    </div>
+                    <div class="task-description">
+                        <?php echo htmlspecialchars($task['description']); ?>
+                    </div>
+                    <?php if (!$task['completed']): ?>
+                    <form method="POST">
+                        <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                        <button type="submit" name="complete_task" class="complete-task-btn">
+                            Complete Task
+                        </button>
+                    </form>
+                    <?php else: ?>
+                    <button class="complete-task-btn" disabled>Completed</button>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+            <h2>Last 7 Days</h2>
+            <div class="history-section">
+                <div class="history-grid">
+                    <?php foreach ($streak_history as $day): ?>
+                    <div class="history-day <?php echo $day['tasks_completed'] > 0 ? 'completed' : ''; ?>">
+                        <div class="day-date"><?php echo date('M j', strtotime($day['date'])); ?></div>
+                        <div class="day-tasks"><?php echo $day['tasks_completed']; ?> Tasks</div>
+                        <div class="day-points"><?php echo $day['points_earned']; ?> Points</div>
                     </div>
                     <?php endforeach; ?>
                 </div>
+            </div>
 
-                <h2>Last 7 Days</h2>
-                <div class="history-section">
-                    <div class="history-grid">
-                        <?php foreach ($streak_history as $day): ?>
-                        <div class="history-day <?php echo $day['tasks_completed'] > 0 ? 'completed' : ''; ?>">
-                            <div class="day-date"><?php echo date('M j', strtotime($day['date'])); ?></div>
-                            <div class="day-tasks"><?php echo $day['tasks_completed']; ?> Tasks</div>
-                            <div class="day-points"><?php echo $day['points_earned']; ?> Points</div>
-                        </div>
-                        <?php endforeach; ?>
+            <h2>Achievements</h2>
+            <div class="achievements-section">
+                <?php foreach ($achievements as $achievement): ?>
+                <div class="achievement-card">
+                    <div class="achievement-icon">
+                        <ion-icon name="trophy-outline"></ion-icon>
                     </div>
-                </div>
-
-                <h2>Achievements</h2>
-                <div class="achievements-section">
-                    <?php foreach ($achievements as $achievement): ?>
-                    <div class="achievement-card">
-                        <div class="achievement-icon">
-                            <ion-icon name="trophy-outline"></ion-icon>
+                    <div class="achievement-info">
+                        <div class="achievement-name">
+                            <?php echo htmlspecialchars($achievement['name']); ?>
                         </div>
-                        <div class="achievement-info">
-                            <div class="achievement-name">
-                                <?php echo htmlspecialchars($achievement['name']); ?>
-                            </div>
-                            <div class="achievement-date">
-                                Achieved on <?php echo date('M j, Y', strtotime($achievement['achieved_at'])); ?>
-                            </div>
-                        </div>
-                        <div class="achievement-points">
-                            +<?php echo $achievement['reward_points']; ?> Points
+                        <div class="achievement-date">
+                            Achieved on <?php echo date('M j, Y', strtotime($achievement['achieved_at'])); ?>
                         </div>
                     </div>
-                    <?php endforeach; ?>
+                    <div class="achievement-points">
+                        +<?php echo $achievement['reward_points']; ?> Points
+                    </div>
                 </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
 
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-    <script src="dashboard.js"></script>
 </body>
 </html>

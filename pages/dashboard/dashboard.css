@@ -707,35 +707,6 @@ body {
 .status.completed { background: #4CAF50; color: white; }
 .status.eliminated { background: #f44336; color: white; }
 
-/* Streak Card Styles */
-.streak-card,
-.streak-progress,
-.progress-text,
-.progress-bar,
-.progress-bar .progress,
-.milestone-reward,
-.streak-points,
-.streak-info-card,
-.streak-stats,
-.stat,
-.stat .label,
-.stat .value,
-.milestone-progress,
-.tasks-container,
-.tasks-grid,
-.task-card,
-.task-footer,
-.points,
-.complete-task-btn,
-.completed,
-.completed-label,
-#alert-container,
-.alert,
-.alert-success,
-.alert-error {
-    /* Remove these classes as they are now in separate CSS files */
-}
-
 /* Performance Text */
 .text-muted {
     color: var(--black2);
