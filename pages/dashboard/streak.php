@@ -189,30 +189,37 @@ function checkTaskCompletion($user_id, $task_name) {
             return $result['count'] > 0;
 
         case 'First Tournament':
-            // Check if user's team has participated in any tournament
+            // Check if user has participated in any tournament through their team
             $sql = "SELECT COUNT(*) as count 
-                   FROM tournament_teams tt 
-                   JOIN team_members tm ON tt.team_id = tm.team_id 
-                   WHERE tm.user_id = ?";
+                   FROM tournament_player_history 
+                   WHERE user_id = ? 
+                   AND status IN ('registered', 'playing', 'completed')";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'] > 0;
 
         case 'Match Veteran':
-            // Check if user has played 50 matches
-            $sql = "SELECT COUNT(*) as count FROM match_participants WHERE user_id = ?";
+            // Check if user has played 50 matches (including history)
+            $sql = "SELECT COUNT(*) as count 
+                   FROM (
+                       SELECT user_id FROM match_participants 
+                       WHERE user_id = ?
+                       UNION ALL
+                       SELECT user_id FROM match_history 
+                       WHERE user_id = ?
+                   ) combined_matches";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([$user_id]);
+            $stmt->execute([$user_id, $user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'] >= 50;
 
         case 'Tournament Veteran':
-            // Check if user's team has participated in 50 tournaments
+            // Check if user has played 50 tournaments
             $sql = "SELECT COUNT(*) as count 
-                   FROM tournament_teams tt 
-                   JOIN team_members tm ON tt.team_id = tm.team_id 
-                   WHERE tm.user_id = ?";
+                   FROM tournament_player_history 
+                   WHERE user_id = ? 
+                   AND status IN ('playing', 'completed')";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
