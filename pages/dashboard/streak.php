@@ -23,7 +23,17 @@ $streak_sql = "SELECT current_streak, longest_streak, streak_points, total_tasks
                WHERE user_id = ?";
 $streak_stmt = $conn->prepare($streak_sql);
 $streak_stmt->execute([$user_id]);
-$streak_data = $streak_stmt->fetch(PDO::FETCH_ASSOC);
+$streakInfo = $streak_stmt->fetch(PDO::FETCH_ASSOC);
+
+// Initialize streak info if not found
+if (!$streakInfo) {
+    $streakInfo = [
+        'current_streak' => 0,
+        'longest_streak' => 0,
+        'streak_points' => 0,
+        'total_tasks_completed' => 0
+    ];
+}
 
 // Get next milestone
 $milestone_sql = "SELECT sm.* 
@@ -198,13 +208,13 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
 
             <div class="streak-container">
                 <div class="streak-header">
-                    <div class="streak-count"><?php echo $streak_data['current_streak'] ?? 0; ?></div>
+                    <div class="streak-count"><?php echo $streakInfo['current_streak'] ?? 0; ?></div>
                     <div class="streak-label">Day Streak</div>
                 </div>
 
                 <div class="streak-stats">
                     <div class="stat-card">
-                        <div class="stat-number"><?php echo $streak_data['longest_streak'] ?? 0; ?></div>
+                        <div class="stat-number"><?php echo $streakInfo['longest_streak'] ?? 0; ?></div>
                         <div class="stat-label">Longest Streak</div>
                     </div>
                     <div class="stat-card">
@@ -212,7 +222,7 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="stat-label">Tasks Completed Today</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number"><?php echo $streak_data['streak_points'] ?? 0; ?></div>
+                        <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
                         <div class="stat-label">Total Points</div>
                     </div>
                 </div>
@@ -222,7 +232,7 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <h3>Next Milestone: <?php echo $next_milestone['days_required']; ?> Days</h3>
                     <div class="progress-bar">
                         <div class="progress" style="width: <?php 
-                            echo min(100, (($streak_data['current_streak'] ?? 0) / $next_milestone['days_required']) * 100);
+                            echo min(100, (($streakInfo['current_streak'] ?? 0) / $next_milestone['days_required']) * 100);
                         ?>%"></div>
                     </div>
                     <div class="milestone-reward">

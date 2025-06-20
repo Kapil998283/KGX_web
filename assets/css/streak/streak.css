@@ -11,23 +11,31 @@
     display: flex;
     justify-content: space-around;
     margin: 20px 0;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-.stat {
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     text-align: center;
+    min-width: 200px;
 }
 
-.stat .label {
-    display: block;
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: #19fb00;
+    margin-bottom: 10px;
+}
+
+.stat-label {
     font-size: 14px;
     color: #666;
-    margin-bottom: 5px;
-}
-
-.stat .value {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .milestone-progress {
@@ -46,11 +54,11 @@
     height: 10px;
     border-radius: 5px;
     overflow: hidden;
-    margin: 10px 0;
+    margin: 15px 0;
 }
 
 .progress-bar .progress {
-    background: var(--blue);
+    background: #19fb00;
     height: 100%;
     transition: width 0.3s ease;
 }
@@ -60,7 +68,20 @@
     color: #666;
 }
 
+.milestone-reward {
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
 /* Tasks Container */
+.streak-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
 .tasks-container {
     margin-top: 30px;
 }
@@ -78,6 +99,7 @@
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.2s;
+    margin-bottom: 20px;
 }
 
 .task-card:hover {
@@ -85,45 +107,55 @@
 }
 
 .task-card h3 {
-    font-size: 16px;
+    font-size: 18px;
+    color: #333;
     margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .task-card p {
     font-size: 14px;
     color: #666;
     margin-bottom: 15px;
+    line-height: 1.5;
 }
 
 .task-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 15px;
 }
 
 .points {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--blue);
+    font-size: 16px;
+    font-weight: 600;
+    color: #19fb00;
 }
 
 .complete-task-btn {
-    background: var(--blue);
-    color: white;
+    background: #19fb00;
+    color: #fff;
     border: none;
-    padding: 8px 15px;
+    padding: 10px 20px;
     border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .complete-task-btn:hover {
     background: #16e100;
+    transform: translateY(-2px);
 }
 
 .complete-task-btn:disabled {
     background: #ccc;
     cursor: not-allowed;
+    transform: none;
 }
 
 .completed {
@@ -132,5 +164,23 @@
 
 .completed-label {
     color: #4CAF50;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Headers */
+h2, h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+h2 {
+    font-size: 24px;
+}
+
+h3 {
+    font-size: 20px;
 } 
