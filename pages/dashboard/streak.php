@@ -189,8 +189,11 @@ function checkTaskCompletion($user_id, $task_name) {
             return $result['count'] > 0;
 
         case 'First Tournament':
-            // Check if user has participated in any tournament
-            $sql = "SELECT COUNT(*) as count FROM tournament_participants WHERE user_id = ?";
+            // Check if user's team has participated in any tournament
+            $sql = "SELECT COUNT(*) as count 
+                   FROM tournament_teams tt 
+                   JOIN team_members tm ON tt.team_id = tm.team_id 
+                   WHERE tm.user_id = ?";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -205,8 +208,11 @@ function checkTaskCompletion($user_id, $task_name) {
             return $result['count'] >= 50;
 
         case 'Tournament Veteran':
-            // Check if user has played 50 tournaments
-            $sql = "SELECT COUNT(*) as count FROM tournament_participants WHERE user_id = ?";
+            // Check if user's team has participated in 50 tournaments
+            $sql = "SELECT COUNT(*) as count 
+                   FROM tournament_teams tt 
+                   JOIN team_members tm ON tt.team_id = tm.team_id 
+                   WHERE tm.user_id = ?";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
