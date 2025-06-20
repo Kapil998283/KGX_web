@@ -465,38 +465,25 @@ if ($stmt_redemption) {
                         <tbody>
                             <?php 
                             // Get user's recent matches
-                            $match_history_sql = "
-                                (SELECT 
-                                    m.id,
-                                    g.name as game_name,
-                                    m.match_type,
-                                    mp.position,
-                                    COALESCE(uk.kills, 0) as kills,
-                                    m.completed_at as match_date,
-                                    m.website_currency_type,
-                                    (COALESCE(uk.kills, 0) * m.coins_per_kill) as kill_rewards
-                                FROM matches m
-                                JOIN match_participants mp ON m.id = mp.match_id
-                                JOIN games g ON m.game_id = g.id
-                                LEFT JOIN user_kills uk ON uk.match_id = m.id AND uk.user_id = mp.user_id
-                                WHERE mp.user_id = ? AND m.status = 'completed')
-                                UNION ALL
-                                (SELECT 
-                                    original_match_id as id,
-                                    game_name,
-                                    match_type,
-                                    position,
-                                    kills,
-                                    match_date,
-                                    website_currency_type,
-                                    coins_earned as kill_rewards
-                                FROM match_history_archive
-                                WHERE user_id = ?)
-                                ORDER BY match_date DESC
-                                LIMIT 5";
+                            $match_history_sql = "SELECT 
+                                m.id,
+                                g.name as game_name,
+                                m.match_type,
+                                mp.position,
+                                COALESCE(uk.kills, 0) as kills,
+                                m.completed_at,
+                                m.website_currency_type,
+                                (COALESCE(uk.kills, 0) * m.coins_per_kill) as kill_rewards
+                            FROM matches m
+                            JOIN match_participants mp ON m.id = mp.match_id
+                            JOIN games g ON m.game_id = g.id
+                            LEFT JOIN user_kills uk ON uk.match_id = m.id AND uk.user_id = mp.user_id
+                            WHERE mp.user_id = ? AND m.status = 'completed'
+                            ORDER BY m.completed_at DESC
+                            LIMIT 5";
                             
                             $stmt = $conn->prepare($match_history_sql);
-                            $stmt->execute([$user_id, $user_id]);
+                            $stmt->execute([$user_id]);
                             $match_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                             if (count($match_history) > 0):
@@ -523,7 +510,7 @@ if ($stmt_redemption) {
                                         }
                                         ?>
                                     </td>
-                                    <td><?php echo date('M d, Y', strtotime($match['match_date'])); ?></td>
+                                    <td><?php echo date('M d, Y', strtotime($match['completed_at'])); ?></td>
                                 </tr>
                             <?php 
                                 endforeach; 
@@ -556,49 +543,30 @@ if ($stmt_redemption) {
                         <tbody>
                             <?php 
                             // Get user's recent tournament participation
-                            $tournament_sql = "
-                                (SELECT 
-                                    t.name as tournament_name,
-                                    t.game_name,
-                                    tm.name as team_name,
-                                    tph.status,
-                                    tph.registration_date,
-                                    tph.rounds_played,
-                                    tph.total_kills,
-                                    tph.total_points,
-                                    tph.best_placement,
-                                    tph.final_position,
-                                    tph.prize_amount,
-                                    tph.prize_currency,
-                                    tph.website_currency_earned,
-                                    tph.website_currency_type
-                                FROM tournament_player_history tph
-                                JOIN tournaments t ON tph.tournament_id = t.id
-                                JOIN teams tm ON tph.team_id = tm.id
-                                WHERE tph.user_id = ?)
-                                UNION ALL
-                                (SELECT 
-                                    tournament_name,
-                                    game_name,
-                                    team_name,
-                                    participation_status as status,
-                                    registration_date,
-                                    rounds_played,
-                                    total_kills,
-                                    total_points,
-                                    best_placement,
-                                    final_position,
-                                    prize_amount,
-                                    prize_currency,
-                                    website_currency_earned,
-                                    website_currency_type
-                                FROM tournament_history_archive
-                                WHERE user_id = ?)
-                                ORDER BY registration_date DESC
-                                LIMIT 5";
+                            $tournament_sql = "SELECT 
+                                t.name as tournament_name,
+                                t.game_name,
+                                tm.name as team_name,
+                                tph.status,
+                                tph.registration_date,
+                                tph.rounds_played,
+                                tph.total_kills,
+                                tph.total_points,
+                                tph.best_placement,
+                                tph.final_position,
+                                tph.prize_amount,
+                                tph.prize_currency,
+                                tph.website_currency_earned,
+                                tph.website_currency_type
+                            FROM tournament_player_history tph
+                            JOIN tournaments t ON tph.tournament_id = t.id
+                            JOIN teams tm ON tph.team_id = tm.id
+                            WHERE tph.user_id = ?
+                            ORDER BY tph.registration_date DESC
+                            LIMIT 5";
                             
                             $stmt = $conn->prepare($tournament_sql);
-                            $stmt->execute([$user_id, $user_id]);
+                            $stmt->execute([$user_id]);
                             $tournament_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                             if (count($tournament_history) > 0):
@@ -664,58 +632,23 @@ if ($stmt_redemption) {
     <script src="dashboard.js"></script>
 
     <script>
-        // Menu Toggle
-        let toggle = document.querySelector('.toggle');
-        let navigation = document.querySelector('.navigation');
-        let main = document.querySelector('.main');
-
-        toggle.onclick = function() {
-            navigation.classList.toggle('active');
-            main.classList.toggle('active');
-        }
-
-        // Tab Switching
         document.addEventListener('DOMContentLoaded', function() {
             const labelBtns = document.querySelectorAll('.label-btn');
             const contentSections = document.querySelectorAll('.content-section');
 
-            function switchTab(targetSection) {
-                // Remove active class from all buttons and sections
-                labelBtns.forEach(btn => btn.classList.remove('active'));
-                contentSections.forEach(section => section.classList.remove('active'));
-
-                // Add active class to clicked button and corresponding section
-                const activeBtn = document.querySelector(`[data-section="${targetSection}"]`);
-                const activeSection = document.getElementById(`${targetSection}-section`);
-
-                if (activeBtn && activeSection) {
-                    activeBtn.classList.add('active');
-                    activeSection.classList.add('active');
-                }
-            }
-
-            // Add click event listeners to all tab buttons
             labelBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const targetSection = btn.getAttribute('data-section');
-                    switchTab(targetSection);
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons and sections
+                    labelBtns.forEach(b => b.classList.remove('active'));
+                    contentSections.forEach(s => s.classList.remove('active'));
+
+                    // Add active class to clicked button and corresponding section
+                    btn.classList.add('active');
+                    const sectionId = btn.getAttribute('data-section') + '-section';
+                    document.getElementById(sectionId).classList.add('active');
                 });
             });
-
-            // Set default active tab
-            switchTab('top10');
         });
-
-        // Add hover class to selected list item
-        let list = document.querySelectorAll('.navigation li');
-        function activeLink() {
-            list.forEach((item) =>
-                item.classList.remove('hovered'));
-            this.classList.add('hovered');
-        }
-        list.forEach((item) =>
-            item.addEventListener('mouseover', activeLink));
     </script>
 </body>
 
