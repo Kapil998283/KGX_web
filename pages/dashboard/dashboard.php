@@ -242,6 +242,16 @@ if ($stmt_redemption) {
                     </a>
                 </li>
 
+                
+                <li>
+                    <a href="./strike.php">
+                        <span class="icon">
+                            <ion-icon name="flame-outline"></ion-icon>
+                        </span>
+                        <span class="title">Strike</span>
+                    </a>
+                </li>
+
                 <li>
                     <a href="./game-profile.php">
                         <span class="icon">
@@ -322,6 +332,17 @@ if ($stmt_redemption) {
 
                     <div class="iconBx">
                         <ion-icon name="cash-outline"></ion-icon>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div>
+                        <div class="numbers"><?php echo $tickets; ?></div>
+                        <div class="cardName">STRIKE</div>
+                    </div>
+
+                    <div class="iconBx">
+                        <ion-icon name="flame-outline"></ion-icon>
                     </div>
                 </div>
 
