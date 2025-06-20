@@ -791,86 +791,74 @@ BEGIN
 END//
 DELIMITER ;
 
--- Create streak_tasks table
+-- Streak Tasks Table
 CREATE TABLE IF NOT EXISTS streak_tasks (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    task_name VARCHAR(100) NOT NULL,
-    description TEXT NOT NULL,
-    task_type ENUM('daily', 'match', 'tournament', 'special') NOT NULL,
-    points_reward INT NOT NULL DEFAULT 1,
-    coins_reward INT NOT NULL DEFAULT 0,
-    tickets_reward INT NOT NULL DEFAULT 0,
-    is_active TINYINT(1) DEFAULT 1,
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    reward_points INT NOT NULL DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
--- Create user_streaks table
+-- User Streaks Table
 CREATE TABLE IF NOT EXISTS user_streaks (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     current_streak INT DEFAULT 0,
     longest_streak INT DEFAULT 0,
-    last_activity_date DATE,
     streak_points INT DEFAULT 0,
     total_tasks_completed INT DEFAULT 0,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_streaks (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    last_activity_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
--- Create user_streak_tasks table
+-- User Streak Tasks Table
 CREATE TABLE IF NOT EXISTS user_streak_tasks (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     task_id INT NOT NULL,
-    completion_date DATE NOT NULL,
-    points_earned INT DEFAULT 0,
-    coins_earned INT DEFAULT 0,
-    tickets_earned INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completion_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    points_earned INT NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (task_id) REFERENCES streak_tasks(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_task_day (user_id, task_id, completion_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    FOREIGN KEY (task_id) REFERENCES streak_tasks(id) ON DELETE CASCADE
+);
 
--- Create streak_milestones table
+-- Streak Milestones Table
 CREATE TABLE IF NOT EXISTS streak_milestones (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    days_required INT NOT NULL,
-    coins_reward INT NOT NULL DEFAULT 0,
-    tickets_reward INT NOT NULL DEFAULT 0,
-    special_reward_description TEXT,
-    is_active TINYINT(1) DEFAULT 1,
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    points_required INT NOT NULL,
+    reward_points INT NOT NULL DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
--- Create user_streak_milestones table
+-- User Streak Milestones Table
 CREATE TABLE IF NOT EXISTS user_streak_milestones (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     milestone_id INT NOT NULL,
     achieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    rewards_claimed TINYINT(1) DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (milestone_id) REFERENCES streak_milestones(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_milestone (user_id, milestone_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    FOREIGN KEY (milestone_id) REFERENCES streak_milestones(id) ON DELETE CASCADE
+);
 
--- Insert default streak tasks
-INSERT INTO streak_tasks (task_name, description, task_type, points_reward, coins_reward) VALUES
-('Daily Login', 'Log in to the platform', 'daily', 1, 5),
-('Play a Match', 'Participate in any match', 'match', 2, 10),
-('Get 3+ Kills', 'Get 3 or more kills in a single match', 'match', 3, 15),
-('Top 10 Finish', 'Finish in top 10 in any match', 'match', 3, 15),
-('Tournament Participation', 'Participate in a tournament', 'tournament', 5, 25),
-('Watch Tournament Stream', 'Watch a tournament live stream', 'daily', 2, 10),
-('Complete All Daily Tasks', 'Complete all available daily tasks', 'special', 5, 25);
+-- Insert some default streak tasks
+INSERT INTO streak_tasks (name, description, reward_points) VALUES
+('Daily Login', 'Log in to your account', 5),
+('Join a Match', 'Participate in any match', 10),
+('Win a Match', 'Win any match you participate in', 20),
+('Complete Profile', 'Update your game profiles', 15),
+('Invite Friends', 'Invite new players to join', 25);
 
--- Insert default streak milestones
-INSERT INTO streak_milestones (days_required, coins_reward, tickets_reward, special_reward_description) VALUES
-(7, 100, 1, '7-Day Streak: Bronze Frame'),
-(15, 250, 2, '15-Day Streak: Silver Frame'),
-(30, 500, 5, '30-Day Streak: Gold Frame + Special Profile Badge'),
-(50, 1000, 10, '50-Day Streak: Diamond Frame + Exclusive Emote'),
-(100, 2500, 25, '100-Day Streak: Ultimate Frame + Custom Profile Effect');
+-- Insert some default streak milestones
+INSERT INTO streak_milestones (name, description, points_required, reward_points) VALUES
+('Bronze Streak', 'Reach 100 streak points', 100, 50),
+('Silver Streak', 'Reach 500 streak points', 500, 100),
+('Gold Streak', 'Reach 1000 streak points', 1000, 200),
+('Diamond Streak', 'Reach 5000 streak points', 5000, 500);
 
