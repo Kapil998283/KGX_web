@@ -1,13 +1,11 @@
 <?php
 require_once '../../config/database.php';
 require_once '../../includes/auth.php';
-require_once '../../includes/header.php';
+require_once '../../includes/user-auth.php';
 
 // Initialize database connection
 $database = new Database();
 $conn = $database->connect();
-
-require_once '../../includes/user-auth.php';
 
 // Check if user is logged in
 if(!isset($_SESSION['user_id'])) {
@@ -16,6 +14,13 @@ if(!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
+
+// Get user profile image
+$profile_sql = "SELECT profile_image FROM users WHERE id = ?";
+$profile_stmt = $conn->prepare($profile_sql);
+$profile_stmt->execute([$user_id]);
+$profile_data = $profile_stmt->fetch(PDO::FETCH_ASSOC);
+$profile_image = $profile_data['profile_image'] ?? '../../assets/images/default-profile.png';
 
 // Get user's streak information
 $streak_sql = "SELECT current_streak, longest_streak, streak_points, total_tasks_completed 
