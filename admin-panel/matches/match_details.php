@@ -45,6 +45,8 @@ $stmt = $db->prepare("SELECT
                         u.username, 
                         u.email, 
                         u.phone,
+                        ug.game_uid,
+                        ug.ingame_name,
                         COALESCE(uk.kills, 0) as total_kills,
                         mp.position as winner_position,
                         CASE 
@@ -55,6 +57,7 @@ $stmt = $db->prepare("SELECT
                      FROM match_participants mp
                      JOIN users u ON mp.user_id = u.id
                      JOIN matches m ON m.id = mp.match_id
+                     LEFT JOIN user_games ug ON ug.user_id = u.id AND ug.game_id = m.game_id
                      LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id
                      WHERE mp.match_id = ?
                      ORDER BY 
@@ -162,14 +165,30 @@ if ($match['prize_distribution']) {
                         </div>
                     </div>
 
+                    <!-- Add search box -->
+                    <div class="mb-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <input type="text" id="searchInput" class="form-control" placeholder="Search by username, game UID, or in-game name...">
+                                    <button class="btn btn-outline-secondary" type="button">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Participants Table -->
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="participantsTable">
                             <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Player</th>
                                     <th>Contact</th>
+                                    <th>Game UID</th>
+                                    <th>In-Game Name</th>
                                     <th>Kills</th>
                                     <th>Coins Earned</th>
                                     <th>Position</th>
@@ -180,6 +199,7 @@ if ($match['prize_distribution']) {
                                     $trophyColor = '';
                                     $trophyTitle = '';
                                     $position = $participant['winner_position'];
+                                    $coinsEarned = $participant['total_kills'] * $match['coins_per_kill'];
                                     
                                     if ($match['status'] === 'completed' && $position && $position <= $numWinners) {
                                         switch($position) {
@@ -213,28 +233,10 @@ if ($match['prize_distribution']) {
                                         <?= htmlspecialchars($participant['email']) ?><br>
                                         <small class="text-muted"><?= htmlspecialchars($participant['phone']) ?></small>
                                     </td>
+                                    <td><?= htmlspecialchars($participant['game_uid']) ?></td>
+                                    <td><?= htmlspecialchars($participant['ingame_name']) ?></td>
                                     <td><?= $participant['total_kills'] ?></td>
-                                    <td>
-                                        <?php 
-                                            $killCoins = $participant['total_kills'] * $match['coins_per_kill'];
-                                            $positionPrize = isset($prizeAmounts[$position]) ? $prizeAmounts[$position] : 0;
-                                            $totalEarned = $killCoins + $positionPrize;
-                                            
-                                            if ($totalEarned > 0):
-                                        ?>
-                                            <div>
-                                                <?php if ($killCoins > 0): ?>
-                                                    <small class="text-muted">Kills: <?= number_format($killCoins) ?></small><br>
-                                                <?php endif; ?>
-                                                <?php if ($positionPrize > 0): ?>
-                                                    <small class="text-muted">Position: <?= number_format($positionPrize) ?></small><br>
-                                                <?php endif; ?>
-                                                <strong>Total: <?= number_format($totalEarned) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></strong>
-                                            </div>
-                                        <?php else: ?>
-                                            0
-                                        <?php endif; ?>
-                                    </td>
+                                    <td><?= $coinsEarned ?> Coins</td>
                                     <td>
                                         <?php if ($position): ?>
                                             <span class="badge bg-<?= $position <= $numWinners ? 'success' : 'secondary' ?>">
@@ -309,4 +311,32 @@ function getOrdinalSuffix($number) {
     }
     return 'th';
 }
-?> 
+?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('participantsTable');
+    const rows = table.getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+        const searchTerm = searchInput.value.toLowerCase();
+
+        // Start from index 1 to skip the header row
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const username = row.cells[1].textContent.toLowerCase();
+            const gameUid = row.cells[3].textContent.toLowerCase();
+            const inGameName = row.cells[4].textContent.toLowerCase();
+
+            if (username.includes(searchTerm) || 
+                gameUid.includes(searchTerm) || 
+                inGameName.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
+</script> 
