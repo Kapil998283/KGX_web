@@ -144,7 +144,7 @@ function checkTaskCompletion($user_id, $task_name) {
         case 'Join a Match':
             // Check if user joined any match today
             $sql = "SELECT COUNT(*) as count FROM match_participants 
-                   WHERE user_id = ? AND DATE(joined_at) = CURDATE()";
+                   WHERE user_id = ? AND DATE(join_date) = CURDATE()";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -152,9 +152,9 @@ function checkTaskCompletion($user_id, $task_name) {
             
         case 'Win a Match':
             // Check if user won any match today
-            $sql = "SELECT COUNT(*) as count FROM match_results 
-                   WHERE user_id = ? AND position = 1 
-                   AND DATE(created_at) = CURDATE()";
+            $sql = "SELECT COUNT(*) as count FROM match_participants 
+                   WHERE user_id = ? AND status = 'winner' 
+                   AND DATE(join_date) = CURDATE()";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
