@@ -664,23 +664,58 @@ if ($stmt_redemption) {
     <script src="dashboard.js"></script>
 
     <script>
+        // Menu Toggle
+        let toggle = document.querySelector('.toggle');
+        let navigation = document.querySelector('.navigation');
+        let main = document.querySelector('.main');
+
+        toggle.onclick = function() {
+            navigation.classList.toggle('active');
+            main.classList.toggle('active');
+        }
+
+        // Tab Switching
         document.addEventListener('DOMContentLoaded', function() {
             const labelBtns = document.querySelectorAll('.label-btn');
             const contentSections = document.querySelectorAll('.content-section');
 
-            labelBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Remove active class from all buttons and sections
-                    labelBtns.forEach(b => b.classList.remove('active'));
-                    contentSections.forEach(s => s.classList.remove('active'));
+            function switchTab(targetSection) {
+                // Remove active class from all buttons and sections
+                labelBtns.forEach(btn => btn.classList.remove('active'));
+                contentSections.forEach(section => section.classList.remove('active'));
 
-                    // Add active class to clicked button and corresponding section
-                    btn.classList.add('active');
-                    const sectionId = btn.getAttribute('data-section') + '-section';
-                    document.getElementById(sectionId).classList.add('active');
+                // Add active class to clicked button and corresponding section
+                const activeBtn = document.querySelector(`[data-section="${targetSection}"]`);
+                const activeSection = document.getElementById(`${targetSection}-section`);
+
+                if (activeBtn && activeSection) {
+                    activeBtn.classList.add('active');
+                    activeSection.classList.add('active');
+                }
+            }
+
+            // Add click event listeners to all tab buttons
+            labelBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetSection = btn.getAttribute('data-section');
+                    switchTab(targetSection);
                 });
             });
+
+            // Set default active tab
+            switchTab('top10');
         });
+
+        // Add hover class to selected list item
+        let list = document.querySelectorAll('.navigation li');
+        function activeLink() {
+            list.forEach((item) =>
+                item.classList.remove('hovered'));
+            this.classList.add('hovered');
+        }
+        list.forEach((item) =>
+            item.addEventListener('mouseover', activeLink));
     </script>
 </body>
 

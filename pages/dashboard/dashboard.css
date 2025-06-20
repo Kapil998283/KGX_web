@@ -563,3 +563,183 @@ body {
 .recentTournaments table tbody tr td .status.eliminated {
     background: var(--red);
 }
+
+/* ================== Labels & Content Sections ============== */
+.labels-container {
+    position: relative;
+    width: 100%;
+    padding: 20px;
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
+    margin-top: 20px;
+}
+
+.labels-nav {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 5px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    width: fit-content;
+}
+
+.label-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--black2);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.label-btn:hover {
+    background: rgba(25, 251, 0, 0.1);
+    color: var(--blue);
+}
+
+.label-btn.active {
+    background: var(--blue);
+    color: var(--white);
+}
+
+.content-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.content-section.active {
+    display: block;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    color: var(--black1);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.section-header .btn {
+    padding: 8px 15px;
+    background: var(--blue);
+    color: var(--white);
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.section-header .btn:hover {
+    background: #16e100;
+}
+
+/* Table Styles */
+.content-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: var(--white);
+    border-radius: 10px;
+}
+
+.content-section table thead tr {
+    background: #f9f9f9;
+}
+
+.content-section table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--black1);
+}
+
+.content-section table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.content-section table tbody tr:hover {
+    background: #f8fff8;
+}
+
+.content-section table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Team Info Styles */
+.team-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.team-info img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.team-info span {
+    font-weight: 500;
+}
+
+/* Status Styles */
+.status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status.registered { background: #19fb00; color: white; }
+.status.playing { background: #2196F3; color: white; }
+.status.completed { background: #4CAF50; color: white; }
+.status.eliminated { background: #f44336; color: white; }
+
+/* Performance Text */
+.text-muted {
+    color: var(--black2);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .labels-nav {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .content-section table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
