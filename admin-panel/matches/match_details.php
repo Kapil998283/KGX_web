@@ -46,7 +46,7 @@ $stmt = $db->prepare("SELECT
                         u.email, 
                         u.phone,
                         ug.game_uid,
-                        ug.ingame_name,
+                        ug.game_username,
                         COALESCE(uk.kills, 0) as total_kills,
                         mp.position as winner_position,
                         CASE 
@@ -57,7 +57,7 @@ $stmt = $db->prepare("SELECT
                      FROM match_participants mp
                      JOIN users u ON mp.user_id = u.id
                      JOIN matches m ON m.id = mp.match_id
-                     LEFT JOIN user_games ug ON ug.user_id = u.id AND ug.game_id = m.game_id
+                     LEFT JOIN user_games ug ON ug.user_id = u.id AND ug.game_name = m.game_id
                      LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id
                      WHERE mp.match_id = ?
                      ORDER BY 
@@ -234,7 +234,7 @@ if ($match['prize_distribution']) {
                                         <small class="text-muted"><?= htmlspecialchars($participant['phone']) ?></small>
                                     </td>
                                     <td><?= htmlspecialchars($participant['game_uid']) ?></td>
-                                    <td><?= htmlspecialchars($participant['ingame_name']) ?></td>
+                                    <td><?= htmlspecialchars($participant['game_username']) ?></td>
                                     <td><?= $participant['total_kills'] ?></td>
                                     <td><?= $coinsEarned ?> Coins</td>
                                     <td>
