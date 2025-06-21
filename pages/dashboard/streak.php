@@ -550,7 +550,12 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <h3>Convert Points to Coins</h3>
                     <p>Available Points: <span id="available-points"><?php echo $streakInfo['streak_points'] ?? 0; ?></span></p>
                     <p>Conversion Rate: 10 points = 1 coin</p>
-                    <p>You can get <span id="convertible-coins"><?php echo $convertible_coins; ?></span> coins</p>
+                    <p>Maximum coins available: <span id="max-coins"><?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?></span></p>
+                    <div class="coin-input">
+                        <label for="coins-to-convert">How many coins do you want?</label>
+                        <input type="number" id="coins-to-convert" min="1" max="<?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?>" value="1">
+                        <p class="points-needed">Points needed: <span id="points-needed">10</span></p>
+                    </div>
                     <div class="modal-buttons">
                         <button onclick="closeModal()" class="cancel-btn">Cancel</button>
                         <button onclick="confirmConversion()" class="confirm-btn">Convert</button>
@@ -780,18 +785,32 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
     <script>
         function convertPoints() {
             document.getElementById('conversion-modal').style.display = 'flex';
+            updatePointsNeeded();
         }
 
         function closeModal() {
             document.getElementById('conversion-modal').style.display = 'none';
         }
 
+        function updatePointsNeeded() {
+            const coinsInput = document.getElementById('coins-to-convert');
+            const pointsNeeded = document.getElementById('points-needed');
+            pointsNeeded.textContent = coinsInput.value * 10;
+        }
+
+        document.getElementById('coins-to-convert').addEventListener('input', updatePointsNeeded);
+
         function confirmConversion() {
+            const coinsToConvert = document.getElementById('coins-to-convert').value;
+            
             fetch('streak_convert.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                body: JSON.stringify({
+                    coins: coinsToConvert
+                })
             })
             .then(response => response.json())
             .then(data => {
