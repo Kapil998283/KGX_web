@@ -11,6 +11,10 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+// Get JSON input data
+$json = file_get_contents('php://input');
+$data = json_decode($json, true);
+
 try {
     $database = new Database();
     $conn = $database->connect();
@@ -30,8 +34,8 @@ try {
     
     $available_points = $points_data['streak_points'];
     
-    // Get requested coins from POST data
-    $requested_coins = isset($_POST['coins']) ? intval($_POST['coins']) : 0;
+    // Get requested coins from JSON data
+    $requested_coins = isset($data['coins']) ? intval($data['coins']) : 0;
     $points_needed = $requested_coins * 10;
     
     // Validate conversion request
