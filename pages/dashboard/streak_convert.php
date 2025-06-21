@@ -68,6 +68,26 @@ try {
     $log_stmt = $conn->prepare($log_sql);
     $log_stmt->execute([$user_id, $points_needed, $requested_coins]);
     
+    // Create notification for the user
+    $notificationMessage = "Successfully converted {$points_needed} streak points to {$requested_coins} coins!";
+    $notification_sql = "INSERT INTO notifications (
+        user_id,
+        type,
+        message,
+        related_id,
+        related_type,
+        created_at
+    ) VALUES (
+        ?,
+        'points_conversion',
+        ?,
+        ?,
+        'streak',
+        NOW()
+    )";
+    $notification_stmt = $conn->prepare($notification_sql);
+    $notification_stmt->execute([$user_id, $notificationMessage, $log_stmt->lastInsertId()]);
+    
     $conn->commit();
     
     echo json_encode([

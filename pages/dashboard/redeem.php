@@ -117,6 +117,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt_ticket->bindParam(':user_id', $user_id);
                 $stmt_ticket->execute();
 
+                // Create notification for the user
+                $notificationMessage = "Successfully converted 100 coins to 1 ticket!";
+                $notification_sql = "INSERT INTO notifications (
+                    user_id,
+                    type,
+                    message,
+                    related_id,
+                    related_type,
+                    created_at
+                ) VALUES (
+                    :user_id,
+                    'coin_conversion',
+                    :message,
+                    NULL,
+                    'ticket',
+                    NOW()
+                )";
+                $notification_stmt = $conn->prepare($notification_sql);
+                $notification_stmt->bindParam(':user_id', $user_id);
+                $notification_stmt->bindParam(':message', $notificationMessage);
+                $notification_stmt->execute();
+
                 // Commit transaction
                 $conn->commit();
                 $_SESSION['success_message'] = "Successfully converted 100 coins to 1 ticket!";
