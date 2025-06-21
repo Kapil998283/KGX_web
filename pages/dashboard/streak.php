@@ -513,270 +513,276 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
     </a>
 
     <div class="main-content">
-        <div class="streak-container">
+        <div class="streak-stats">
+            <div class="stat-card">
+                <div class="stat-number"><?php echo $streakInfo['current_streak'] ?? 0; ?></div>
+                <div class="stat-label">LONGEST STREAK</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
+                <div class="stat-label">TASKS COMPLETED TODAY</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
+                <div class="stat-label">AVAILABLE POINTS</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?></div>
+                <div class="stat-label">CONVERTIBLE COINS</div>
+                <button onclick="convertPoints()" class="convert-btn">Convert to Coins →</button>
+            </div>
+        </div>
 
-            <div class="streak-stats">
-                <div class="stat-card">
-                    <div class="stat-number"><?php echo $streakInfo['longest_streak'] ?? 0; ?></div>
-                    <div class="stat-label">Longest Streak</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
-                    <div class="stat-label">Tasks Completed Today</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
-                    <div class="stat-label">Available Points</div>
-                </div>
-                <div class="stat-card convert-card">
-                    <div class="stat-number">
-                        <?php 
-                        $convertible_coins = floor(($streakInfo['streak_points'] ?? 0) / 10);
-                        echo $convertible_coins;
-                        ?>
+        <!-- Conversion Modal -->
+        <div id="conversion-modal" class="modal">
+            <div class="modal-content">
+                <h2>Convert Points to Coins</h2>
+                <div class="conversion-info">
+                    <div class="info-row">
+                        <span>Available Points:</span>
+                        <span id="available-points"><?php echo $streakInfo['streak_points'] ?? 0; ?></span>
                     </div>
-                    <div class="stat-label">Convertible Coins</div>
-                    <?php if ($convertible_coins > 0): ?>
-                    <button class="convert-btn" onclick="convertPoints()">
-                        Convert to Coins
-                        <ion-icon name="swap-horizontal-outline"></ion-icon>
-                    </button>
+                    <div class="info-row">
+                        <span>Conversion Rate:</span>
+                        <span>10 points = 1 coin</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Maximum coins available:</span>
+                        <span id="max-coins"><?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?></span>
+                    </div>
+                </div>
+
+                <div class="coin-input">
+                    <label for="coins-to-convert">How many coins do you want?</label>
+                    <div class="input-group">
+                        <button type="button" onclick="decrementCoins()" class="coin-btn">-</button>
+                        <input type="number" id="coins-to-convert" min="1" 
+                               max="<?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?>" value="1">
+                        <button type="button" onclick="incrementCoins()" class="coin-btn">+</button>
+                    </div>
+                    <p class="points-needed">Points needed: <span id="points-needed">10</span></p>
+                </div>
+
+                <div class="modal-buttons">
+                    <button onclick="closeModal()" class="cancel-btn">Cancel</button>
+                    <button onclick="confirmConversion()" class="confirm-btn">Convert</button>
+                </div>
+            </div>
+        </div>
+
+        <?php if ($next_milestone): ?>
+        <div class="milestone-progress">
+            <h3>Next Milestone: <?php echo htmlspecialchars($next_milestone['name']); ?></h3>
+            <div class="progress-bar">
+                <div class="progress" style="width: <?php 
+                    echo min(100, (($streakInfo['streak_points'] ?? 0) / $next_milestone['points_required']) * 100);
+                ?>%"></div>
+            </div>
+            <div class="milestone-reward">
+                Reward: <?php echo $next_milestone['reward_points']; ?> Points
+            </div>
+            <div class="milestone-description">
+                <?php echo htmlspecialchars($next_milestone['description']); ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <h2>Daily Tasks</h2>
+        <div class="tasks-grid">
+            <?php foreach ($daily_tasks as $task): ?>
+            <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
+                <div class="task-header">
+                    <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
+                    <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
+                </div>
+                <div class="task-description">
+                    <?php echo htmlspecialchars($task['description']); ?>
+                </div>
+                <div class="task-status">
+                    <?php if ($task['completed']): ?>
+                        <div class="status-icon completed">
+                            <ion-icon name="checkmark-circle"></ion-icon>
+                            <span>Task Completed! +<?php echo $task['reward_points']; ?> points earned</span>
+                        </div>
+                    <?php else: ?>
+                        <?php $status = checkTaskCompletion($user_id, $task['name']); ?>
+                        <div class="status-icon <?php echo $status ? 'pending' : 'incomplete'; ?>">
+                            <?php if ($status): ?>
+                                <ion-icon name="time"></ion-icon>
+                                <span>Task completed! Points will be awarded soon.</span>
+                            <?php else: ?>
+                                <ion-icon name="close-circle"></ion-icon>
+                                <span>Task not completed yet</span>
+                            <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endforeach; ?>
+        </div>
 
-            <div id="conversion-modal" class="modal">
-                <div class="modal-content">
-                    <h3>Convert Points to Coins</h3>
-                    <p>Available Points: <span id="available-points"><?php echo $streakInfo['streak_points'] ?? 0; ?></span></p>
-                    <p>Conversion Rate: 10 points = 1 coin</p>
-                    <p>Maximum coins available: <span id="max-coins"><?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?></span></p>
-                    <div class="coin-input">
-                        <label for="coins-to-convert">How many coins do you want?</label>
-                        <input type="number" id="coins-to-convert" min="1" max="<?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?>" value="1">
-                        <p class="points-needed">Points needed: <span id="points-needed">10</span></p>
-                    </div>
-                    <div class="modal-buttons">
-                        <button onclick="closeModal()" class="cancel-btn">Cancel</button>
-                        <button onclick="confirmConversion()" class="confirm-btn">Convert</button>
-                    </div>
+        <?php if (!empty($onetime_tasks)): ?>
+        <h2>One-Time Achievements</h2>
+        <div class="tasks-grid">
+            <?php foreach ($onetime_tasks as $task): ?>
+            <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
+                <div class="task-header">
+                    <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
+                    <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
+                </div>
+                <div class="task-description">
+                    <?php echo htmlspecialchars($task['description']); ?>
+                </div>
+                <div class="task-status">
+                    <?php if ($task['completed']): ?>
+                        <div class="status-icon completed">
+                            <ion-icon name="checkmark-circle"></ion-icon>
+                            <span>Achievement Unlocked! +<?php echo $task['reward_points']; ?> points earned</span>
+                        </div>
+                    <?php else: ?>
+                        <?php $status = checkTaskCompletion($user_id, $task['name']); ?>
+                        <div class="status-icon <?php echo $status ? 'pending' : 'incomplete'; ?>">
+                            <?php if ($status): ?>
+                                <ion-icon name="time"></ion-icon>
+                                <span>Completed! Points will be awarded soon.</span>
+                            <?php else: ?>
+                                <ion-icon name="close-circle"></ion-icon>
+                                <span>Not completed yet</span>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
 
-            <?php if ($next_milestone): ?>
-            <div class="milestone-progress">
-                <h3>Next Milestone: <?php echo htmlspecialchars($next_milestone['name']); ?></h3>
-                <div class="progress-bar">
-                    <div class="progress" style="width: <?php 
-                        echo min(100, (($streakInfo['streak_points'] ?? 0) / $next_milestone['points_required']) * 100);
-                    ?>%"></div>
-                </div>
-                <div class="milestone-reward">
-                    Reward: <?php echo $next_milestone['reward_points']; ?> Points
-                </div>
-                <div class="milestone-description">
-                    <?php echo htmlspecialchars($next_milestone['description']); ?>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <h2>Daily Tasks</h2>
-            <div class="tasks-grid">
-                <?php foreach ($daily_tasks as $task): ?>
-                <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
-                    <div class="task-header">
-                        <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
-                        <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
-                    </div>
-                    <div class="task-description">
-                        <?php echo htmlspecialchars($task['description']); ?>
-                    </div>
-                    <div class="task-status">
-                        <?php if ($task['completed']): ?>
-                            <div class="status-icon completed">
-                                <ion-icon name="checkmark-circle"></ion-icon>
-                                <span>Task Completed! +<?php echo $task['reward_points']; ?> points earned</span>
-                            </div>
-                        <?php else: ?>
-                            <?php $status = checkTaskCompletion($user_id, $task['name']); ?>
-                            <div class="status-icon <?php echo $status ? 'pending' : 'incomplete'; ?>">
-                                <?php if ($status): ?>
-                                    <ion-icon name="time"></ion-icon>
-                                    <span>Task completed! Points will be awarded soon.</span>
-                                <?php else: ?>
-                                    <ion-icon name="close-circle"></ion-icon>
-                                    <span>Task not completed yet</span>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-
-            <?php if (!empty($onetime_tasks)): ?>
-            <h2>One-Time Achievements</h2>
-            <div class="tasks-grid">
-                <?php foreach ($onetime_tasks as $task): ?>
-                <div class="task-card <?php echo $task['completed'] ? 'completed' : ''; ?>">
-                    <div class="task-header">
-                        <div class="task-name"><?php echo htmlspecialchars($task['name']); ?></div>
-                        <div class="task-points"><?php echo $task['reward_points']; ?> Points</div>
-                    </div>
-                    <div class="task-description">
-                        <?php echo htmlspecialchars($task['description']); ?>
-                    </div>
-                    <div class="task-status">
-                        <?php if ($task['completed']): ?>
-                            <div class="status-icon completed">
-                                <ion-icon name="checkmark-circle"></ion-icon>
-                                <span>Achievement Unlocked! +<?php echo $task['reward_points']; ?> points earned</span>
-                            </div>
-                        <?php else: ?>
-                            <?php $status = checkTaskCompletion($user_id, $task['name']); ?>
-                            <div class="status-icon <?php echo $status ? 'pending' : 'incomplete'; ?>">
-                                <?php if ($status): ?>
-                                    <ion-icon name="time"></ion-icon>
-                                    <span>Completed! Points will be awarded soon.</span>
-                                <?php else: ?>
-                                    <ion-icon name="close-circle"></ion-icon>
-                                    <span>Not completed yet</span>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-
-            <h2>Last 7 Days Activity</h2>
-            <div class="history-section">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Tasks Completed</th>
-                            <th>Points Earned</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        // Get the last 7 days, including days with no activity
-                        $last7Days = array();
-                        for ($i = 0; $i < 7; $i++) {
-                            $date = date('Y-m-d', strtotime("-$i days"));
-                            $last7Days[$date] = array(
-                                'date' => $date,
-                                'tasks_completed' => 0,
-                                'points_earned' => 0
-                            );
+        <h2>Last 7 Days Activity</h2>
+        <div class="history-section">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Tasks Completed</th>
+                        <th>Points Earned</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    // Get the last 7 days, including days with no activity
+                    $last7Days = array();
+                    for ($i = 0; $i < 7; $i++) {
+                        $date = date('Y-m-d', strtotime("-$i days"));
+                        $last7Days[$date] = array(
+                            'date' => $date,
+                            'tasks_completed' => 0,
+                            'points_earned' => 0
+                        );
+                    }
+                    
+                    // Fill in the actual data
+                    foreach ($streak_history as $day) {
+                        if (isset($last7Days[$day['date']])) {
+                            $last7Days[$day['date']] = $day;
                         }
-                        
-                        // Fill in the actual data
-                        foreach ($streak_history as $day) {
-                            if (isset($last7Days[$day['date']])) {
-                                $last7Days[$day['date']] = $day;
-                            }
-                        }
-                        
-                        foreach ($last7Days as $day): 
-                        ?>
-                        <tr class="<?php echo $day['tasks_completed'] > 0 ? 'active-day' : 'inactive-day'; ?>">
-                            <td><?php echo date('D, M j', strtotime($day['date'])); ?></td>
-                            <td><?php echo $day['tasks_completed']; ?></td>
-                            <td><?php echo $day['points_earned'] ?? 0; ?></td>
-                            <td>
-                                <?php if ($day['tasks_completed'] > 0): ?>
-                                    <span class="status-badge success">
-                                        <ion-icon name="checkmark-circle"></ion-icon> Active
-                                    </span>
-                                <?php else: ?>
-                                    <span class="status-badge inactive">
-                                        <ion-icon name="close-circle"></ion-icon> Inactive
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-
-            <h2>Milestone Achievements</h2>
-            <div class="achievements-section">
-                <?php if (empty($achievements)): ?>
-                    <div class="no-achievements">
-                        <ion-icon name="trophy-outline" class="large-icon"></ion-icon>
-                        <p>Complete tasks and earn points to unlock achievements!</p>
-                        <div class="upcoming-milestones">
-                            <h3>Upcoming Milestones:</h3>
-                            <ul>
-                                <li>
-                                    <div class="milestone-name">Bronze Streak</div>
-                                    <div class="milestone-points">100 points</div>
-                                    <div class="milestone-reward">Earn exclusive profile badge</div>
-                                </li>
-                                <li>
-                                    <div class="milestone-name">Silver Streak</div>
-                                    <div class="milestone-points">250 points</div>
-                                    <div class="milestone-reward">Get 50 bonus coins</div>
-                                </li>
-                                <li>
-                                    <div class="milestone-name">Gold Streak</div>
-                                    <div class="milestone-points">500 points</div>
-                                    <div class="milestone-reward">Unlock special tournament access</div>
-                                </li>
-                                <li>
-                                    <div class="milestone-name">Diamond Streak</div>
-                                    <div class="milestone-points">1000 points</div>
-                                    <div class="milestone-reward">Earn premium membership benefits</div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($achievements as $achievement): ?>
-                    <div class="achievement-card">
-                        <div class="achievement-icon">
-                            <?php
-                            $iconName = 'trophy';
-                            switch($achievement['name']) {
-                                case 'Bronze Streak':
-                                    $iconName = 'medal';
-                                    break;
-                                case 'Silver Streak':
-                                    $iconName = 'ribbon';
-                                    break;
-                                case 'Gold Streak':
-                                    $iconName = 'star';
-                                    break;
-                                case 'Diamond Streak':
-                                    $iconName = 'diamond';
-                                    break;
-                            }
-                            ?>
-                            <ion-icon name="<?php echo $iconName; ?>-outline"></ion-icon>
-                        </div>
-                        <div class="achievement-info">
-                            <div class="achievement-name">
-                                <?php echo htmlspecialchars($achievement['name']); ?>
-                            </div>
-                            <div class="achievement-description">
-                                <?php echo htmlspecialchars($achievement['description']); ?>
-                            </div>
-                            <div class="achievement-date">
-                                Achieved on <?php echo date('M j, Y', strtotime($achievement['achieved_at'])); ?>
-                            </div>
-                        </div>
-                        <div class="achievement-points">
-                            +<?php echo $achievement['reward_points']; ?> Points
-                        </div>
-                    </div>
+                    }
+                    
+                    foreach ($last7Days as $day): 
+                    ?>
+                    <tr class="<?php echo $day['tasks_completed'] > 0 ? 'active-day' : 'inactive-day'; ?>">
+                        <td><?php echo date('D, M j', strtotime($day['date'])); ?></td>
+                        <td><?php echo $day['tasks_completed']; ?></td>
+                        <td><?php echo $day['points_earned'] ?? 0; ?></td>
+                        <td>
+                            <?php if ($day['tasks_completed'] > 0): ?>
+                                <span class="status-badge success">
+                                    <ion-icon name="checkmark-circle"></ion-icon> Active
+                                </span>
+                            <?php else: ?>
+                                <span class="status-badge inactive">
+                                    <ion-icon name="close-circle"></ion-icon> Inactive
+                                </span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Milestone Achievements</h2>
+        <div class="achievements-section">
+            <?php if (empty($achievements)): ?>
+                <div class="no-achievements">
+                    <ion-icon name="trophy-outline" class="large-icon"></ion-icon>
+                    <p>Complete tasks and earn points to unlock achievements!</p>
+                    <div class="upcoming-milestones">
+                        <h3>Upcoming Milestones:</h3>
+                        <ul>
+                            <li>
+                                <div class="milestone-name">Bronze Streak</div>
+                                <div class="milestone-points">100 points</div>
+                                <div class="milestone-reward">Earn exclusive profile badge</div>
+                            </li>
+                            <li>
+                                <div class="milestone-name">Silver Streak</div>
+                                <div class="milestone-points">250 points</div>
+                                <div class="milestone-reward">Get 50 bonus coins</div>
+                            </li>
+                            <li>
+                                <div class="milestone-name">Gold Streak</div>
+                                <div class="milestone-points">500 points</div>
+                                <div class="milestone-reward">Unlock special tournament access</div>
+                            </li>
+                            <li>
+                                <div class="milestone-name">Diamond Streak</div>
+                                <div class="milestone-points">1000 points</div>
+                                <div class="milestone-reward">Earn premium membership benefits</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            <?php else: ?>
+                <?php foreach ($achievements as $achievement): ?>
+                <div class="achievement-card">
+                    <div class="achievement-icon">
+                        <?php
+                        $iconName = 'trophy';
+                        switch($achievement['name']) {
+                            case 'Bronze Streak':
+                                $iconName = 'medal';
+                                break;
+                            case 'Silver Streak':
+                                $iconName = 'ribbon';
+                                break;
+                            case 'Gold Streak':
+                                $iconName = 'star';
+                                break;
+                            case 'Diamond Streak':
+                                $iconName = 'diamond';
+                                break;
+                        }
+                        ?>
+                        <ion-icon name="<?php echo $iconName; ?>-outline"></ion-icon>
+                    </div>
+                    <div class="achievement-info">
+                        <div class="achievement-name">
+                            <?php echo htmlspecialchars($achievement['name']); ?>
+                        </div>
+                        <div class="achievement-description">
+                            <?php echo htmlspecialchars($achievement['description']); ?>
+                        </div>
+                        <div class="achievement-date">
+                            Achieved on <?php echo date('M j, Y', strtotime($achievement['achieved_at'])); ?>
+                        </div>
+                    </div>
+                    <div class="achievement-points">
+                        +<?php echo $achievement['reward_points']; ?> Points
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -798,6 +804,25 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
             pointsNeeded.textContent = coinsInput.value * 10;
         }
 
+        function incrementCoins() {
+            const input = document.getElementById('coins-to-convert');
+            const maxCoins = parseInt(input.getAttribute('max'));
+            const currentValue = parseInt(input.value);
+            if (currentValue < maxCoins) {
+                input.value = currentValue + 1;
+                updatePointsNeeded();
+            }
+        }
+
+        function decrementCoins() {
+            const input = document.getElementById('coins-to-convert');
+            const currentValue = parseInt(input.value);
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+                updatePointsNeeded();
+            }
+        }
+
         document.getElementById('coins-to-convert').addEventListener('input', updatePointsNeeded);
 
         function confirmConversion() {
@@ -806,23 +831,26 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
             fetch('streak_convert.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    coins: coinsToConvert
+                    coins: parseInt(coinsToConvert)
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    alert(data.message);
                     location.reload();
                 } else {
                     alert(data.message || 'Error converting points');
                 }
+                closeModal();
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error converting points');
+                closeModal();
             });
         }
     </script>
