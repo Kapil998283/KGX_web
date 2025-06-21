@@ -1,7 +1,7 @@
 <?php
 require_once '../../config/database.php';
 require_once '../../includes/auth.php';
-require_once '../../includes/header.php';
+
 
 // Helper function to get position suffix
 function getPositionSuffix($position) {
@@ -24,8 +24,6 @@ function getPositionSuffix($position) {
 $database = new Database();
 $conn = $database->connect();
 
-session_start();
-require_once '../../includes/user-auth.php';
 
 // Check if user is logged in
 if(!isset($_SESSION['user_id'])) {
