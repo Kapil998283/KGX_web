@@ -611,6 +611,7 @@ CREATE TABLE IF NOT EXISTS user_games (
     game_name ENUM('PUBG', 'BGMI', 'FREE FIRE', 'COD') NOT NULL,
     game_username VARCHAR(50),
     game_uid VARCHAR(20),
+    game_level INT DEFAULT 1,
     is_primary BOOLEAN DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

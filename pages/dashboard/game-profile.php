@@ -7,7 +7,7 @@ $database = new Database();
 $db = $database->connect();
 
 // Get user's games including main game status
-$sql = "SELECT game_name, game_username, game_uid, is_primary FROM user_games WHERE user_id = ?";
+$sql = "SELECT game_name, game_username, game_uid, game_level, is_primary FROM user_games WHERE user_id = ?";
 $stmt = $db->prepare($sql);
 $stmt->execute([$_SESSION['user_id']]);
 $user_games = [];
@@ -15,6 +15,7 @@ while ($row = $stmt->fetch()) {
     $user_games[$row['game_name']] = [
         'game_username' => $row['game_username'],
         'game_uid' => $row['game_uid'],
+        'game_level' => $row['game_level'],
         'is_primary' => $row['is_primary']
     ];
 }
@@ -27,9 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $game = $_POST['game_name'];
         $username = $_POST['game_username'];
         $uid = $_POST['game_uid'];
+        $level = intval($_POST['game_level']);
         
         // Validate input
-        if (empty($game) || empty($username) || empty($uid)) {
+        if (empty($game) || empty($username) || empty($uid) || empty($level)) {
             throw new Exception('All fields are required');
         }
         
@@ -44,12 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($existing) {
                 // Update existing game profile
-                $stmt = $db->prepare("UPDATE user_games SET game_username = ?, game_uid = ? WHERE user_id = ? AND game_name = ?");
-                $stmt->execute([$username, $uid, $_SESSION['user_id'], $game]);
+                $stmt = $db->prepare("UPDATE user_games SET game_username = ?, game_uid = ?, game_level = ? WHERE user_id = ? AND game_name = ?");
+                $stmt->execute([$username, $uid, $level, $_SESSION['user_id'], $game]);
             } else {
                 // Insert new game profile
-                $stmt = $db->prepare("INSERT INTO user_games (user_id, game_name, game_username, game_uid) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$_SESSION['user_id'], $game, $username, $uid]);
+                $stmt = $db->prepare("INSERT INTO user_games (user_id, game_name, game_username, game_uid, game_level) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$_SESSION['user_id'], $game, $username, $uid, $level]);
             }
             
             // Commit transaction
@@ -145,6 +147,10 @@ include '../../includes/header.php';
                                     <span class="info-label">UID:</span>
                                     <p class="game-uid"><?php echo isset($user_games[$key]) ? htmlspecialchars($user_games[$key]['game_uid']) : '-'; ?></p>
                                 </div>
+                                <div class="info-row">
+                                    <span class="info-label">Level:</span>
+                                    <p class="game-level"><?php echo isset($user_games[$key]) ? htmlspecialchars($user_games[$key]['game_level']) : '-'; ?></p>
+                                </div>
                                 <?php if (isset($user_games[$key]) && $user_games[$key]['is_primary']): ?>
                                     <span class="primary-badge">Main</span>
                                 <?php endif; ?>
@@ -184,6 +190,11 @@ include '../../includes/header.php';
                     <span id="uid_count">0</span>/<span id="uid_max">10</span>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label for="game_level">Game Level</label>
+                <input type="number" id="game_level" name="game_level" min="1" required>
+            </div>
             
             <button type="submit" class="submit-btn">
                 <span id="submit_text">Add Profile</span>
@@ -203,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const uidPattern = document.getElementById('uid_pattern');
     const gameUidInput = document.getElementById('game_uid');
     const gameUsernameInput = document.getElementById('game_username');
+    const gameLevelInput = document.getElementById('game_level');
     const usernameCount = document.getElementById('username_count');
     const usernameMax = document.getElementById('username_max');
     const uidCount = document.getElementById('uid_count');
@@ -227,11 +239,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Only allow numbers in UID field
     gameUidInput.addEventListener('input', function(e) {
         this.value = this.value.replace(/\D/g, '');
+        
+        // Get max length from the current game's requirements
+        const maxLength = parseInt(uidMax.textContent);
+        if (this.value.length > maxLength) {
+            this.value = this.value.slice(0, maxLength);
+        }
+        
         uidCount.textContent = this.value.length;
     });
 
-    // Update username character count
+    // Update username character count and enforce limit
     gameUsernameInput.addEventListener('input', function(e) {
+        // Get max length from the current game's requirements
+        const maxLength = parseInt(usernameMax.textContent);
+        if (this.value.length > maxLength) {
+            this.value = this.value.slice(0, maxLength);
+        }
+        
         usernameCount.textContent = this.value.length;
     });
 
@@ -285,11 +310,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (gameProfiles[game]) {
                 gameUsernameInput.value = gameProfiles[game].game_username;
                 gameUidInput.value = gameProfiles[game].game_uid;
+                gameLevelInput.value = gameProfiles[game].game_level || 1;
                 usernameCount.textContent = gameProfiles[game].game_username.length;
                 uidCount.textContent = gameProfiles[game].game_uid.length;
             } else {
                 gameUidInput.value = '';
                 gameUsernameInput.value = '';
+                gameLevelInput.value = '1';
                 uidCount.textContent = '0';
                 usernameCount.textContent = '0';
             }
@@ -362,5 +389,29 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCharCount(uidInput, uidCount, uidMax);
 });
 </script>
+
+<style>
+/* Add these styles to your existing CSS */
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.form-group input[type="number"]:focus {
+    border-color: #00c896;
+    outline: none;
+}
+
+/* Hide number input spinners */
+.form-group input[type="number"]::-webkit-inner-spin-button,
+.form-group input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+</style>
 
 <?php include '../../includes/footer.php'; ?> 
