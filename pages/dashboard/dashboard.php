@@ -202,6 +202,14 @@ $streak_data = $streak_stmt->fetch(PDO::FETCH_ASSOC);
 $streak_points = $streak_data['streak_points'] ?? 0;
 $current_streak = $streak_data['current_streak'] ?? 0;
 
+// Get count of videos watched
+$videos_watched_sql = "SELECT COUNT(DISTINCT stream_id) as videos_watched 
+                      FROM video_watch_history 
+                      WHERE user_id = ?";
+$videos_stmt = $conn->prepare($videos_watched_sql);
+$videos_stmt->execute([$user_id]);
+$videos_watched = $videos_stmt->fetch(PDO::FETCH_ASSOC)['videos_watched'];
+
 ?>
 
 <!DOCTYPE html>
@@ -401,12 +409,12 @@ $current_streak = $streak_data['current_streak'] ?? 0;
 
                 <div class="card">
                     <div>
-                        <div class="numbers"><?php echo $matches_count; ?></div>
-                        <div class="cardName">Videos atched</div>
+                        <div class="numbers"><?php echo $videos_watched; ?></div>
+                        <div class="cardName">Videos Watched</div>
                     </div>
 
                     <div class="iconBx">
-                        <ion-icon name="game-controller-outline"></ion-icon>
+                        <ion-icon name="play-circle-outline"></ion-icon>
                     </div>
                 </div>
 
