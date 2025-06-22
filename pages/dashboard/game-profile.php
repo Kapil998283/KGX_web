@@ -193,7 +193,7 @@ include '../../includes/header.php';
 
             <div class="form-group">
                 <label for="game_level">Game Level</label>
-                <input type="number" id="game_level" name="game_level" min="1" required>
+                <input type="number" id="game_level" name="game_level" min="1" max="100" required>
             </div>
             
             <button type="submit" class="submit-btn">
@@ -258,6 +258,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         usernameCount.textContent = this.value.length;
+    });
+
+    // Add event listener for game level input
+    gameLevelInput.addEventListener('input', function(e) {
+        // Remove any non-numeric characters
+        this.value = this.value.replace(/\D/g, '');
+        
+        // Ensure value is between 1 and 100
+        let value = parseInt(this.value);
+        if (value > 100) {
+            this.value = '100';
+        } else if (value < 1 && this.value !== '') {
+            this.value = '1';
+        }
     });
 
     gameCards.forEach(card => {
