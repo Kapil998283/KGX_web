@@ -187,8 +187,8 @@ if (isset($_SESSION['user_id'])) {
             <li><a href="/KGX/pages/teams/yourteams.php" class="dropdown-item">Your Teams</a></li>
           </ul>
         </li>
-        <li><a href="#about" class="navbar-link">About</a></li>
-        <li><a href="/afterlogin/dashboard/help-contact.html" class="navbar-link">Contact</a></li>
+        <li><a href="../Shop/index.php" class="navbar-link">Pricing</a></li>
+        <li><a href="../pages/community.php" class="navbar-link">Community</a></li>
       </ul>
       <ul class="nav-social-list">
         <li><a href="#" class="social-link"><ion-icon name="logo-facebook"></ion-icon></a></li>
