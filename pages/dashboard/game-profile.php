@@ -2,6 +2,15 @@
 require_once '../../config/database.php';
 require_once '../../includes/user-auth.php';
 
+// Check if user is logged in
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+    // Store the intended destination
+    $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
+    // Redirect to login page
+    header('Location: ../../login.php');
+    exit;
+}
+
 // Initialize database connection
 $database = new Database();
 $db = $database->connect();
@@ -22,6 +31,17 @@ while ($row = $stmt->fetch()) {
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if user is still logged in
+    if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+        $response = [
+            'success' => false,
+            'message' => 'Your session has expired. Please login again.'
+        ];
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit;
+    }
+
     $response = ['success' => false, 'message' => ''];
     
     try {
