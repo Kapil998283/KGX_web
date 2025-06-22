@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
     <title>Pricing Table Component</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
   <header>
@@ -55,6 +55,6 @@
       </ul>
     </div>
   </div>
-  <script src="script.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
