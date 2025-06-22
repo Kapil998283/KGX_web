@@ -91,11 +91,17 @@ function getYoutubeThumbnail($url) {
                 <h1>Earn Coins</h1>
                 <p>Watch tournaments and content to earn coins!</p>
             </div>
-            <div class="coins-balance">
-                <ion-icon name="wallet"></ion-icon>
-                <div class="balance-info">
-                    <div class="amount"><?php echo number_format($current_coins, 2); ?></div>
-                    <div class="label">Your Coins</div>
+            <div class="coins-actions">
+                <a href="watch-history.php" class="history-link">
+                    <ion-icon name="time-outline"></ion-icon>
+                    Watch History
+                </a>
+                <div class="coins-balance">
+                    <ion-icon name="wallet"></ion-icon>
+                    <div class="balance-info">
+                        <div class="amount"><?php echo number_format($current_coins, 2); ?></div>
+                        <div class="label">Your Coins</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -235,5 +241,34 @@ function getYoutubeThumbnail($url) {
     </script>
 
     <?php require_once '../includes/footer.php'; ?>
+
+    <style>
+        .coins-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .history-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--surface-3);
+            border-radius: 5px;
+            color: var(--text-1);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .history-link:hover {
+            background: var(--surface-4);
+            transform: translateY(-2px);
+        }
+
+        .history-link ion-icon {
+            font-size: 1.2rem;
+        }
+    </style>
 </body>
 </html> 
