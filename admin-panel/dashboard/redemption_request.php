@@ -25,6 +25,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['redemption_id']) && is
             $sql = "UPDATE redemption_history SET status = 'completed' WHERE id = :redemption_id";
             $stmt = $db->prepare($sql);
             $stmt->execute(['redemption_id' => $redemption_id]);
+
+            // Get redemption details for notification
+            $sql = "SELECT rh.user_id, rh.coins_spent, ri.name as item_name 
+                   FROM redemption_history rh 
+                   JOIN redeemable_items ri ON rh.item_id = ri.id 
+                   WHERE rh.id = :redemption_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['redemption_id' => $redemption_id]);
+            $redemption = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Create approval notification
+            $notificationMessage = "Your redemption request for {$redemption['item_name']} has been approved!";
+            $notification_sql = "INSERT INTO notifications (
+                user_id,
+                type,
+                message,
+                related_id,
+                related_type,
+                created_at
+            ) VALUES (
+                :user_id,
+                'redemption_approved',
+                :message,
+                :redemption_id,
+                'redemption',
+                NOW()
+            )";
+            $notification_stmt = $db->prepare($notification_sql);
+            $notification_stmt->execute([
+                'user_id' => $redemption['user_id'],
+                'message' => $notificationMessage,
+                'redemption_id' => $redemption_id
+            ]);
             
             $_SESSION['success_message'] = "Redemption request approved successfully.";
         } elseif ($action == 'reject') {
@@ -33,18 +66,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['redemption_id']) && is
             $stmt = $db->prepare($sql);
             $stmt->execute(['redemption_id' => $redemption_id]);
             
-            // Get redemption details to refund coins
-            $sql = "SELECT user_id, coins_spent FROM redemption_history WHERE id = :redemption_id";
+            // Get redemption details to refund coins and create notification
+            $sql = "SELECT rh.user_id, rh.coins_spent, ri.name as item_name 
+                   FROM redemption_history rh 
+                   JOIN redeemable_items ri ON rh.item_id = ri.id 
+                   WHERE rh.id = :redemption_id";
             $stmt = $db->prepare($sql);
             $stmt->execute(['redemption_id' => $redemption_id]);
             $redemption = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            // Refund coins to user in user_coins table
+            // Refund coins to user
             $sql = "UPDATE user_coins SET coins = coins + :coins_spent WHERE user_id = :user_id";
             $stmt = $db->prepare($sql);
             $stmt->execute([
                 'coins_spent' => $redemption['coins_spent'],
                 'user_id' => $redemption['user_id']
+            ]);
+
+            // Create rejection notification
+            $notificationMessage = "Your redemption request for {$redemption['item_name']} was rejected. {$redemption['coins_spent']} coins have been refunded to your account.";
+            $notification_sql = "INSERT INTO notifications (
+                user_id,
+                type,
+                message,
+                related_id,
+                related_type,
+                created_at
+            ) VALUES (
+                :user_id,
+                'redemption_rejected',
+                :message,
+                :redemption_id,
+                'redemption',
+                NOW()
+            )";
+            $notification_stmt = $db->prepare($notification_sql);
+            $notification_stmt->execute([
+                'user_id' => $redemption['user_id'],
+                'message' => $notificationMessage,
+                'redemption_id' => $redemption_id
             ]);
             
             $_SESSION['success_message'] = "Redemption request rejected and coins refunded.";
