@@ -19,7 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         // Prepare statement to prevent SQL injection
-        $stmt = $db->prepare("SELECT * FROM admins WHERE username = ?");
+        $stmt = $db->prepare("
+            SELECT id, username, password, role, full_name 
+            FROM admin_users 
+            WHERE username = ? AND is_active = 1
+        ");
         $stmt->execute([$username]);
         $admin = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -28,11 +32,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_username'] = $admin['username'];
             $_SESSION['admin_role'] = $admin['role'];
+            $_SESSION['admin_name'] = $admin['full_name'];
+            
+            // Update last login time
+            $update_stmt = $db->prepare("
+                UPDATE admin_users 
+                SET last_login = NOW() 
+                WHERE id = ?
+            ");
+            $update_stmt->execute([$admin['id']]);
             
             // Log admin login
             $log_stmt = $db->prepare("
-                INSERT INTO admin_logs (admin_id, action, ip_address, created_at)
-                VALUES (?, 'login', ?, NOW())
+                INSERT INTO admin_activity_log (
+                    admin_id, 
+                    action, 
+                    details,
+                    ip_address
+                ) VALUES (
+                    ?, 
+                    'login', 
+                    'Admin logged in successfully',
+                    ?
+                )
             ");
             $log_stmt->execute([$admin['id'], $_SERVER['REMOTE_ADDR']]);
             
