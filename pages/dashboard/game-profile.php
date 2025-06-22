@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="modal" id="gameProfileModal">
     <div class="modal-content">
         <button class="modal-close">&times;</button>
-        <h2 class="modal-title">Game Profile</h2>
+        <h2 class="modal-title">Game Profile - <span id="selected_game_name">Select a Game</span></h2>
         
         <form class="game-details-form" method="POST" id="gameProfileForm">
             <input type="hidden" name="selected_game" id="selected_game">
@@ -360,6 +360,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 uidCount.textContent = '0';
                 usernameCount.textContent = '0';
             }
+
+            // Update modal title with game name when a game card is clicked
+            const gameName = this.querySelector('h3').textContent;
+            document.getElementById('selected_game_name').textContent = gameName;
         });
     });
 

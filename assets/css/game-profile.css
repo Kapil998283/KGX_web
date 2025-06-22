@@ -71,6 +71,24 @@
     cursor: pointer;
 }
 
+.game-card.configured::after {
+    content: '\2713'; /* Unicode checkmark */
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 24px;
+    height: 24px;
+    background: var(--success-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    z-index: 2;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
 .game-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -81,6 +99,7 @@
     padding: 1.5rem;
     border: 1px solid var(--border-color);
     border-radius: 10px;
+    position: relative;
 }
 
 .game-image {
@@ -172,6 +191,14 @@
     margin: 0 0 1.5rem;
     color: var(--secondary-color);
     font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-title span {
+    color: var(--primary-color);
+    font-weight: 500;
 }
 
 .container h1 {
@@ -321,6 +348,49 @@
 /* Add styles for configured cards */
 .game-card.configured .game-card-inner {
     border-color: var(--primary-color);
+    border-width: 2px;
+}
+
+.game-card.configured .game-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 2px var(--success-color);
+    pointer-events: none;
+}
+
+/* Add animation for the checkmark */
+@keyframes checkmark-pop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.game-card.configured::after {
+    animation: checkmark-pop 0.3s ease-out forwards;
+}
+
+/* Update hover effects for configured cards */
+.game-card.configured:hover .game-card-inner {
+    border-color: var(--success-color);
+}
+
+.game-card.configured:hover::after {
+    background: var(--success-color);
+    transform: scale(1.1);
+    transition: transform 0.3s, background-color 0.3s;
 }
 
 .alert {
