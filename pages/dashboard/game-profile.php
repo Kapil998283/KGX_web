@@ -1,6 +1,6 @@
 <?php
 require_once '../../config/database.php';
-require_once '../../includes/user-auth.php';
+require_once '../../includes/auth.php';
 
 // Initialize database connection
 $database = new Database();
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-include '../../includes/header.php';
+
 ?>
 
 <link rel="stylesheet" href="../../assets/css/game-profile.css">
