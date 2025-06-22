@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } 
     // Handle Coin to Ticket Conversion
     elseif (isset($_POST['convert_ticket'])) {
-        $conversion_cost = 100;
+        $conversion_cost = 200;
         if ($coin_balance >= $conversion_cost) {
             // Start transaction
             $conn->beginTransaction();
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt_ticket->execute();
 
                 // Create notification for the user
-                $notificationMessage = "Successfully converted 100 coins to 1 ticket!";
+                $notificationMessage = "Successfully converted 200 coins to 1 ticket!";
                 $notification_sql = "INSERT INTO notifications (
                     user_id,
                     type,
@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 // Commit transaction
                 $conn->commit();
-                $_SESSION['success_message'] = "Successfully converted 100 coins to 1 ticket!";
+                $_SESSION['success_message'] = "Successfully converted 200 coins to 1 ticket!";
 
             } catch (PDOException $e) {
                 $conn->rollBack();
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 error_log("PDO Exception: " . $e->getMessage());
             }
         } else {
-            $_SESSION['error_message'] = "Not enough coins (100 required) to convert to a ticket.";
+            $_SESSION['error_message'] = "Not enough coins (200 required) to convert to a ticket.";
         }
     }
 
@@ -497,11 +497,11 @@ h2 {
     <div class="redeem-card conversion-card">
       <img src="../../assets/images/ticket-icon.png" alt="Ticket" /> <!-- Replace with actual ticket icon path -->
       <h3>Convert Coins to Ticket</h3>
-      <p>Exchange 100 Coins for 1 Ticket</p>
+      <p>Exchange 200 Coins for 1 Ticket</p>
       <p>Use tickets for special entries!</p>
-      <form method="POST" onsubmit="return confirm('Convert 100 coins to 1 ticket?');">
-        <button type="submit" name="convert_ticket" <?php echo ($coin_balance < 100) ? 'disabled' : ''; ?>>
-          Convert (100 Coins)
+      <form method="POST" onsubmit="return confirm('Convert 200 coins to 1 ticket?');">
+        <button type="submit" name="convert_ticket" <?php echo ($coin_balance < 200) ? 'disabled' : ''; ?>>
+          Convert (200 Coins)
         </button>
       </form>
     </div>
