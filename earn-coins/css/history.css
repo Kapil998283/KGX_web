@@ -1,0 +1,333 @@
+/* Watch History Container */
+.history-container {
+    max-width: 1200px;
+    margin: 120px auto 60px;
+    padding: 0 20px;
+    color: var(--white);
+}
+
+/* Header Section */
+.history-container .history-header {
+    background: var(--raisin-black-1);
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-container .header-content h1 {
+    color: var(--white);
+    font-size: 2.2em;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.history-container .header-content p {
+    color: var(--quick-silver);
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+.history-container .total-earnings {
+    background: var(--raisin-black-2);
+    padding: 20px 25px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-container .total-earnings .amount {
+    color: var(--orange);
+    font-size: 2em;
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.history-container .total-earnings .amount ion-icon {
+    font-size: 1.2em;
+}
+
+.history-container .total-earnings .label {
+    color: var(--quick-silver);
+    font-size: 0.9em;
+    margin-top: 5px;
+    text-transform: uppercase;
+}
+
+/* Filter Buttons */
+.history-container .filter-buttons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.history-container .filter-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    background: var(--raisin-black-2);
+    color: var(--white);
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-container .filter-btn ion-icon {
+    font-size: 1.2em;
+}
+
+.history-container .filter-btn.active {
+    background: var(--orange);
+    transform: translateY(-2px);
+    border-color: transparent;
+}
+
+.history-container .filter-btn:hover:not(.active) {
+    background: var(--raisin-black-1);
+    transform: translateY(-1px);
+}
+
+/* History Table */
+.history-container .history-table {
+    background: var(--raisin-black-1);
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-container .table-header {
+    display: grid;
+    grid-template-columns: 180px 2fr 1fr 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    background: var(--raisin-black-2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-container .table-header span {
+    color: var(--quick-silver);
+    font-size: 0.9em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.history-container .history-item {
+    display: grid;
+    grid-template-columns: 180px 2fr 1fr 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.history-container .history-item:hover {
+    background: var(--raisin-black-2);
+}
+
+.history-container .history-thumbnail {
+    width: 160px;
+    height: 90px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.history-container .history-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.history-container .content-info h3 {
+    color: var(--white);
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.history-container .content-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.history-container .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--quick-silver);
+    font-size: 0.9em;
+}
+
+.history-container .meta-item ion-icon {
+    font-size: 1.1em;
+    color: var(--orange);
+}
+
+.history-container .watch-duration,
+.history-container .watch-date,
+.history-container .coins-earned {
+    color: var(--white);
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-container .watch-duration ion-icon,
+.history-container .watch-date ion-icon {
+    color: var(--quick-silver);
+}
+
+.history-container .coins-earned {
+    color: var(--orange);
+    font-weight: 600;
+}
+
+.history-container .coins-earned ion-icon {
+    color: var(--orange);
+}
+
+.history-container .type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.history-container .type-badge.tournament {
+    background: rgba(255, 165, 0, 0.1);
+    color: var(--orange);
+    border: 1px solid rgba(255, 165, 0, 0.2);
+}
+
+.history-container .type-badge.content {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+/* No History State */
+.history-container .no-history {
+    text-align: center;
+    padding: 60px 30px;
+    background: var(--raisin-black-1);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-container .no-history ion-icon {
+    font-size: 48px;
+    color: var(--orange);
+    margin-bottom: 20px;
+}
+
+.history-container .no-history h2 {
+    color: var(--white);
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}
+
+.history-container .no-history p {
+    color: var(--quick-silver);
+    margin-bottom: 20px;
+}
+
+.history-container .no-history .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--orange);
+    color: var(--white);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.history-container .no-history .btn:hover {
+    transform: translateY(-2px);
+    background: var(--orange-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .history-container .table-header,
+    .history-container .history-item {
+        grid-template-columns: 140px 2fr 1fr 1fr;
+    }
+
+    .history-container .watch-date {
+        display: none;
+    }
+
+    .history-container .content-meta {
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 768px) {
+    .history-container {
+        margin: 100px auto 40px;
+        padding: 0 15px;
+    }
+
+    .history-container .history-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .history-container .header-content h1 {
+        font-size: 1.8em;
+    }
+
+    .history-container .filter-buttons {
+        flex-direction: column;
+    }
+
+    .history-container .table-header {
+        display: none;
+    }
+
+    .history-container .history-item {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .history-container .history-thumbnail {
+        width: 100%;
+        height: 200px;
+    }
+
+    .history-container .watch-duration,
+    .history-container .coins-earned {
+        justify-content: center;
+    }
+
+    .history-container .content-info {
+        text-align: center;
+    }
+
+    .history-container .content-meta {
+        align-items: center;
+    }
+} 

@@ -7,24 +7,26 @@ body {
     max-width: 1200px;
     margin: 120px auto 60px;
     padding: 0 20px;
+    color: var(--white);
 }
 
-.video-wrapper {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+.watch-container .video-wrapper {
+    background: var(--raisin-black-1);
+    border-radius: 15px;
     overflow: hidden;
     margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.video-player {
+.watch-container .video-player {
     position: relative;
     padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
     height: 0;
     background: #000;
 }
 
-.video-player iframe {
+.watch-container .video-player iframe {
     position: absolute;
     top: 0;
     left: 0;
@@ -33,195 +35,222 @@ body {
     border: none;
 }
 
-.video-info {
+.watch-container .video-info {
     padding: 25px;
 }
 
-.video-title {
+.watch-container .video-title {
     font-size: 24px;
     font-weight: 600;
     margin: 0 0 20px 0;
-    color: #2c3e50;
+    color: var(--white);
 }
 
-.video-meta {
+.watch-container .video-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 25px;
 }
 
-.meta-item {
+.watch-container .meta-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #666;
+    color: var(--quick-silver);
     font-size: 14px;
 }
 
-.meta-item ion-icon {
+.watch-container .meta-item ion-icon {
     font-size: 20px;
-    color: #3498db;
+    color: var(--orange);
 }
 
-.reward-info {
-    background: #f8f9fa;
-    border-radius: 10px;
+.watch-container .live-indicator {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.watch-container .live-indicator ion-icon {
+    color: #dc3545;
+}
+
+.watch-container .reward-info {
+    background: var(--raisin-black-2);
+    border-radius: 12px;
     padding: 20px;
     margin-top: 20px;
-    border: 1px solid #e9ecef;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.reward-text {
+.watch-container .reward-text {
     display: flex;
     align-items: center;
     gap: 15px;
 }
 
-.reward-text ion-icon {
+.watch-container .reward-text ion-icon {
     font-size: 28px;
-    color: #f1c40f;
+    color: var(--orange);
 }
 
-.reward-details .amount {
+.watch-container .reward-details .amount {
     font-size: 22px;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--white);
     margin-bottom: 5px;
 }
 
-.reward-details .condition {
+.watch-container .reward-details .condition {
     font-size: 14px;
-    color: #666;
+    color: var(--quick-silver);
 }
 
-.progress-wrapper {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+.watch-container .progress-wrapper {
+    background: var(--raisin-black-1);
+    border-radius: 15px;
     padding: 25px;
     margin-bottom: 30px;
     display: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.progress-info {
+.watch-container .progress-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
 }
 
-.progress-label {
+.watch-container .progress-label {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--white);
     font-size: 16px;
 }
 
-.progress-time {
-    color: #666;
+.watch-container .progress-time {
+    color: var(--quick-silver);
     font-size: 15px;
     font-weight: 500;
 }
 
-.progress-bar {
+.watch-container .progress-bar {
     height: 12px;
-    background: #e9ecef;
+    background: var(--raisin-black-2);
     border-radius: 6px;
     overflow: hidden;
 }
 
-.progress-fill {
+.watch-container .progress-fill {
     height: 100%;
-    background: linear-gradient(to right, #2ecc71, #27ae60);
+    background: var(--orange);
     width: 0;
     transition: width 0.3s ease;
     border-radius: 6px;
 }
 
-.reward-earned {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+.watch-container .coins-earned {
+    margin-top: 15px;
+    text-align: right;
+}
+
+.watch-container .coins-label {
+    color: var(--quick-silver);
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.watch-container .coins-amount {
+    color: var(--orange);
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.watch-container .reward-earned {
+    background: var(--raisin-black-1);
+    border-radius: 15px;
     padding: 40px 30px;
     text-align: center;
     display: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.reward-earned ion-icon {
+.watch-container .reward-earned ion-icon {
     font-size: 56px;
-    color: #2ecc71;
+    color: var(--orange);
     margin-bottom: 20px;
 }
 
-.reward-earned h2 {
+.watch-container .reward-earned h2 {
     font-size: 28px;
-    color: #2c3e50;
+    color: var(--white);
     margin-bottom: 15px;
 }
 
-.reward-earned p {
-    color: #666;
+.watch-container .reward-earned p {
+    color: var(--quick-silver);
     margin-bottom: 20px;
     font-size: 16px;
 }
 
-.reward-earned .coins {
+.watch-container .reward-earned .coins {
     font-size: 36px;
     font-weight: 600;
-    color: #2ecc71;
+    color: var(--orange);
     margin-bottom: 25px;
 }
 
-.back-btn {
+.watch-container .back-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 12px 25px;
-    background: #f8f9fa;
+    background: var(--raisin-black-2);
     border-radius: 8px;
-    color: #2c3e50;
+    color: var(--white);
     text-decoration: none;
     transition: all 0.3s ease;
     font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.back-btn:hover {
-    background: #e9ecef;
+.watch-container .back-btn:hover {
+    background: var(--raisin-black-1);
     transform: translateY(-2px);
 }
 
-/* Error message styling */
-.video-error {
+.watch-container .video-error {
     padding: 30px;
     text-align: center;
-    background: #fff;
-    border-radius: 12px;
+    background: var(--raisin-black-1);
+    border-radius: 15px;
     margin: 20px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.video-error h3 {
-    color: #e74c3c;
+.watch-container .video-error h3 {
+    color: #dc3545;
     margin-bottom: 15px;
     font-size: 20px;
 }
 
-.video-error p {
-    color: #666;
+.watch-container .video-error p {
+    color: var(--quick-silver);
     margin-bottom: 20px;
 }
 
-.video-error .error-btn {
+.watch-container .video-error .error-btn {
     display: inline-block;
     padding: 10px 20px;
-    background: #e74c3c;
-    color: white;
+    background: #dc3545;
+    color: var(--white);
     text-decoration: none;
     border-radius: 6px;
     transition: background 0.3s ease;
 }
 
-.video-error .error-btn:hover {
-    background: #c0392b;
+.watch-container .video-error .error-btn:hover {
+    background: #c82333;
 }
 
 @media (max-width: 768px) {
@@ -230,27 +259,27 @@ body {
         padding: 0 15px;
     }
 
-    .video-info {
+    .watch-container .video-info {
         padding: 20px;
     }
 
-    .video-title {
+    .watch-container .video-title {
         font-size: 20px;
     }
 
-    .video-meta {
+    .watch-container .video-meta {
         gap: 15px;
     }
 
-    .reward-earned {
+    .watch-container .reward-earned {
         padding: 30px 20px;
     }
 
-    .reward-earned h2 {
+    .watch-container .reward-earned h2 {
         font-size: 24px;
     }
 
-    .reward-earned .coins {
+    .watch-container .reward-earned .coins {
         font-size: 32px;
     }
 }

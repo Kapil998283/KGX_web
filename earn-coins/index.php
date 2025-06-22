@@ -83,6 +83,18 @@ function getYoutubeThumbnail($url) {
     <title>Earn Coins - Watch Content</title>
     <link rel="stylesheet" href="../ui/assets/css/style.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Override any conflicting styles from main CSS */
+        :root {
+            --orange: hsla(140, 100%, 50%, 0.985);
+        }
+        
+        /* Ensure the earn-coins container is properly positioned */
+        .earn-coins-container {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
 </head>
 <body>
     <div class="earn-coins-container">
