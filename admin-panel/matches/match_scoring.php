@@ -41,9 +41,12 @@ if (!$match) {
 
 // Fetch participants
 $stmt = $db->prepare("SELECT mp.*, u.username, u.email, u.phone,
+                            ug.game_uid, ug.game_username,
                             COALESCE(uk.kills, 0) as total_kills
                      FROM match_participants mp
                      JOIN users u ON mp.user_id = u.id
+                     JOIN matches m ON m.id = mp.match_id
+                     LEFT JOIN user_games ug ON ug.user_id = u.id AND ug.game_name = m.game_id
                      LEFT JOIN user_kills uk ON uk.match_id = mp.match_id AND uk.user_id = mp.user_id
                      WHERE mp.match_id = ?
                      ORDER BY uk.kills DESC, u.username ASC");
@@ -777,14 +780,30 @@ if (isset($_GET['success'])) {
                     </div>
                     <?php endif; ?>
 
+                    <!-- Add search box -->
+                    <div class="mb-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <input type="text" id="searchInput" class="form-control" placeholder="Search by username, game UID, or in-game name...">
+                                    <button class="btn btn-outline-secondary" type="button">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Participants Table -->
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="participantsTable">
                             <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Player</th>
                                     <th>Contact</th>
+                                    <th>Game UID</th>
+                                    <th>In-Game Name</th>
                                     <th>Kills</th>
                                     <th>Coins Earned</th>
                                     <th>Actions</th>
@@ -799,6 +818,8 @@ if (isset($_GET['success'])) {
                                         <?= htmlspecialchars($participant['email']) ?><br>
                                         <small class="text-muted"><?= htmlspecialchars($participant['phone']) ?></small>
                                     </td>
+                                    <td><?= htmlspecialchars($participant['game_uid']) ?></td>
+                                    <td><?= htmlspecialchars($participant['game_username']) ?></td>
                                     <td><?= $participant['total_kills'] ?></td>
                                     <td><?= $participant['total_kills'] * $match['coins_per_kill'] ?></td>
                                     <td>
@@ -961,6 +982,32 @@ function updatePosition(userId, username) {
     document.getElementById('position_username').textContent = username;
     positionModal.show();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('participantsTable');
+    const rows = table.getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+        const searchTerm = searchInput.value.toLowerCase();
+
+        // Start from index 1 to skip the header row
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const username = row.cells[1].textContent.toLowerCase();
+            const gameUid = row.cells[3].textContent.toLowerCase();
+            const inGameName = row.cells[4].textContent.toLowerCase();
+
+            if (username.includes(searchTerm) || 
+                gameUid.includes(searchTerm) || 
+                inGameName.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
 
 // Add form validation and confirmation
 document.querySelectorAll('form').forEach(form => {
