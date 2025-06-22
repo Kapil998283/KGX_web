@@ -149,12 +149,12 @@ if (isset($_SESSION['user_id'])) {
   <div class="container">
     <!-- Main Logo (Desktop & Mobile) -->
 <a href="/KGX/home.php" class="logo-main">
-  <img src="/KGX/assets/images/logo.svg" alt="GameX Logo">
+  <img src="/KGX/assets/images/logo.svg" alt="KGX Logo">
 </a>
 
 <!-- Additional Logo (Visible Only on Small Devices) -->
 <a href="/KGX/home.php" class="logo-mobile-only">
-  <img src="/KGX/favicon.svg" alt="GameX Mobile Logo">
+  <img src="/KGX/favicon.svg" alt="KGX Mobile Logo">
 </a>
 
     <button class="nav-open-btn" data-nav-open-btn>
@@ -163,7 +163,7 @@ if (isset($_SESSION['user_id'])) {
     <nav class="navbar" data-nav>
       <div class="navbar-top">
         <a href="/KGX/home.php" class="logo">
-          <img src="/KGX/assets/images/logo.svg" alt="GameX logo">
+          <img src="/KGX/assets/images/logo.svg" alt="KGX logo">
         </a>
         <button class="nav-close-btn" data-nav-close-btn>
           <ion-icon name="close-outline"></ion-icon>
