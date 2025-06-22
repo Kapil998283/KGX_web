@@ -81,7 +81,6 @@ function getYoutubeThumbnail($url) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Earn Coins - Watch Content</title>
-    <link rel="stylesheet" href="../ui/assets/css/style.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* Override any conflicting styles from main CSS */
