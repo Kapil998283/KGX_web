@@ -266,7 +266,7 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <div class="match-actions">
                         <?php if (!isset($_SESSION['user_id'])): ?>
-                            <a href="../auth/login.php" class="btn-join btn-primary">
+                            <a href="../login.php" class="btn-join btn-primary">
                                 <i class="bi bi-box-arrow-in-right"></i> Login to Join
                             </a>
                         <?php elseif ($match['status'] === 'completed'): ?>
