@@ -15,6 +15,14 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
 $database = new Database();
 $db = $database->connect();
 
+// Get return URL from query parameter or HTTP referer
+$return_url = isset($_GET['return']) ? $_GET['return'] : (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'dashboard.php');
+
+// Validate the return URL to ensure it's within your website
+$return_url = filter_var($return_url, FILTER_VALIDATE_URL) ? 
+    (parse_url($return_url, PHP_URL_HOST) === parse_url($_SERVER['HTTP_HOST'], PHP_URL_HOST) ? $return_url : 'dashboard.php') : 
+    'dashboard.php';
+
 // Get user's games including main game status
 $sql = "SELECT game_name, game_username, game_uid, game_level, is_primary FROM user_games WHERE user_id = ?";
 $stmt = $db->prepare($sql);
@@ -108,8 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="game-profile-section">
     <div class="game-profile-container">
         <div class="page-header">
-            <a href="dashboard.php" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            <a href="<?php echo htmlspecialchars($return_url); ?>" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back
             </a>
         </div>
 
