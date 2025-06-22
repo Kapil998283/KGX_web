@@ -386,7 +386,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    // Handle form submission
+    // Handle edit parameter and auto-open modal
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameToEdit = urlParams.get('game');
+    const fieldToEdit = urlParams.get('edit');
+    const returnUrl = urlParams.get('return');
+
+    if (gameToEdit) {
+        // Find the game card for the specified game
+        const gameCard = Array.from(gameCards).find(card => 
+            card.dataset.game === gameToEdit || 
+            card.dataset.game === gameToEdit.toUpperCase()
+        );
+
+        if (gameCard) {
+            // Trigger click on the game card to open modal
+            gameCard.click();
+
+            // Focus on the specific field if specified
+            if (fieldToEdit) {
+                setTimeout(() => {
+                    let fieldToFocus;
+                    switch(fieldToEdit) {
+                        case 'username':
+                            fieldToFocus = gameUsernameInput;
+                            break;
+                        case 'uid':
+                            fieldToFocus = gameUidInput;
+                            break;
+                        case 'level':
+                            fieldToFocus = gameLevelInput;
+                            break;
+                    }
+                    if (fieldToFocus) {
+                        fieldToFocus.focus();
+                        fieldToFocus.select();
+                    }
+                }, 300); // Small delay to ensure modal is fully open
+            }
+        }
+    }
+
+    // Modify form submission to handle return URL
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -406,10 +447,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 showSuccessMessage();
                 modal.classList.remove('active');
-                // Reload the page after a short delay
-                setTimeout(() => {
-                    location.reload();
-                }, 3500); // Wait for success message to fade
+                
+                // Check if there's a return URL
+                if (returnUrl) {
+                    setTimeout(() => {
+                        window.location.href = decodeURIComponent(returnUrl);
+                    }, 1500); // Wait for success message to show
+                } else {
+                    // Original behavior - reload the page
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3500);
+                }
             } else {
                 alert(data.message || 'An error occurred');
             }

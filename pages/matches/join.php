@@ -2,7 +2,7 @@
 // Start session and check login status first
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../../auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    header('Location: ../../login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
     exit();
 }
 
@@ -233,17 +233,21 @@ include '../../includes/header.php';
     border-radius: 12px;
     padding: 20px;
     margin-top: 20px;
+    position: relative;
 }
 
 .game-profile-info h4 {
     color: #25d366;
     margin-bottom: 15px;
     font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .profile-details {
     display: grid;
-    gap: 12px;
+    gap: 15px;
 }
 
 .detail-item {
@@ -251,6 +255,8 @@ include '../../includes/header.php';
     align-items: center;
     gap: 10px;
     color: #fff;
+    position: relative;
+    padding-right: 40px; /* Make room for edit icon */
 }
 
 .detail-item i {
@@ -260,6 +266,21 @@ include '../../includes/header.php';
 
 .detail-item span {
     font-size: 0.95em;
+    flex-grow: 1;
+}
+
+.edit-icon {
+    position: absolute;
+    right: 0;
+    color: #25d366;
+    opacity: 0.8;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.edit-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    color: #25d366;
 }
 </style>
 
@@ -374,14 +395,23 @@ include '../../includes/header.php';
                             <div class="detail-item">
                                 <i class="bi bi-person-badge"></i>
                                 <span>In-Game Name: <?= htmlspecialchars($game_profile['game_username'] ?? 'Not set') ?></span>
+                                <a href="/KGX/pages/dashboard/game-profile.php?game=<?= urlencode($match['game_name']) ?>&edit=username" class="edit-icon">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                             </div>
                             <div class="detail-item">
                                 <i class="bi bi-fingerprint"></i>
                                 <span>Game UID: <?= htmlspecialchars($game_profile['game_uid'] ?? 'Not set') ?></span>
+                                <a href="/KGX/pages/dashboard/game-profile.php?game=<?= urlencode($match['game_name']) ?>&edit=uid" class="edit-icon">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                             </div>
                             <div class="detail-item">
-                                <i class="bi bi-star"></i>
-                                <span>Experience Level: <?= htmlspecialchars('Experienced') ?></span>
+                                <i class="bi bi-star-fill"></i>
+                                <span>Game Level: <?= htmlspecialchars($game_profile['game_level'] ?? '1') ?></span>
+                                <a href="/KGX/pages/dashboard/game-profile.php?game=<?= urlencode($match['game_name']) ?>&edit=level" class="edit-icon">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -408,3 +438,17 @@ include '../../includes/header.php';
 </div>
 
 <?php include '../../includes/footer.php'; ?>
+
+<script>
+// Add this to your existing JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Store the current URL to return to after editing
+    const returnUrl = encodeURIComponent(window.location.href);
+    
+    // Update all edit links to include the return URL
+    document.querySelectorAll('.edit-icon').forEach(link => {
+        const currentHref = link.getAttribute('href');
+        link.setAttribute('href', `${currentHref}&return=${returnUrl}`);
+    });
+});
+</script>
