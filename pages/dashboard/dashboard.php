@@ -203,7 +203,7 @@ $streak_points = $streak_data['streak_points'] ?? 0;
 $current_streak = $streak_data['current_streak'] ?? 0;
 
 // Get count of videos watched
-$videos_watched_sql = "SELECT COUNT(DISTINCT stream_id) as videos_watched 
+$videos_watched_sql = "SELECT COUNT(DISTINCT video_id) as videos_watched 
                       FROM video_watch_history 
                       WHERE user_id = ?";
 $videos_stmt = $conn->prepare($videos_watched_sql);
