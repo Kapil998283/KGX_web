@@ -34,11 +34,45 @@ $current_tickets = $balance['tickets'] ?? 0;
     <link rel="preconnect" href="https://fonts.gstatic.com" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
     <title>KGX Shop - Buy Coins & Tickets</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../ui/assets/css/style.css">
     <link rel="stylesheet" href="css/styles.css">
     
     <!-- Add custom shop styles -->
     <style>
+        /* Reset header styles */
+        .navbar {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            padding: 20px 0 !important;
+        }
+
+        .navbar-list {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 30px !important;
+            margin-left: 50px !important;
+        }
+
+        .navbar-link {
+            color: var(--quick-silver) !important;
+            transition: color 0.3s !important;
+            text-transform: uppercase !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+        }
+
+        .navbar-link:hover {
+            color: var(--orange) !important;
+        }
+
+        /* Shop specific styles */
+        main {
+            padding-top: 100px;
+            min-height: 100vh;
+            background: var(--eerie-black-1);
+        }
+
         .balance-container {
             background: var(--raisin-black-1);
             padding: 20px;
@@ -73,24 +107,69 @@ $current_tickets = $balance['tickets'] ?? 0;
 
         .cards {
             margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            padding-bottom: 50px;
         }
 
         .card {
             background: var(--raisin-black-1);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            width: 300px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
         }
 
         .card.active {
             background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
         }
 
+        .card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+
+        .card ul li {
+            padding: 10px 0;
+            color: var(--quick-silver);
+        }
+
+        .card ul li.pack {
+            font-size: 1.5em;
+            color: var(--white);
+            margin-bottom: 20px;
+        }
+
         .card ul li.price {
+            font-size: 2em;
+            color: var(--orange);
+            margin: 20px 0;
+        }
+
+        .card.active ul li.price {
             color: var(--white);
         }
 
         .btn {
             background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: var(--white);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
             transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
         }
 
         .btn:hover {
@@ -179,6 +258,54 @@ $current_tickets = $balance['tickets'] ?? 0;
         .payment-amount {
             color: var(--orange);
             font-weight: bold;
+        }
+
+        /* Header styles */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            color: var(--white);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: var(--quick-silver);
+        }
+
+        .toggle-btn {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            border-radius: 25px;
+            background: var(--raisin-black-2);
+            cursor: pointer;
+        }
+
+        .toggle-btn .circle {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            background: var(--orange);
+            transition: transform 0.3s;
+        }
+
+        .checkbox:checked + .sub .circle {
+            transform: translateX(25px);
+        }
+
+        .checkbox {
+            display: none;
         }
     </style>
 </head>
@@ -287,6 +414,9 @@ $current_tickets = $balance['tickets'] ?? 0;
         </div>
     </main>
 
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script src="js/payment.js"></script>
     <script>
         // Toggle between coins and tickets pricing
         const checkbox = document.getElementById("checkbox");
@@ -315,12 +445,6 @@ $current_tickets = $balance['tickets'] ?? 0;
             if (event.target == modal) {
                 closePaymentModal();
             }
-        }
-
-        // Function to initialize payment (to be implemented with Cashfree)
-        function initializePayment() {
-            alert('Payment gateway integration pending. This feature will be available soon!');
-            // Here we'll add the Cashfree integration code once approved
         }
     </script>
 
