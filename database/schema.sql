@@ -43,6 +43,25 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_phone (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `shop_orders` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `order_id` varchar(50) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `coins` int(11) NOT NULL DEFAULT 0,
+  `tickets` int(11) NOT NULL DEFAULT 0,
+  `status` enum('pending','completed','failed') NOT NULL DEFAULT 'pending',
+  `payment_id` varchar(100) DEFAULT NULL,
+  `payment_signature` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `order_id` (`order_id`),
+  KEY `user_id` (`user_id`),
+  KEY `status` (`status`),
+  CONSTRAINT `shop_orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
+
 -- Profile images table
 CREATE TABLE IF NOT EXISTS profile_images (
     id INT AUTO_INCREMENT PRIMARY KEY,
