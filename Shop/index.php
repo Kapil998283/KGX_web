@@ -147,35 +147,5 @@ $current_tickets = $balance['tickets'] ?? 0;
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
     <script src="js/payment.js"></script>
-    <script>
-        // Toggle between coins and tickets pricing
-        const checkbox = document.getElementById("checkbox");
-        const professional = document.getElementById("professional");
-        const master = document.getElementById("master");
-        const basic = document.getElementById("basic");
-
-        // Payment modal functionality
-        function showPaymentModal(packageName, amount, coins, tickets) {
-            const modal = document.getElementById('paymentModal');
-            document.getElementById('packageName').textContent = packageName;
-            document.getElementById('packageCoins').textContent = coins.toLocaleString();
-            document.getElementById('packageTickets').textContent = tickets.toLocaleString();
-            document.getElementById('packageAmount').textContent = '₹' + amount.toLocaleString();
-            
-            modal.style.display = 'flex';
-        }
-
-        function closePaymentModal() {
-            document.getElementById('paymentModal').style.display = 'none';
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('paymentModal');
-            if (event.target == modal) {
-                closePaymentModal();
-            }
-        }
-    </script>
 </body>
 </html>

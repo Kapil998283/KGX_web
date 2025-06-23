@@ -1,11 +1,9 @@
 :root {
-  --orange: #ff9900;
-  --orange-dark: #ff6600;
+  --primary-color: #7C7FF3;
   --white: #ffffff;
-  --quick-silver: #a6a6a6;
-  --raisin-black-1: #1c1c1c;
-  --raisin-black-2: #222222;
-  --eerie-black-1: #161616;
+  --gray-text: #666666;
+  --card-bg: #ffffff;
+  --body-bg: #f5f6fa;
 }
 
 * {
@@ -19,91 +17,73 @@ html {
 }
 
 body {
-  background: var(--eerie-black-1);
+  background: var(--body-bg);
   font-family: "Montserrat", sans-serif;
   min-height: 100vh;
-  color: var(--white);
+  color: var(--gray-text);
 }
 
 main {
   padding: 20px;
   min-height: 100vh;
   width: 90%;
-  max-width: 1440px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
 /* Back Button */
 .back-button {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: var(--raisin-black-1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 20px;
-  border-radius: 25px;
-  color: var(--quick-silver);
-  text-decoration: none;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: var(--primary-color);
+  text-decoration: none;
   font-weight: 600;
-  transition: all 0.3s ease;
-  z-index: 100;
+  margin-bottom: 30px;
 }
 
 .back-button:hover {
-  background: var(--raisin-black-2);
-  color: var(--orange);
-  transform: translateX(-5px);
-}
-
-.back-button ion-icon {
-  font-size: 1.2em;
+  opacity: 0.8;
 }
 
 /* Balance Container */
 .balance-container {
-  background: var(--raisin-black-1);
-  padding: 20px;
-  border-radius: 15px;
-  margin: 20px 0;
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 40px;
+  margin-bottom: 40px;
 }
 
 .balance-item {
-  text-align: center;
-  color: var(--white);
-}
-
-.balance-item .amount {
-  font-size: 2em;
-  color: var(--orange);
-  margin: 10px 0;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 10px;
 }
 
+.balance-item ion-icon {
+  font-size: 1.2em;
+  color: var(--gray-text);
+}
+
+.balance-item .amount {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--gray-text);
+}
+
 .balance-item .label {
-  color: var(--quick-silver);
+  color: var(--gray-text);
   font-size: 0.9em;
-  text-transform: uppercase;
 }
 
 /* Header Styles */
 header {
   text-align: center;
   margin-bottom: 40px;
-  color: var(--white);
 }
 
 header h1 {
-  font-size: 2.5em;
+  font-size: 2em;
+  color: var(--gray-text);
   margin-bottom: 20px;
 }
 
@@ -112,8 +92,7 @@ header h1 {
   align-items: center;
   justify-content: center;
   gap: 15px;
-  color: var(--quick-silver);
-  margin-top: 2rem;
+  color: var(--gray-text);
 }
 
 .toggle-btn {
@@ -121,7 +100,7 @@ header h1 {
   width: 50px;
   height: 25px;
   border-radius: 25px;
-  background: var(--raisin-black-2);
+  background: var(--primary-color);
   cursor: pointer;
 }
 
@@ -132,7 +111,7 @@ header h1 {
   width: 21px;
   height: 21px;
   border-radius: 50%;
-  background: var(--orange);
+  background: var(--white);
   transition: transform 0.3s;
 }
 
@@ -146,21 +125,20 @@ header h1 {
 
 /* Cards Section */
 .cards {
-  margin-top: 40px;
   display: flex;
   justify-content: center;
   gap: 30px;
   flex-wrap: wrap;
-  padding-bottom: 50px;
+  padding: 20px 0;
 }
 
 .card {
-  background: var(--raisin-black-1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
   border-radius: 15px;
   padding: 30px;
   width: 300px;
   transition: transform 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .card:hover {
@@ -168,7 +146,8 @@ header h1 {
 }
 
 .card.active {
-  background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+  background: var(--primary-color);
+  color: var(--white);
 }
 
 .card ul {
@@ -179,20 +158,26 @@ header h1 {
 }
 
 .card ul li {
-  padding: 10px 0;
-  color: var(--quick-silver);
+  padding: 15px 0;
+  color: var(--gray-text);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.card.active ul li {
+  color: var(--white);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .card ul li.pack {
   font-size: 1.5em;
-  color: var(--white);
-  margin-bottom: 20px;
+  font-weight: 600;
+  border-bottom: none;
 }
 
 .card ul li.price {
-  font-size: 2em;
-  color: var(--orange);
-  margin: 20px 0;
+  font-size: 2.5em;
+  font-weight: 700;
+  color: var(--gray-text);
 }
 
 .card.active ul li.price {
@@ -200,7 +185,7 @@ header h1 {
 }
 
 .btn {
-  background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+  background: var(--primary-color);
   color: var(--white);
   border: none;
   padding: 12px 30px;
@@ -213,18 +198,12 @@ header h1 {
 }
 
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 165, 0, 0.3);
+  opacity: 0.9;
 }
 
 .active-btn {
   background: var(--white);
-  color: var(--orange);
-}
-
-.active-btn:hover {
-  background: var(--raisin-black-2);
-  color: var(--white);
+  color: var(--primary-color);
 }
 
 /* Payment Modal */
@@ -235,19 +214,18 @@ header h1 {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   justify-content: center;
   align-items: center;
 }
 
 .modal-content {
-  background: var(--raisin-black-1);
+  background: var(--white);
   padding: 30px;
   border-radius: 15px;
-  max-width: 500px;
+  max-width: 400px;
   width: 90%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-header {
@@ -258,45 +236,44 @@ header h1 {
 }
 
 .modal-header h2 {
-  color: var(--white);
+  color: var(--gray-text);
   font-size: 1.5em;
 }
 
 .close-modal {
-  color: var(--quick-silver);
+  color: var(--gray-text);
   font-size: 24px;
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: opacity 0.3s;
 }
 
 .close-modal:hover {
-  color: var(--orange);
+  opacity: 0.7;
 }
 
 .payment-details {
   margin: 20px 0;
-  padding: 15px;
-  background: var(--raisin-black-2);
-  border-radius: 10px;
 }
 
 .payment-row {
   display: flex;
   justify-content: space-between;
   margin: 10px 0;
-  color: var(--quick-silver);
+  color: var(--gray-text);
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .payment-row.total {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+  border-bottom: none;
   margin-top: 15px;
   padding-top: 15px;
   font-weight: bold;
-  color: var(--white);
 }
 
 .payment-amount {
-  color: var(--orange);
+  color: var(--gray-text);
   font-weight: bold;
 }
 
@@ -329,13 +306,6 @@ header h1 {
   }
 
   header h1 {
-    font-size: 2em;
-  }
-
-  .back-button {
-    top: 10px;
-    left: 10px;
-    padding: 8px 15px;
-    font-size: 0.9em;
+    font-size: 1.8em;
   }
 }
