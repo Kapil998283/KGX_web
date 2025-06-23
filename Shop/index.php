@@ -6,28 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.gstatic.com" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
-    <title>Pricing Table Component</title>
+    <title>Pricing Table </title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
   <header>
     <h1>Our Pricing</h1>
     <div class="toggle">
-      <label>Annually </label>
+      <label>Coins </label>
       <div class="toggle-btn">
         <input type="checkbox" class="checkbox" id="checkbox" />
         <label class="sub" id="sub" for="checkbox">
           <div class="circle"></div>
         </label>
       </div>
-      <label> Monthly</label>
+      <label> Tickets</label>
     </div>
   </header>
   <div class="cards">
     <div class="card shadow">
       <ul>
         <li class="pack">Basic</li>
-        <li id="basic" class="price bottom-bar">$199.99</li>
+        <li id="basic" class="price bottom-bar">$9</li>
         <li class="bottom-bar">500 GB Storage</li>
         <li class="bottom-bar">2 Users Allowed</li>
         <li class="bottom-bar">Send up to 3 GB</li>
