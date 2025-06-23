@@ -1,5 +1,9 @@
 <?php
-require_once '../../includes/db_connect.php';
+require_once '../../config/database.php';
+
+// Initialize database connection
+$database = new Database();
+$db = $database->connect();
 
 try {
     $db->beginTransaction();
