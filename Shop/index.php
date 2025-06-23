@@ -82,33 +82,30 @@ $current_tickets = $balance['tickets'] ?? 0;
                 <div class="card shadow">
                     <ul>
                         <li class="pack">Starter</li>
-                        <li id="basic" class="price bottom-bar" data-coins="1000" data-tickets="100">₹199</li>
-                        <li class="bottom-bar">1,000 Coins</li>
-                        <li class="bottom-bar">100 Tickets</li>
-                        <li class="bottom-bar">Valid for 30 days</li>
-                        <li><button class="btn" onclick="showPaymentModal('Starter', 199, 1000, 100)">Purchase Now</button></li>
+                        <li class="price">₹10</li>
+                        <li>200 Coins</li>
+                        <li>Valid for 30 days</li>
+                        <li><button class="btn">Purchase Now</button></li>
                     </ul>
                 </div>
 
                 <div class="card active">
                     <ul>
                         <li class="pack">Popular</li>
-                        <li id="professional" class="price bottom-bar" data-coins="2500" data-tickets="250">₹499</li>
-                        <li class="bottom-bar">2,500 Coins</li>
-                        <li class="bottom-bar">250 Tickets</li>
-                        <li class="bottom-bar">Valid for 60 days</li>
-                        <li><button class="btn active-btn" onclick="showPaymentModal('Popular', 499, 2500, 250)">Purchase Now</button></li>
+                        <li class="price">₹100</li>
+                        <li>2,000 Coins</li>
+                        <li>Valid for 60 days</li>
+                        <li><button class="btn active-btn">Purchase Now</button></li>
                     </ul>
                 </div>
 
                 <div class="card shadow">
                     <ul>
                         <li class="pack">Premium</li>
-                        <li id="master" class="price bottom-bar" data-coins="5000" data-tickets="500">₹999</li>
-                        <li class="bottom-bar">5,000 Coins</li>
-                        <li class="bottom-bar">500 Tickets</li>
-                        <li class="bottom-bar">Valid for 90 days</li>
-                        <li><button class="btn" onclick="showPaymentModal('Premium', 999, 5000, 500)">Purchase Now</button></li>
+                        <li class="price">₹250</li>
+                        <li>5,000 Coins</li>
+                        <li>Valid for 90 days</li>
+                        <li><button class="btn">Purchase Now</button></li>
                     </ul>
                 </div>
             </div>
@@ -127,12 +124,12 @@ $current_tickets = $balance['tickets'] ?? 0;
                         <span id="packageName"></span>
                     </div>
                     <div class="payment-row">
-                        <span>Coins</span>
-                        <span id="packageCoins"></span>
+                        <span>Type</span>
+                        <span id="packageType"></span>
                     </div>
                     <div class="payment-row">
-                        <span>Tickets</span>
-                        <span id="packageTickets"></span>
+                        <span>Quantity</span>
+                        <span id="packageQuantity"></span>
                     </div>
                     <div class="payment-row total">
                         <span>Total Amount</span>

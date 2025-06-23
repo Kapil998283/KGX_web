@@ -1,57 +1,103 @@
+// Package configurations
+const packages = {
+    coins: {
+        starter: {
+            name: "Starter",
+            price: 10,
+            amount: 200,
+            validity: 30
+        },
+        popular: {
+            name: "Popular",
+            price: 100,
+            amount: 2000,
+            validity: 60
+        },
+        premium: {
+            name: "Premium",
+            price: 250,
+            amount: 5000,
+            validity: 90
+        }
+    },
+    tickets: {
+        starter: {
+            name: "Starter",
+            price: 10,
+            amount: 1,
+            validity: 30
+        },
+        popular: {
+            name: "Popular",
+            price: 100,
+            amount: 10,
+            validity: 60
+        },
+        premium: {
+            name: "Premium",
+            price: 500,
+            amount: 50,
+            validity: 90
+        }
+    }
+};
+
 // Toggle functionality
 const checkbox = document.getElementById("checkbox");
 const cards = document.querySelectorAll('.card');
 
-// Store original values
-const originalValues = {
-    basic: {
-        coins: 1000,
-        tickets: 100,
-        price: 199
-    },
-    professional: {
-        coins: 2500,
-        tickets: 250,
-        price: 499
-    },
-    master: {
-        coins: 5000,
-        tickets: 500,
-        price: 999
-    }
-};
+// Update card content based on type (coins/tickets)
+function updateCards(isTickets) {
+    const type = isTickets ? 'tickets' : 'coins';
+    const packageType = packages[type];
+    
+    // Update starter package
+    const starterCard = document.querySelector('.card:nth-child(1)');
+    starterCard.querySelector('.price').textContent = `₹${packageType.starter.price}`;
+    starterCard.querySelector('li:nth-child(3)').textContent = 
+        isTickets ? `${packageType.starter.amount} Tickets` : `${packageType.starter.amount.toLocaleString()} Coins`;
+    starterCard.querySelector('button').onclick = () => 
+        showPaymentModal(packageType.starter.name, packageType.starter.price, type, packageType.starter.amount);
+
+    // Update popular package
+    const popularCard = document.querySelector('.card:nth-child(2)');
+    popularCard.querySelector('.price').textContent = `₹${packageType.popular.price}`;
+    popularCard.querySelector('li:nth-child(3)').textContent = 
+        isTickets ? `${packageType.popular.amount} Tickets` : `${packageType.popular.amount.toLocaleString()} Coins`;
+    popularCard.querySelector('button').onclick = () => 
+        showPaymentModal(packageType.popular.name, packageType.popular.price, type, packageType.popular.amount);
+
+    // Update premium package
+    const premiumCard = document.querySelector('.card:nth-child(3)');
+    premiumCard.querySelector('.price').textContent = `₹${packageType.premium.price}`;
+    premiumCard.querySelector('li:nth-child(3)').textContent = 
+        isTickets ? `${packageType.premium.amount} Tickets` : `${packageType.premium.amount.toLocaleString()} Coins`;
+    premiumCard.querySelector('button').onclick = () => 
+        showPaymentModal(packageType.premium.name, packageType.premium.price, type, packageType.premium.amount);
+
+    // Update validity text for all cards
+    cards.forEach((card, index) => {
+        const packageKey = ['starter', 'popular', 'premium'][index];
+        card.querySelector('li:nth-child(4)').textContent = 
+            `Valid for ${packageType[packageKey].validity} days`;
+    });
+}
 
 // Toggle between coins and tickets
 checkbox.addEventListener('change', function() {
     const isTickets = this.checked;
-    
-    cards.forEach(card => {
-        const priceElement = card.querySelector('.price');
-        const coinsElement = card.querySelector('li:nth-child(3)');
-        const ticketsElement = card.querySelector('li:nth-child(4)');
-        
-        if (isTickets) {
-            // Show tickets more prominently
-            coinsElement.style.opacity = '0.7';
-            ticketsElement.style.opacity = '1';
-            ticketsElement.style.fontWeight = '600';
-            coinsElement.style.fontWeight = 'normal';
-        } else {
-            // Show coins more prominently
-            coinsElement.style.opacity = '1';
-            ticketsElement.style.opacity = '0.7';
-            coinsElement.style.fontWeight = '600';
-            ticketsElement.style.fontWeight = 'normal';
-        }
-    });
+    updateCards(isTickets);
 });
 
+// Initialize with coins view
+updateCards(false);
+
 // Payment modal functionality
-function showPaymentModal(packageName, amount, coins, tickets) {
+function showPaymentModal(packageName, amount, type, quantity) {
     const modal = document.getElementById('paymentModal');
     document.getElementById('packageName').textContent = packageName;
-    document.getElementById('packageCoins').textContent = coins.toLocaleString();
-    document.getElementById('packageTickets').textContent = tickets.toLocaleString();
+    document.getElementById('packageType').textContent = type.charAt(0).toUpperCase() + type.slice(1);
+    document.getElementById('packageQuantity').textContent = quantity.toLocaleString();
     document.getElementById('packageAmount').textContent = '₹' + amount.toLocaleString();
     
     modal.style.display = 'flex';
@@ -74,8 +120,8 @@ async function initializePayment() {
     try {
         const packageName = document.getElementById('packageName').textContent;
         const amount = document.getElementById('packageAmount').textContent.replace('₹', '').replace(',', '');
-        const coins = document.getElementById('packageCoins').textContent.replace(',', '');
-        const tickets = document.getElementById('packageTickets').textContent.replace(',', '');
+        const type = document.getElementById('packageType').textContent.toLowerCase();
+        const quantity = document.getElementById('packageQuantity').textContent.replace(',', '');
 
         const response = await fetch('/Shop/process_payment.php', {
             method: 'POST',
@@ -85,8 +131,8 @@ async function initializePayment() {
             body: JSON.stringify({
                 package: packageName,
                 amount: parseFloat(amount),
-                coins: parseInt(coins),
-                tickets: parseInt(tickets)
+                type: type,
+                quantity: parseInt(quantity)
             })
         });
 
@@ -141,8 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const packageData = {
                 package: button.dataset.package,
                 amount: parseFloat(button.dataset.amount),
-                coins: parseInt(button.dataset.coins, 10),
-                tickets: parseInt(button.dataset.tickets, 10)
+                type: button.dataset.type,
+                quantity: parseInt(button.dataset.quantity, 10)
             };
 
             initializePayment(packageData);
