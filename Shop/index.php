@@ -39,6 +39,44 @@ $current_tickets = $balance['tickets'] ?? 0;
     
     <!-- Add custom shop styles -->
     <style>
+        body {
+            background: var(--eerie-black-1);
+            min-height: 100vh;
+        }
+
+        main {
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--raisin-black-1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: var(--quick-silver);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-button:hover {
+            background: var(--raisin-black-2);
+            color: var(--orange);
+            transform: translateX(-5px);
+        }
+
+        .back-button ion-icon {
+            font-size: 1.2em;
+        }
+
         /* Reset header styles */
         .navbar {
             display: flex !important;
@@ -67,12 +105,6 @@ $current_tickets = $balance['tickets'] ?? 0;
         }
 
         /* Shop specific styles */
-        main {
-            padding-top: 100px;
-            min-height: 100vh;
-            background: var(--eerie-black-1);
-        }
-
         .balance-container {
             background: var(--raisin-black-1);
             padding: 20px;
@@ -310,7 +342,10 @@ $current_tickets = $balance['tickets'] ?? 0;
     </style>
 </head>
 <body>
-    <?php require_once '../includes/header.php'; ?>
+    <a href="../dashboard.php" class="back-button">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+        Back to Dashboard
+    </a>
 
     <main>
         <div class="container">
@@ -447,7 +482,5 @@ $current_tickets = $balance['tickets'] ?? 0;
             }
         }
     </script>
-
-    <?php require_once '../includes/footer.php'; ?>
 </body>
 </html>
