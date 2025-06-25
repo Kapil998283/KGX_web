@@ -98,28 +98,40 @@ $login_check = $login_check_stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($login_check['logged_today'] == 0) {
     // Get the Daily Login task ID
-    $login_task_sql = "SELECT id, reward_points FROM streak_tasks WHERE name = 'Daily Login'";
+    $login_task_sql = "SELECT id, reward_points FROM streak_tasks WHERE name = 'Daily Login' LIMIT 1";
     $login_task_stmt = $conn->prepare($login_task_sql);
     $login_task_stmt->execute();
     $login_task = $login_task_stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($login_task) {
-        // Record the daily login and award points
-        $record_login_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
-                            VALUES (?, ?, ?)";
-        $record_login_stmt = $conn->prepare($record_login_sql);
-        $record_login_stmt->execute([$user_id, $login_task['id'], $login_task['reward_points']]);
-        
-        // Update user streak points
-        $update_streak_sql = "UPDATE user_streaks 
-                            SET streak_points = streak_points + ?, 
-                                total_tasks_completed = total_tasks_completed + 1,
-                                current_streak = current_streak + 1,
-                                longest_streak = GREATEST(longest_streak, current_streak + 1),
-                                last_activity_date = CURDATE()
-                            WHERE user_id = ?";
-        $update_streak_stmt = $conn->prepare($update_streak_sql);
-        $update_streak_stmt->execute([$login_task['reward_points'], $user_id]);
+        try {
+            $conn->beginTransaction();
+            
+            // Record the daily login and award points
+            $record_login_sql = "INSERT INTO user_streak_tasks (user_id, task_id, points_earned) 
+                                VALUES (?, ?, ?)";
+            $record_login_stmt = $conn->prepare($record_login_sql);
+            $record_login_stmt->execute([$user_id, $login_task['id'], $login_task['reward_points']]);
+            
+            // Update user streak points
+            $update_streak_sql = "UPDATE user_streaks 
+                                SET streak_points = streak_points + ?, 
+                                    total_tasks_completed = total_tasks_completed + 1,
+                                    current_streak = current_streak + 1,
+                                    longest_streak = GREATEST(longest_streak, current_streak + 1),
+                                    last_activity_date = CURDATE()
+                                WHERE user_id = ?";
+            $update_streak_stmt = $conn->prepare($update_streak_sql);
+            $update_streak_stmt->execute([$login_task['reward_points'], $user_id]);
+            
+            $conn->commit();
+            
+            // Set a flag to trigger page refresh
+            $_SESSION['task_completed'] = true;
+        } catch (Exception $e) {
+            $conn->rollBack();
+            error_log("Error recording daily login: " . $e->getMessage());
+        }
     }
 }
 
@@ -129,17 +141,8 @@ function checkTaskCompletion($user_id, $task_name) {
     
     switch($task_name) {
         case 'Daily Login':
-            // Check if login was recorded today
-            $sql = "SELECT COUNT(*) as count 
-                   FROM user_streak_tasks ust 
-                   JOIN streak_tasks st ON ust.task_id = st.id 
-                   WHERE ust.user_id = ? 
-                   AND st.name = 'Daily Login' 
-                   AND DATE(ust.completion_date) = CURDATE()";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([$user_id]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['count'] > 0;
+            // Simply return true since user is logged in
+            return true;
             
         case 'Join a Match':
             // Check if user joined any match today
@@ -853,6 +856,30 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                 closeModal();
             });
         }
+
+        // Add auto-refresh functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_SESSION['task_completed'])): ?>
+                // Clear the flag
+                <?php unset($_SESSION['task_completed']); ?>
+                // Refresh the page after 2 seconds
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            <?php endif; ?>
+
+            // Check for new task completions every 30 seconds
+            setInterval(function() {
+                fetch('check_tasks.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.new_completion) {
+                            location.reload();
+                        }
+                    })
+                    .catch(error => console.error('Error checking tasks:', error));
+            }, 30000);
+        });
     </script>
 </body>
 </html>
