@@ -744,7 +744,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelMatch()" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Match</button>
                 </div>
             </form>
@@ -1076,9 +1076,32 @@ document.getElementById('matchForm').addEventListener('submit', function(event) 
     });
 });
 
-function cancelMatch(matchId) {
-    if (confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.')) {
-        window.location.href = '../matches/match_scoring.php?action=cancel_match&match_id=' + matchId;
+function cancelMatch() {
+    if (confirm('Are you sure you want to cancel this match? This will refund all joined users.')) {
+        const matchId = document.querySelector('[name="match_id"]').value;
+        
+        fetch('cancel_match.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                match_id: matchId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Match cancelled successfully. All users have been refunded.');
+                location.reload();
+            } else {
+                alert('Error cancelling match: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while cancelling the match.');
+        });
     }
 }
 </script>
