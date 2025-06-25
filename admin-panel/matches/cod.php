@@ -263,17 +263,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         $stmt->execute([$match['entry_fee'], $user_id]);
                         
-                        // Create refund notification
-                        $stmt = $db->prepare("
-                            INSERT INTO notifications (
-                                user_id, type, message, related_id, related_type, created_at
-                            ) VALUES (
-                                ?, 'match_cancelled', ?, ?, 'match', NOW()
-                            )
-                        ");
+                        // Record the refund transaction
+                        $stmt = $db->prepare("INSERT INTO transactions (user_id, amount, type, description, currency_type) 
+                                            VALUES (?, ?, 'refund', ?, ?)");
                         $stmt->execute([
                             $user_id,
-                            "Match cancelled: Refunded " . $match['entry_fee'] . " " . $match['entry_type'],
+                            $match['entry_fee'],
+                            "Refund for cancelled match #" . $match_id,
+                            $match['entry_type']
+                        ]);
+                        
+                        // Create a detailed notification message
+                        $notification_message = sprintf(
+                            "Your Call of Duty Mobile match scheduled for %s has been cancelled. Entry fee of %d %s has been refunded to your account.",
+                            date('d M Y, h:i A', strtotime($match['match_date'])),
+                            $match['entry_fee'],
+                            strtoupper($match['entry_type'])
+                        );
+
+                        // Notify user with detailed message
+                        $stmt = $db->prepare("INSERT INTO notifications (user_id, type, message, related_id, related_type) 
+                                            VALUES (?, 'match_cancelled', ?, ?, 'match')");
+                        $stmt->execute([
+                            $user_id,
+                            $notification_message,
                             $match_id
                         ]);
                     }

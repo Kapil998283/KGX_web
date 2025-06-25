@@ -53,12 +53,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $match['entry_type']
             ]);
             
-            // Notify user
+            // Create a detailed notification message
+            $notification_message = sprintf(
+                "Your BGMI match scheduled for %s has been cancelled. Entry fee of %d %s has been refunded to your account.",
+                date('d M Y, h:i A', strtotime($match['match_date'])),
+                $match['entry_fee'],
+                strtoupper($match['entry_type'])
+            );
+
+            // Notify user with detailed message
             $stmt = $db->prepare("INSERT INTO notifications (user_id, type, message, related_id, related_type) 
                                 VALUES (?, 'match_cancelled', ?, ?, 'match')");
             $stmt->execute([
                 $participant['user_id'],
-                "Match cancelled: " . $match['entry_fee'] . " " . $match['entry_type'] . " refunded",
+                $notification_message,
                 $match_id
             ]);
         }

@@ -421,6 +421,8 @@ CREATE TABLE IF NOT EXISTS matches (
     winner_user_id INT COMMENT 'For individual match winners',
     started_at DATETIME,
     completed_at DATETIME,
+    cancelled_at DATETIME DEFAULT NULL COMMENT 'When the match was cancelled',
+    cancellation_reason VARCHAR(255) DEFAULT NULL COMMENT 'Reason for match cancellation',
     room_details_added_at DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -458,6 +460,22 @@ CREATE TABLE IF NOT EXISTS user_tickets (
     tickets INT DEFAULT 0,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Transactions table
+CREATE TABLE IF NOT EXISTS transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    type ENUM('refund', 'purchase', 'reward', 'withdrawal') NOT NULL,
+    description TEXT NOT NULL,
+    currency_type ENUM('coins', 'tickets', 'INR', 'USD') NOT NULL,
+    status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'completed',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_transactions (user_id),
+    INDEX idx_transaction_type (type),
+    INDEX idx_transaction_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Notifications table
