@@ -200,15 +200,13 @@ function checkTaskCompletion($user_id, $task_name) {
             return $result['count'] > 0;
 
         case 'Team Membership':
-            // Check if user is in any team (current or history)
+            // Check if user is in any team (as member or captain)
             $sql = "SELECT COUNT(*) as count 
-                   FROM (
-                       SELECT user_id FROM team_members WHERE user_id = ?
-                       UNION ALL
-                       SELECT user_id FROM team_member_history WHERE user_id = ?
-                   ) combined_teams";
+                   FROM team_members 
+                   WHERE user_id = ? 
+                   AND status = 'active'";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([$user_id, $user_id]);
+            $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'] > 0;
 
