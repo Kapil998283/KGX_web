@@ -7,6 +7,78 @@ include '../includes/admin-header.php';
 $database = new Database();
 $db = $database->connect();
 
+// Add this at the top of the file, after the database connection
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel_match') {
+    try {
+        $match_id = $_POST['match_id'];
+        
+        // Start transaction
+        $db->beginTransaction();
+        
+        // Get match details and verify it can be cancelled
+        $stmt = $db->prepare("SELECT entry_fee, entry_type, status FROM matches WHERE id = ?");
+        $stmt->execute([$match_id]);
+        $match = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$match) {
+            throw new Exception("Match not found");
+        }
+        
+        if ($match['status'] !== 'upcoming') {
+            throw new Exception("Only upcoming matches can be cancelled");
+        }
+        
+        // Get all participants
+        $stmt = $db->prepare("SELECT user_id FROM match_participants WHERE match_id = ?");
+        $stmt->execute([$match_id]);
+        $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Process refunds for each participant
+        foreach ($participants as $participant) {
+            if ($match['entry_type'] === 'coins') {
+                $stmt = $db->prepare("UPDATE user_coins SET coins = coins + ? WHERE user_id = ?");
+                $stmt->execute([$match['entry_fee'], $participant['user_id']]);
+            } else {
+                $stmt = $db->prepare("UPDATE user_tickets SET tickets = tickets + ? WHERE user_id = ?");
+                $stmt->execute([$match['entry_fee'], $participant['user_id']]);
+            }
+            
+            // Record the refund transaction
+            $stmt = $db->prepare("INSERT INTO transactions (user_id, amount, type, description, currency_type) 
+                                VALUES (?, ?, 'refund', ?, ?)");
+            $stmt->execute([
+                $participant['user_id'],
+                $match['entry_fee'],
+                "Refund for cancelled match #" . $match_id,
+                $match['entry_type']
+            ]);
+            
+            // Notify user
+            $stmt = $db->prepare("INSERT INTO notifications (user_id, type, message, related_id, related_type) 
+                                VALUES (?, 'match_cancelled', ?, ?, 'match')");
+            $stmt->execute([
+                $participant['user_id'],
+                "Match cancelled: " . $match['entry_fee'] . " " . $match['entry_type'] . " refunded",
+                $match_id
+            ]);
+        }
+        
+        // Update match status
+        $stmt = $db->prepare("UPDATE matches SET status = 'cancelled', cancelled_at = NOW() WHERE id = ?");
+        $stmt->execute([$match_id]);
+        
+        $db->commit();
+        $_SESSION['success_message'] = "Match cancelled successfully. All participants have been refunded.";
+        
+    } catch (Exception $e) {
+        $db->rollBack();
+        $_SESSION['error_message'] = "Error cancelling match: " . $e->getMessage();
+    }
+    
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -230,70 +302,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } catch (Exception $e) {
                     $db->rollBack();
                     error_log("Error deleting match: " . $e->getMessage());
-                }
-                break;
-
-            case 'cancel_match':
-                $match_id = $_POST['match_id'];
-                try {
-                    $db->beginTransaction();
-                    
-                    // Get match details first
-                    $stmt = $db->prepare("SELECT * FROM matches WHERE id = ? AND status = 'upcoming'");
-                    $stmt->execute([$match_id]);
-                    $match = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if (!$match) {
-                        throw new Exception("Match not found or cannot be cancelled!");
-                    }
-                    
-                    // Get all participants who paid entry fee
-                    $stmt = $db->prepare("SELECT user_id FROM match_participants WHERE match_id = ?");
-                    $stmt->execute([$match_id]);
-                    $participants = $stmt->fetchAll(PDO::FETCH_COLUMN);
-                    
-                    // Process refunds for each participant
-                    foreach ($participants as $user_id) {
-                        if ($match['entry_type'] === 'coins') {
-                            // Refund coins
-                            $stmt = $db->prepare("UPDATE user_coins SET coins = coins + ? WHERE user_id = ?");
-                        } else {
-                            // Refund tickets
-                            $stmt = $db->prepare("UPDATE user_tickets SET tickets = tickets + ? WHERE user_id = ?");
-                        }
-                        $stmt->execute([$match['entry_fee'], $user_id]);
-                        
-                        // Create refund notification
-                        $stmt = $db->prepare("
-                            INSERT INTO notifications (
-                                user_id, type, message, related_id, related_type, created_at
-                            ) VALUES (
-                                ?, 'match_cancelled', ?, ?, 'match', NOW()
-                            )
-                        ");
-                        $stmt->execute([
-                            $user_id,
-                            "Match cancelled: Refunded " . $match['entry_fee'] . " " . $match['entry_type'],
-                            $match_id
-                        ]);
-                    }
-                    
-                    // Update match status to cancelled
-                    $stmt = $db->prepare("
-                        UPDATE matches 
-                        SET status = 'cancelled',
-                            cancelled_at = NOW(),
-                            cancellation_reason = 'Cancelled by admin'
-                        WHERE id = ?
-                    ");
-                    $stmt->execute([$match_id]);
-                    
-                    $db->commit();
-                    header("Location: " . basename($_SERVER['PHP_SELF']));
-                    exit;
-                } catch (Exception $e) {
-                    $db->rollBack();
-                    error_log("Error cancelling match: " . $e->getMessage());
                 }
                 break;
         }
@@ -529,10 +537,10 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <button class="btn btn-sm btn-success" onclick="startMatch(<?= $match['id'] ?>)">
                                         <i class="bi bi-play-fill"></i> Start
                                     </button>
-                                    <form method="POST" style="display: inline;">
+                                    <form method="POST" style="display: inline;" onsubmit="return confirmCancel(event)">
                                         <input type="hidden" name="action" value="cancel_match">
                                         <input type="hidden" name="match_id" value="<?= $match['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.');">
+                                        <button type="submit" class="btn btn-sm btn-warning">
                                             <i class="bi bi-x-circle"></i> Cancel Match
                                         </button>
                                     </form>
@@ -744,7 +752,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cancelMatch()" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Match</button>
                 </div>
             </form>
@@ -1076,34 +1084,26 @@ document.getElementById('matchForm').addEventListener('submit', function(event) 
     });
 });
 
-function cancelMatch() {
-    if (confirm('Are you sure you want to cancel this match? This will refund all joined users.')) {
-        const matchId = document.querySelector('[name="match_id"]').value;
-        
-        fetch('cancel_match.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                match_id: matchId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Match cancelled successfully. All users have been refunded.');
-                location.reload();
-            } else {
-                alert('Error cancelling match: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while cancelling the match.');
-        });
+function confirmCancel(event) {
+    if (!confirm('Are you sure you want to cancel this match? This will refund all participants and cannot be undone.')) {
+        event.preventDefault();
+        return false;
     }
+    return true;
 }
+
+// Add success/error message display
+document.addEventListener('DOMContentLoaded', function() {
+    <?php if (isset($_SESSION['success_message'])): ?>
+        alert('<?= htmlspecialchars($_SESSION['success_message']) ?>');
+        <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['error_message'])): ?>
+        alert('<?= htmlspecialchars($_SESSION['error_message']) ?>');
+        <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
+});
 </script>
 
 <style>

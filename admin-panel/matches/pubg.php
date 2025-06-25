@@ -240,12 +240,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$match_id]);
                     
                     $db->commit();
-                    header("Location: " . basename($_SERVER['PHP_SELF']));
-                    exit;
+                    $_SESSION['success_message'] = "Match cancelled successfully. All participants have been refunded.";
                 } catch (Exception $e) {
                     $db->rollBack();
-                    error_log("Error cancelling match: " . $e->getMessage());
+                    $_SESSION['error_message'] = "Error cancelling match: " . $e->getMessage();
                 }
+                
+                header("Location: " . basename($_SERVER['PHP_SELF']));
+                exit;
                 break;
 
             case 'complete_match':
@@ -869,6 +871,17 @@ document.addEventListener('DOMContentLoaded', function() {
         resetMatchForm();
         addMatchModal.show();
     });
+
+    // Add success/error message display
+    <?php if (isset($_SESSION['success_message'])): ?>
+        alert('<?= htmlspecialchars($_SESSION['success_message']) ?>');
+        <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['error_message'])): ?>
+        alert('<?= htmlspecialchars($_SESSION['error_message']) ?>');
+        <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
 });
 
 // Handle match actions
