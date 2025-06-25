@@ -55,7 +55,7 @@ $today_tasks_stmt->execute([$user_id]);
 $today_tasks = $today_tasks_stmt->fetch(PDO::FETCH_ASSOC);
 
 // Get daily tasks and their completion status
-$daily_tasks_sql = "SELECT 
+$daily_tasks_sql = "SELECT DISTINCT
     st.*,
     CASE WHEN ust.id IS NOT NULL THEN 1 ELSE 0 END as completed
     FROM streak_tasks st
@@ -65,6 +65,7 @@ $daily_tasks_sql = "SELECT
         AND DATE(ust.completion_date) = CURDATE()
     WHERE st.is_active = 1 
     AND st.is_daily = 1
+    GROUP BY st.id
     ORDER BY st.reward_points ASC";
 $daily_tasks_stmt = $conn->prepare($daily_tasks_sql);
 $daily_tasks_stmt->execute([$user_id]);
