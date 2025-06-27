@@ -189,18 +189,20 @@ h3 {
 .history-section {
     background: white;
     border-radius: 15px;
-    padding: 30px;
+    padding: 20px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     margin: 40px 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .history-table {
     width: 100%;
+    min-width: 600px;
     border-collapse: separate;
     border-spacing: 0;
     background: white;
     border-radius: 10px;
-    overflow: hidden;
 }
 
 .history-table th {
@@ -607,4 +609,53 @@ h3 {
 .convert-btn:hover {
     background: #16e100;
     transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .history-section {
+        padding: 10px;
+        margin: 20px 0;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 12px 10px;
+        font-size: 14px;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .status-badge ion-icon {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .streak-stats {
+        gap: 10px;
+    }
+
+    .stat-card {
+        min-width: 140px;
+        padding: 15px;
+    }
+
+    .stat-number {
+        font-size: 24px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+    }
+
+    .tasks-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .task-card {
+        padding: 15px;
+    }
 } 

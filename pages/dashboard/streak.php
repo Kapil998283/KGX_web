@@ -47,9 +47,9 @@ $milestone_stmt->execute([$user_id]);
 $next_milestone = $milestone_stmt->fetch(PDO::FETCH_ASSOC);
 
 // Get today's completed tasks
-$today_tasks_sql = "SELECT COUNT(*) as completed_count
-                    FROM user_streak_tasks 
-                    WHERE user_id = ? AND DATE(completion_date) = CURDATE()";
+$today_tasks_sql = "SELECT COUNT(DISTINCT ust.task_id) as completed_count, SUM(ust.points_earned) as points_earned
+                    FROM user_streak_tasks ust 
+                    WHERE ust.user_id = ? AND DATE(ust.completion_date) = CURDATE()";
 $today_tasks_stmt = $conn->prepare($today_tasks_sql);
 $today_tasks_stmt->execute([$user_id]);
 $today_tasks = $today_tasks_stmt->fetch(PDO::FETCH_ASSOC);
@@ -318,10 +318,10 @@ foreach($onetime_tasks as $task) {
     }
 }
 
-// Get streak history
+// Get streak history with correct counting
 $history_sql = "SELECT 
     DATE(completion_date) as date,
-    COUNT(*) as tasks_completed,
+    COUNT(DISTINCT task_id) as tasks_completed,
     SUM(points_earned) as points_earned
     FROM user_streak_tasks
     WHERE user_id = ?
