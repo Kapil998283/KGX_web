@@ -26,7 +26,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
           <h1 class="h1 hero-title"><?php echo htmlspecialchars($hero_settings['title'] ?? 'TOURNAMENTS'); ?></h1>
       
           <div class="btn-group">
-            <a href="<?php echo htmlspecialchars($hero_settings['primary_btn_url'] ?? '#tickets'); ?>">
+            <a href="/Shop/index.php">
               <button class="btn btn-primary">
                 <ion-icon name="<?php echo htmlspecialchars($hero_settings['primary_btn_icon'] ?? 'wallet-outline'); ?>"></ion-icon>
                 <span><?php echo htmlspecialchars($hero_settings['primary_btn_text'] ?? '+TICKET'); ?></span>
