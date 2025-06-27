@@ -216,7 +216,7 @@ if (isset($_SESSION['user_id'])) {
 
               <!-- Dropdown Content -->
               <div class="dropdown-content" id="ticket-dropdown">
-                <a href="./Shop/index.php"><button class="ticket-option">+ Add More Tickets</button></a>
+                <a href="./Shop/index.php" class="ticket-option">+ Add More Tickets</a>
                 <button class="ticket-option">Share Tickets</button>
                 <a href="./earn-coins/" class="ticket-option">You Can Earn Tickets</a>
               </div>

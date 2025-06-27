@@ -363,7 +363,6 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
             top: 20px;
             left: 20px;
             padding: 10px 20px;
-            margin-top: 100px;
             background: #19fb00;
             color: #fff;
             border: none;
