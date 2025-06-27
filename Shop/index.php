@@ -37,9 +37,9 @@ $current_tickets = $balance['tickets'] ?? 0;
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <a href="./home.php" class="back-button">
+    <a href="../home.php" class="back-button">
         <ion-icon name="arrow-back-outline"></ion-icon>
-        Back to Dashboard
+        Home
     </a>
 
     <main>
