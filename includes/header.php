@@ -187,8 +187,8 @@ if (isset($_SESSION['user_id'])) {
             <li><a href="/KGX/pages/teams/yourteams.php" class="dropdown-item">Your Teams</a></li>
           </ul>
         </li>
-        <li><a href="/KGX/Shop/index.php" class="navbar-link">Pricing</a></li>
-        <li><a href="/KGX/pages/community.php" class="navbar-link">Community</a></li>
+        <li><a href="./Shop/index.php" class="navbar-link">Pricing</a></li>
+        <li><a href="./pages/community.php" class="navbar-link">Community</a></li>
       </ul>
       <ul class="nav-social-list">
         <li><a href="#" class="social-link"><ion-icon name="logo-facebook"></ion-icon></a></li>
@@ -216,9 +216,9 @@ if (isset($_SESSION['user_id'])) {
 
               <!-- Dropdown Content -->
               <div class="dropdown-content" id="ticket-dropdown">
-                <button class="ticket-option">+ Add More Tickets</button>
+                <a href="./Shop/index.php"><button class="ticket-option">+ Add More Tickets</button></a>
                 <button class="ticket-option">Share Tickets</button>
-                <a href="/KGX/earn-coins/" class="ticket-option">You Can Earn Tickets</a>
+                <a href="./earn-coins/" class="ticket-option">You Can Earn Tickets</a>
               </div>
             </div>
 
