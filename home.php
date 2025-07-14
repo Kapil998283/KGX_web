@@ -79,7 +79,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
       <data value="10000">Highest Prize Pool</data>
 
       <figure>
-        <img src="/assets/images/prize-img.png" alt="Prize image">
+        <img src="/assets/images/prize-pool.png" alt="prize pool">
       </figure>
 
     </div>
@@ -140,7 +140,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                   <div class="card-banner">
 
                     <a href="#">
-                      <img src="/assets/images/bgmi.png" alt="Headphone">
+                      <img src="/assets/images/games/pubg.png" alt="Pubg">
                     </a>
 
                     <button class="share">
@@ -150,7 +150,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                     <div class="card-time-wrapper">
                       
                       <ion-icon name="time-outline"></ion-icon>
-                      <span>2 maps</span>
+                      <span>All Maps</span>
                     </div>
 
                   </div>
@@ -174,7 +174,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                     <a href="pages/games/pubg.php">
                       <button class="btn btn-primary">
                         <ion-icon name="add-outline"></ion-icon>
-                        <span>participate</span>
+                        <span>Join</span>
                       </button>
                     </a>
 
@@ -189,7 +189,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                   <div class="card-banner">
 
                     <a href="#">
-                      <img src="/assets/images/bgmi.png" alt="Controller">
+                      <img src="/assets/images/games/bgmi.png" alt="Bgmi">
                     </a>
 
                     <button class="share">
@@ -223,7 +223,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                     <a href="pages/games/bgmi.php">
                       <button class="btn btn-primary">
                         <ion-icon name="add-outline"></ion-icon>
-                        <span>participate</span>
+                        <span>Join</span>
                       </button>
                     </a>
 
@@ -238,7 +238,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                   <div class="card-banner">
 
                     <a href="#">
-                      <img src="/assets/images/freefire.png" alt="Gaming mask">
+                      <img src="/assets/images/games/freefire.png" alt="Freefire">
                     </a>
 
                     <button class="share">
@@ -272,7 +272,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                     <a href="pages/games/freefire.php">
                       <button class="btn btn-primary">
                         <ion-icon name="add-outline"></ion-icon>
-                        <span>participate</span>
+                        <span>Join</span>
                       </button>
                     </a>
 
@@ -287,7 +287,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                   <div class="card-banner">
 
                     <a href="#">
-                      <img src="/assets/images/cod.png" alt="Headphone">
+                      <img src="/assets/images/games/cod.png" alt="Cod">
                     </a>
 
                     <button class="share">
@@ -321,7 +321,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
                     <a href="pages/games/cod.php">
                       <button class="btn btn-primary">
                         <ion-icon name="add-outline"></ion-icon>
-                        <span>participate</span>
+                        <span>Join</span>
                       </button>
                     </a>
 
@@ -356,7 +356,7 @@ $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
     </figure>
     <!-- Left Side: About Content -->
     <div class="about-content">
-      <p class="about-subtitle">• participate • Earn • Enjoy</p>
+      <p class="about-subtitle">• Join • Earn • Enjoy</p>
 
       <h2 class="about-title">
         Ultimate <strong>Gamer's</strong> Haven
