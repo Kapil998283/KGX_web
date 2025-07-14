@@ -424,6 +424,7 @@ CREATE TABLE IF NOT EXISTS matches (
     cancelled_at DATETIME DEFAULT NULL COMMENT 'When the match was cancelled',
     cancellation_reason VARCHAR(255) DEFAULT NULL COMMENT 'Reason for match cancellation',
     room_details_added_at DATETIME,
+    payment_confirmed TINYINT(1) DEFAULT 0 COMMENT 'Whether real currency prize payment has been confirmed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (game_id) REFERENCES games(id),

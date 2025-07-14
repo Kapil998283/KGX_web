@@ -585,6 +585,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 break;
+
+            case 'confirm_payment':
+                try {
+                    $stmt = $db->prepare("UPDATE matches SET payment_confirmed = 1 WHERE id = ?");
+                    $stmt->execute([$match_id]);
+                    header("Location: match_scoring.php?id=" . $match_id . "&success=payment_confirmed");
+                    exit;
+                } catch (Exception $e) {
+                    header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
+                    exit;
+                }
+                break;
         }
     }
 }
@@ -698,6 +710,9 @@ if (isset($_GET['success'])) {
         case 'completed':
             $success_message = 'Match completed successfully!';
             break;
+        case 'payment_confirmed':
+            $success_message = 'Prize payment confirmed!';
+            break;
         default:
             $success_message = 'Operation completed successfully!';
     }
@@ -753,16 +768,39 @@ if (isset($_GET['success'])) {
                         </div>
                     </div>
 
-                    <!-- Add Complete Match Button -->
-                    <?php if ($match['status'] === 'in_progress'): ?>
-                    <div class="text-end mb-4">
-                        <form method="POST" id="completeMatchForm">
-                            <input type="hidden" name="action" value="complete_match">
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-lg"></i> Complete Match
-                            </button>
-                        </form>
-                    </div>
+                    <!-- Add Payment Confirmation Button for Real Currency Matches -->
+                    <?php if ($match['status'] === 'in_progress' && !$match['website_currency_type'] && $match['prize_pool'] > 0): ?>
+                        <div class="text-end mb-4">
+                            <?php
+                                // Check if payment is confirmed
+                                $stmt = $db->prepare("SELECT payment_confirmed FROM matches WHERE id = ?");
+                                $stmt->execute([$match_id]);
+                                $payment_confirmed = $stmt->fetchColumn();
+                            ?>
+                            <?php if (!$payment_confirmed): ?>
+                                <form method="POST" class="d-inline">
+                                    <input type="hidden" name="action" value="confirm_payment">
+                                    <button type="submit" class="btn btn-warning me-2">
+                                        <i class="bi bi-cash"></i> Confirm Prize Payment
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                            <form method="POST" id="completeMatchForm" class="d-inline">
+                                <input type="hidden" name="action" value="complete_match">
+                                <button type="submit" class="btn btn-success" <?= !$payment_confirmed ? 'disabled' : '' ?>>
+                                    <i class="bi bi-check-lg"></i> Complete Match
+                                </button>
+                            </form>
+                        </div>
+                    <?php elseif ($match['status'] === 'in_progress'): ?>
+                        <div class="text-end mb-4">
+                            <form method="POST" id="completeMatchForm">
+                                <input type="hidden" name="action" value="complete_match">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg"></i> Complete Match
+                                </button>
+                            </form>
+                        </div>
                     <?php endif; ?>
 
                     <!-- Add success/error messages -->
