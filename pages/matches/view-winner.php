@@ -83,33 +83,8 @@ $stmt = $db->prepare("SELECT
                                             ELSE 0
                                         END
                                 END
-                            ELSE
-                                CASE 
-                                    WHEN m.prize_distribution = 'top3' THEN
-                                        CASE 
-                                            WHEN mp.position = 1 THEN m.prize_pool * 0.6
-                                            WHEN mp.position = 2 THEN m.prize_pool * 0.3
-                                            WHEN mp.position = 3 THEN m.prize_pool * 0.1
-                                            ELSE 0
-                                        END
-                                    WHEN m.prize_distribution = 'top5' THEN
-                                        CASE 
-                                            WHEN mp.position = 1 THEN m.prize_pool * 0.5
-                                            WHEN mp.position = 2 THEN m.prize_pool * 0.25
-                                            WHEN mp.position = 3 THEN m.prize_pool * 0.15
-                                            WHEN mp.position = 4 THEN m.prize_pool * 0.07
-                                            WHEN mp.position = 5 THEN m.prize_pool * 0.03
-                                            ELSE 0
-                                        END
-                                    ELSE
-                                        CASE 
-                                            WHEN mp.position = 1 THEN m.prize_pool
-                                            ELSE 0
-                                        END
-                                END
-                        END as position_prize,
-                        m.website_currency_type,
-                        m.prize_type
+                            ELSE 0
+                        END as position_prize
                     FROM match_participants mp
                     JOIN users u ON mp.user_id = u.id
                     JOIN matches m ON m.id = mp.match_id
@@ -155,16 +130,12 @@ include '../../includes/header.php';
                 <div class="prize-pool">
                     <div class="prize-main">
                         <i class="bi bi-trophy-fill"></i>
-                        <?php if ($match['website_currency_type'] && $match['website_currency_amount'] > 0): ?>
-                            <span>Prize Pool: <?= number_format($match['website_currency_amount']) ?> <?= ucfirst($match['website_currency_type']) ?></span>
-                        <?php else: ?>
-                            <span>Prize Pool: <?= $match['prize_type'] === 'USD' ? '$' : '₹' ?><?= number_format($match['prize_pool'], 2) ?></span>
-                        <?php endif; ?>
+                        <span>Prize Pool: <?= number_format($match['website_currency_amount']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></span>
                     </div>
                     <?php if ($match['coins_per_kill'] > 0): ?>
                     <div class="prize-kill">
-                        <i class="bi bi-star"></i>
-                        <span><?= number_format($match['coins_per_kill']) ?> Coins per Kill</span>
+                        <i class="bi bi-star-fill"></i>
+                        <small>+<?= number_format($match['coins_per_kill']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?> per Kill</small>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -231,20 +202,14 @@ include '../../includes/header.php';
                                     <i class="bi bi-star-fill"></i>
                                     <span><?= $winner['kills'] ?> Kills</span>
                                 </div>
-                                <?php if ($winner['kill_coins'] > 0): ?>
                                 <div class="stat-item">
                                     <i class="bi bi-coin"></i>
                                     <span><?= number_format($winner['kill_coins']) ?> Coins</span>
                                 </div>
-                                <?php endif; ?>
                                 <?php if ($winner['position_prize'] > 0): ?>
                                 <div class="stat-item">
                                     <i class="bi bi-trophy-fill"></i>
-                                    <?php if ($match['website_currency_type']): ?>
-                                        <span><?= number_format($winner['position_prize']) ?> <?= ucfirst($match['website_currency_type']) ?></span>
-                                    <?php else: ?>
-                                        <span><?= $match['prize_type'] === 'USD' ? '$' : '₹' ?><?= number_format($winner['position_prize']) ?></span>
-                                    <?php endif; ?>
+                                    <span><?= number_format($winner['position_prize']) ?> <?= ucfirst($match['website_currency_type'] ?? 'Coins') ?></span>
                                 </div>
                                 <?php endif; ?>
                             </div>

@@ -424,7 +424,6 @@ CREATE TABLE IF NOT EXISTS matches (
     cancelled_at DATETIME DEFAULT NULL COMMENT 'When the match was cancelled',
     cancellation_reason VARCHAR(255) DEFAULT NULL COMMENT 'Reason for match cancellation',
     room_details_added_at DATETIME,
-    payment_confirmed TINYINT(1) DEFAULT 0 COMMENT 'Whether real currency prize payment has been confirmed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (game_id) REFERENCES games(id),
@@ -435,12 +434,11 @@ CREATE TABLE IF NOT EXISTS matches (
     FOREIGN KEY (winner_user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Match results table for tracking real currency prizes
+-- Match results table
 CREATE TABLE IF NOT EXISTS match_results (
     match_id INT,
     team_id INT,
-    position INT,
-    kills INT DEFAULT 0,
+    score INT DEFAULT NULL,
     prize_amount DECIMAL(10,2) DEFAULT NULL,
     prize_currency VARCHAR(20) DEFAULT NULL,
     PRIMARY KEY (match_id, team_id),
