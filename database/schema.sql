@@ -435,11 +435,12 @@ CREATE TABLE IF NOT EXISTS matches (
     FOREIGN KEY (winner_user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Match results table
+-- Match results table for tracking real currency prizes
 CREATE TABLE IF NOT EXISTS match_results (
     match_id INT,
     team_id INT,
-    score INT DEFAULT NULL,
+    position INT,
+    kills INT DEFAULT 0,
     prize_amount DECIMAL(10,2) DEFAULT NULL,
     prize_currency VARCHAR(20) DEFAULT NULL,
     PRIMARY KEY (match_id, team_id),

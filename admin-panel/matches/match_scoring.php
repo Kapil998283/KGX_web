@@ -12,6 +12,13 @@ header("Pragma: no-cache");
 $database = new Database();
 $db = $database->connect();
 
+// Add payment_confirmed column to matches table if it doesn't exist
+try {
+    $db->exec("ALTER TABLE matches ADD COLUMN IF NOT EXISTS payment_confirmed BOOLEAN DEFAULT FALSE");
+} catch (Exception $e) {
+    error_log("Error adding payment_confirmed column: " . $e->getMessage());
+}
+
 // Get match ID from URL
 $match_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
@@ -358,92 +365,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'complete_match':
                 $db->beginTransaction();
                 try {
-                    // Check if positions have been set for the required number of winners
-                    $requiredPositions = ($match['prize_distribution'] === 'top5') ? 5 : 
-                                        ($match['prize_distribution'] === 'top3' ? 3 : 1);
-                    
-                    $stmt = $db->prepare("SELECT COUNT(*) FROM match_participants 
-                                         WHERE match_id = ? AND position IS NOT NULL AND position <= ?");
-                    $stmt->execute([$match_id, $requiredPositions]);
-                    $positionsSet = $stmt->fetchColumn();
-                    
-                    if ($positionsSet < $requiredPositions) {
-                        throw new Exception("Please set positions for all winners (top " . $requiredPositions . ") before completing the match.");
+                    // Check if payment confirmation is required and confirmed
+                    if ($match['prize_pool'] > 0 && !$match['website_currency_type']) {
+                        $stmt = $db->prepare("SELECT payment_confirmed FROM matches WHERE id = ?");
+                        $stmt->execute([$match_id]);
+                        $payment_status = $stmt->fetchColumn();
+                        
+                        if (!$payment_status) {
+                            throw new Exception("Payment must be confirmed before completing match with real currency prizes.");
+                        }
                     }
-                    
-                    // Get the first position player as the main winner
-                    $stmt = $db->prepare("SELECT user_id FROM match_participants 
-                                         WHERE match_id = ? AND position = 1");
+
+                    // Get winner ID (team with highest kills)
+                    $stmt = $db->prepare("SELECT team_id FROM match_participants WHERE match_id = ? ORDER BY position ASC LIMIT 1");
                     $stmt->execute([$match_id]);
-                    $firstPlace = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if (!$firstPlace) {
-                        throw new Exception("First position must be set before completing the match.");
-                    }
-                    
-                    // Update match status and set the first position player as winner
-                    $stmt = $db->prepare("UPDATE matches SET 
-                                        status = 'completed', 
-                                        completed_at = NOW(), 
-                                        winner_user_id = ?
-                                        WHERE id = ?");
-                    $stmt->execute([$firstPlace['user_id'], $match_id]);
-                    
+                    $winner_id = $stmt->fetchColumn();
+
                     // Distribute prizes
-                    distributePrize($db, $match_id, $firstPlace['user_id'], $match);
-                    
-                    // Get match and winner details for notification
-                    $stmt = $db->prepare("
-                        SELECT m.id, m.match_type, g.name as game_name, u.username as winner_name
-                        FROM matches m
-                        JOIN games g ON m.game_id = g.id
-                        JOIN users u ON u.id = ?
-                        WHERE m.id = ?
-                    ");
-                    $stmt->execute([$firstPlace['user_id'], $match_id]);
-                    $matchInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    // Get all users participating in this match
-                    $stmt = $db->prepare("
-                        SELECT DISTINCT u.id
-                        FROM users u
-                        JOIN match_participants mp ON u.id = mp.user_id
-                        WHERE mp.match_id = ?
-                    ");
+                    distributePrize($db, $match_id, $winner_id, $match);
+
+                    // Update match status
+                    $stmt = $db->prepare("UPDATE matches SET status = 'completed' WHERE id = ?");
                     $stmt->execute([$match_id]);
-                    $users = $stmt->fetchAll(PDO::FETCH_COLUMN);
-                    
-                    // Create notifications for participating users
-                    $notificationMessage = "Match completed! {$matchInfo['winner_name']} won the {$matchInfo['game_name']} {$matchInfo['match_type']} match";
-                    
-                    foreach ($users as $user_id) {
-                        $stmt = $db->prepare("
-                            INSERT INTO notifications (
-                                user_id, 
-                                type, 
-                                message, 
-                                related_id, 
-                                related_type,
-                                created_at
-                            ) VALUES (
-                                ?, 
-                                'match_completed', 
-                                ?, 
-                                ?, 
-                                'match',
-                                NOW()
-                            )
-                        ");
-                        $stmt->execute([$user_id, $notificationMessage, $match_id]);
-                    }
-                    
+
                     $db->commit();
-                    header("Location: match_scoring.php?id=" . $match_id . "&success=completed");
+                    header("Location: " . strtolower($match['game_name']) . ".php?success=match_completed");
                     exit;
                 } catch (Exception $e) {
-                    if ($db->inTransaction()) {
-                        $db->rollBack();
-                    }
+                    $db->rollBack();
+                    error_log("Error completing match: " . $e->getMessage());
                     header("Location: match_scoring.php?id=" . $match_id . "&error=" . urlencode($e->getMessage()));
                     exit;
                 }
@@ -777,38 +727,35 @@ if (isset($_GET['success'])) {
 
                     <!-- Add Payment Confirmation Button for Real Currency Matches -->
                     <?php if ($match['status'] === 'in_progress' && !$match['website_currency_type'] && $match['prize_pool'] > 0): ?>
-                        <div class="text-end mb-4">
-                            <?php
-                                // Check if payment is confirmed
-                                $stmt = $db->prepare("SELECT payment_confirmed FROM matches WHERE id = ?");
-                                $stmt->execute([$match_id]);
-                                $payment_confirmed = $stmt->fetchColumn();
-                            ?>
-                            <?php if (!$payment_confirmed): ?>
-                                <form method="POST" class="d-inline">
-                                    <input type="hidden" name="action" value="confirm_payment">
-                                    <button type="submit" class="btn btn-warning me-2">
-                                        <i class="bi bi-cash"></i> Confirm Prize Payment
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                            <form method="POST" id="completeMatchForm" class="d-inline">
-                                <input type="hidden" name="action" value="complete_match">
-                                <button type="submit" class="btn btn-success" <?= !$payment_confirmed ? 'disabled' : '' ?>>
-                                    <i class="bi bi-check-lg"></i> Complete Match
+                        <?php
+                        // Check if payment is already confirmed
+                        $stmt = $db->prepare("SELECT payment_confirmed FROM matches WHERE id = ?");
+                        $stmt->execute([$match_id]);
+                        $payment_confirmed = $stmt->fetchColumn();
+                        ?>
+                        <?php if (!$payment_confirmed): ?>
+                            <form method="POST" class="mb-3">
+                                <input type="hidden" name="action" value="confirm_payment">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-cash"></i> Confirm Prize Payment
                                 </button>
                             </form>
-                        </div>
-                    <?php elseif ($match['status'] === 'in_progress'): ?>
-                        <div class="text-end mb-4">
-                            <form method="POST" id="completeMatchForm">
-                                <input type="hidden" name="action" value="complete_match">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-check-lg"></i> Complete Match
-                                </button>
-                            </form>
-                        </div>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> You must confirm prize payment before completing the match.
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-success mb-3">
+                                <i class="bi bi-check-circle"></i> Prize payment has been confirmed.
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
+
+                    <form method="POST" class="text-end">
+                        <input type="hidden" name="action" value="complete_match">
+                        <button type="submit" class="btn btn-success" <?= ($match['prize_pool'] > 0 && !$match['website_currency_type'] && !$payment_confirmed) ? 'disabled' : '' ?>>
+                            <i class="bi bi-check-circle"></i> Complete Match
+                        </button>
+                    </form>
 
                     <!-- Add success/error messages -->
                     <?php if ($success_message): ?>
