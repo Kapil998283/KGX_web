@@ -829,6 +829,14 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Drop existing streak tables if they exist (in reverse order of dependencies)
+DROP TABLE IF EXISTS streak_conversion_log;
+DROP TABLE IF EXISTS user_streak_milestones;
+DROP TABLE IF EXISTS streak_milestones;
+DROP TABLE IF EXISTS user_streak_tasks;
+DROP TABLE IF EXISTS user_streaks;
+DROP TABLE IF EXISTS streak_tasks;
+
 -- Streak Tasks
 CREATE TABLE IF NOT EXISTS streak_tasks (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -838,9 +846,70 @@ CREATE TABLE IF NOT EXISTS streak_tasks (
     is_daily BOOLEAN DEFAULT TRUE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- User Streaks Table
+CREATE TABLE IF NOT EXISTS user_streaks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    current_streak INT DEFAULT 0,
+    longest_streak INT DEFAULT 0,
+    streak_points INT DEFAULT 0,
+    total_earned_points INT DEFAULT 0,
+    total_tasks_completed INT DEFAULT 0,
+    last_activity_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- User Streak Tasks Table
+CREATE TABLE IF NOT EXISTS user_streak_tasks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    task_id INT NOT NULL,
+    completion_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    points_earned INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (task_id) REFERENCES streak_tasks(id) ON DELETE CASCADE,
+    INDEX idx_user_tasks (user_id, task_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Streak Milestones Table
+CREATE TABLE IF NOT EXISTS streak_milestones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    points_required INT NOT NULL,
+    reward_points INT NOT NULL DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- User Streak Milestones Table
+CREATE TABLE IF NOT EXISTS user_streak_milestones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    milestone_id INT NOT NULL,
+    achieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (milestone_id) REFERENCES streak_milestones(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_milestone (user_id, milestone_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Create streak_conversion_log table
+CREATE TABLE IF NOT EXISTS streak_conversion_log (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    points_converted INT NOT NULL,
+    coins_received INT NOT NULL,
+    conversion_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_conversions (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Insert default streak tasks
+DELETE FROM streak_tasks WHERE id > 0;
 INSERT INTO streak_tasks (name, description, reward_points, is_daily) VALUES
 -- Daily Tasks
 ('Daily Login', 'Log in to your account', 5, 1),
@@ -856,67 +925,11 @@ INSERT INTO streak_tasks (name, description, reward_points, is_daily) VALUES
 ('Match Veteran', 'Play 50 matches', 50, 0),
 ('Tournament Veteran', 'Play 50 tournaments', 100, 0);
 
--- User Streaks Table
-CREATE TABLE IF NOT EXISTS user_streaks (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    current_streak INT DEFAULT 0,
-    longest_streak INT DEFAULT 0,
-    streak_points INT DEFAULT 0,
-    total_earned_points INT DEFAULT 0,
-    total_tasks_completed INT DEFAULT 0,
-    last_activity_date DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- User Streak Tasks Table
-CREATE TABLE IF NOT EXISTS user_streak_tasks (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    task_id INT NOT NULL,
-    completion_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    points_earned INT NOT NULL DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (task_id) REFERENCES streak_tasks(id) ON DELETE CASCADE
-);
-
--- Streak Milestones Table
-CREATE TABLE IF NOT EXISTS streak_milestones (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    points_required INT NOT NULL,
-    reward_points INT NOT NULL DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Insert default streak milestones
+DELETE FROM streak_milestones WHERE id > 0;
 INSERT INTO streak_milestones (name, description, points_required, reward_points) VALUES
 ('Bronze Streak', 'Reach 100 streak points', 100, 50),
 ('Silver Streak', 'Reach 500 streak points', 500, 100),
 ('Gold Streak', 'Reach 1000 streak points', 1000, 200),
 ('Diamond Streak', 'Reach 5000 streak points', 5000, 500);
-
--- User Streak Milestones Table
-CREATE TABLE IF NOT EXISTS user_streak_milestones (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    milestone_id INT NOT NULL,
-    achieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (milestone_id) REFERENCES streak_milestones(id) ON DELETE CASCADE
-);
-
--- Create streak_conversion_log table
-CREATE TABLE IF NOT EXISTS streak_conversion_log (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    points_converted INT NOT NULL,
-    coins_received INT NOT NULL,
-    conversion_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
 
