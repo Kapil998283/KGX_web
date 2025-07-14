@@ -191,12 +191,19 @@ function distributePrize($db, $match_id, $winner_id, $match) {
 
                 try {
                     // Store in match_results table
-                    $stmt = $db->prepare("INSERT INTO match_results (match_id, team_id, prize_amount, prize_currency) 
-                                        VALUES (?, ?, ?, ?) 
-                                        ON DUPLICATE KEY UPDATE 
-                                        prize_amount = VALUES(prize_amount),
-                                        prize_currency = VALUES(prize_currency)");
-                    $stmt->execute([$match_id, $participant['team_id'], $prize_amount, $currency_type]);
+                    $stmt = $db->prepare("INSERT INTO match_results (match_id, team_id, score, prize_amount, prize_currency) 
+                                            VALUES (?, ?, ?, ?, ?) 
+                                            ON DUPLICATE KEY UPDATE 
+                                            score = VALUES(score),
+                                            prize_amount = VALUES(prize_amount),
+                                            prize_currency = VALUES(prize_currency)");
+                    $stmt->execute([
+                        $match_id, 
+                        $participant['team_id'], 
+                        $participant['kills'], // Using kills as score
+                        $prize_amount, 
+                        $currency_type
+                    ]);
                 } catch (Exception $e) {
                     error_log("Error storing real money prize: " . $e->getMessage());
                     throw $e;
