@@ -158,15 +158,7 @@ include '../../includes/header.php';
                         <?php if ($match['website_currency_type'] && $match['website_currency_amount'] > 0): ?>
                             <span>Prize Pool: <?= number_format($match['website_currency_amount']) ?> <?= ucfirst($match['website_currency_type']) ?></span>
                         <?php else: ?>
-                            <?php
-                            // Get total prize pool from match_results for real currency matches
-                            $stmt = $db->prepare("SELECT SUM(prize_amount) as total_prize, prize_currency 
-                                                FROM match_results 
-                                                WHERE match_id = ?");
-                            $stmt->execute([$match_id]);
-                            $prize_info = $stmt->fetch(PDO::FETCH_ASSOC);
-                            ?>
-                            <span>Prize Pool: <?= $prize_info['prize_currency'] === 'USD' ? '$' : '₹' ?><?= number_format($prize_info['total_prize'], 2) ?></span>
+                            <span>Prize Pool: <?= $match['prize_type'] === 'USD' ? '$' : '₹' ?><?= number_format($match['prize_pool'], 2) ?></span>
                         <?php endif; ?>
                     </div>
                     <?php if ($match['coins_per_kill'] > 0): ?>
