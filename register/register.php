@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
     $password = $_POST['password'] ?? '';
     $main_game = trim($_POST['main_game'] ?? '');
     $phone = trim($_POST['full_phone'] ?? '');
+    $auto_login = isset($_POST['auto_login']) ? true : false;
     
     // Validate inputs
     $errors = [];
@@ -26,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
     if (empty($password)) $errors[] = "Password is required";
     if (empty($main_game)) $errors[] = "Main game selection is required";
     if (empty($phone)) $errors[] = "Phone number is required";
+    if (!isset($_POST['terms'])) $errors[] = "You must agree to the Terms & Conditions";
     
     if (empty($errors)) {
         // Start transaction
@@ -86,15 +88,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 // Commit transaction
                 $conn->commit();
                 
-                // Log the user in
-                $_SESSION['user_id'] = $user_id;
-                $_SESSION['username'] = $username;
-                $_SESSION['email'] = $email;
-                $_SESSION['role'] = 'user';
-                
-                // Redirect to home page
-                header("Location: ../index.php");
-                exit();
+                if ($auto_login) {
+                    // Log the user in automatically
+                    $_SESSION['user_id'] = $user_id;
+                    $_SESSION['username'] = $username;
+                    $_SESSION['email'] = $email;
+                    $_SESSION['role'] = 'user';
+                    
+                    // Redirect to home page
+                    header("Location: ../home.php");
+                    exit();
+                } else {
+                    // Redirect to login page with success message
+                    $_SESSION['registration_success'] = "Registration successful! Please login to continue.";
+                    header("Location: ../pages/login.php");
+                    exit();
+                }
             }
         } catch (Exception $e) {
             $conn->rollBack();
@@ -129,6 +138,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
     <!-- Ion Icons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+    /* Add these styles to your existing CSS */
+    .checkbox-group {
+        margin: 20px 0;
+    }
+
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .checkbox-wrapper label {
+        font-size: 14px;
+        cursor: pointer;
+        color: #fff;
+    }
+
+    .checkbox-wrapper a {
+        color: #00ff00;
+        text-decoration: none;
+    }
+
+    .checkbox-wrapper a:hover {
+        text-decoration: underline;
+    }
+    </style>
 </head>
 <body>
     <div class="auth-container">
@@ -238,7 +281,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                         <strong>Phone:</strong> <span id="review-phone"></span>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group checkbox-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">I agree to the Terms & Conditions and Privacy Policy</label>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="auto_login" name="auto_login" checked>
+                        <label for="auto_login">Sign me in automatically after registration</label>
+                    </div>
                     <div class="error-message"></div>
                 </div>
                 <div class="btn-group">
@@ -422,6 +473,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                                 fullPhoneInput.value = fullNumber;
                                 hideError(phoneInput);
                             }
+                        }
+                        break;
+
+                    case 4:
+                        // Terms validation
+                        const termsCheckbox = document.getElementById('terms');
+                        if (!termsCheckbox.checked) {
+                            showError(termsCheckbox, 'You must agree to the Terms & Conditions');
+                            isValid = false;
+                        } else {
+                            hideError(termsCheckbox);
                         }
                         break;
                 }
