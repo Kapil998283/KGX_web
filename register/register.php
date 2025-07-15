@@ -1,5 +1,9 @@
 <?php
-session_start();
+// Only start session if one isn't already active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once '../config/database.php';
 require_once '../includes/auth.php';
 require_once '../includes/user-auth.php';
@@ -8,14 +12,17 @@ require_once '../includes/user-auth.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Initialize error array
+// Initialize variables
 $errors = [];
 $debug_log = [];
+$username = '';
+$email = '';
+$main_game = '';
+$phone = '';
 
 // Get database connection
 try {
-    $db = new Database();
-    $conn = $db->connect();
+    $conn = getDbConnection();
     if (!$conn) {
         throw new Exception("Database connection failed");
     }
@@ -39,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
     $main_game = trim($_POST['main_game'] ?? '');
     $phone = trim($_POST['full_phone'] ?? '');
     $auto_login = isset($_POST['auto_login']) ? true : false;
@@ -49,13 +57,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
     if (empty($username)) $errors[] = "Username is required";
     if (empty($email)) $errors[] = "Email is required";
     if (empty($password)) $errors[] = "Password is required";
+    if (empty($confirm_password)) $errors[] = "Password confirmation is required";
     if (empty($main_game)) $errors[] = "Main game selection is required";
     if (empty($phone)) $errors[] = "Phone number is required";
     if (!isset($_POST['terms'])) $errors[] = "You must agree to the Terms & Conditions";
 
-    // Check email format
+    // Additional validation
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Invalid email format";
+    }
+    if (strlen($password) < 8) {
+        $errors[] = "Password must be at least 8 characters long";
+    }
+    if ($password !== $confirm_password) {
+        $errors[] = "Passwords do not match";
+    }
+    if (!preg_match("/^\+[1-9]\d{6,14}$/", $phone)) {
+        $errors[] = "Please enter a valid phone number with country code";
     }
     
     $debug_log[] = empty($errors) ? "Validation passed" : "Validation errors: " . implode(", ", $errors);
@@ -69,71 +87,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             // Check if email exists
             $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
-            
             if ($stmt->rowCount() > 0) {
                 throw new Exception("Email already exists");
             }
-            $debug_log[] = "Email check passed";
             
             // Check if username exists
             $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
             $stmt->execute([$username]);
-            
             if ($stmt->rowCount() > 0) {
                 throw new Exception("Username already exists");
             }
-            $debug_log[] = "Username check passed";
 
             // Check if phone exists
             $stmt = $conn->prepare("SELECT id FROM users WHERE phone = ?");
             $stmt->execute([$phone]);
-            
             if ($stmt->rowCount() > 0) {
                 throw new Exception("Phone number already exists");
             }
-            $debug_log[] = "Phone check passed";
             
             // Hash password
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             
             // Insert new user
             $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, phone, created_at) VALUES (?, ?, ?, 'user', ?, NOW())");
-            
             if (!$stmt->execute([$username, $email, $hashed_password, $phone])) {
-                $error_info = $stmt->errorInfo();
-                throw new Exception("Failed to create user account: " . $error_info[2]);
+                throw new Exception("Failed to create user account");
             }
-            $debug_log[] = "User inserted successfully";
             
             $user_id = $conn->lastInsertId();
             if (!$user_id) {
                 throw new Exception("Failed to get new user ID");
             }
-            $debug_log[] = "Got user ID: " . $user_id;
             
             // Add user's main game
             $stmt = $conn->prepare("INSERT INTO user_games (user_id, game_name, is_primary) VALUES (?, ?, 1)");
             if (!$stmt->execute([$user_id, $main_game])) {
-                $error_info = $stmt->errorInfo();
-                throw new Exception("Failed to set main game: " . $error_info[2]);
+                throw new Exception("Failed to set main game");
             }
-            $debug_log[] = "Main game set successfully";
             
             // Give new user 100 coins
             $stmt = $conn->prepare("INSERT INTO user_coins (user_id, coins) VALUES (?, 100)");
             if (!$stmt->execute([$user_id])) {
-                $error_info = $stmt->errorInfo();
-                throw new Exception("Failed to set initial coins: " . $error_info[2]);
+                throw new Exception("Failed to set initial coins");
             }
-            $debug_log[] = "Initial coins set successfully";
             
             // Give new user 1 ticket
             $stmt = $conn->prepare("INSERT INTO user_tickets (user_id, tickets) VALUES (?, 1)");
             if (!$stmt->execute([$user_id])) {
-                $error_info = $stmt->errorInfo();
-                throw new Exception("Failed to set initial tickets: " . $error_info[2]);
+                throw new Exception("Failed to set initial tickets");
             }
-            $debug_log[] = "Initial tickets set successfully";
             
             // Commit transaction
             $conn->commit();
@@ -147,7 +149,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 $_SESSION['role'] = 'user';
                 
                 $debug_log[] = "Auto login successful";
-                // Redirect to home page
                 header("Location: ../home.php");
                 exit();
             } else {
@@ -201,50 +202,41 @@ if (!empty($debug_log)) {
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     
     <style>
+    .iti {
+        width: 100%;
+    }
+    .iti__flag {
+        background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/img/flags.png");
+    }
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+        .iti__flag {
+            background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/img/flags@2x.png");
+        }
+    }
     .checkbox-group {
         margin: 20px 0;
     }
-
     .checkbox-wrapper {
         display: flex;
         align-items: center;
         margin: 10px 0;
     }
-
     .checkbox-wrapper input[type="checkbox"] {
         margin-right: 10px;
         width: 18px;
         height: 18px;
         cursor: pointer;
     }
-
     .checkbox-wrapper label {
         font-size: 14px;
         cursor: pointer;
         color: #fff;
     }
-
-    .checkbox-wrapper a {
-        color: #00ff00;
-        text-decoration: none;
-    }
-
-    .checkbox-wrapper a:hover {
-        text-decoration: underline;
-    }
-
     .error-message {
         color: #ff3333;
         font-size: 14px;
         margin-top: 5px;
-        display: none;
     }
-
-    .form-group.error .error-message {
-        display: block;
-    }
-
-    /* Display PHP errors at the top */
     .php-errors {
         background: rgba(255, 51, 51, 0.1);
         border: 1px solid #ff3333;
@@ -253,141 +245,145 @@ if (!empty($debug_log)) {
         color: #ff3333;
         border-radius: 4px;
     }
+    .game-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 10px;
+    }
+    .game-option {
+        border: 2px solid #333;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .game-option.selected {
+        border-color: #00ff00;
+        background: rgba(0, 255, 0, 0.1);
+    }
+    .game-option img {
+        width: 100%;
+        max-width: 100px;
+        height: auto;
+        margin-bottom: 10px;
+    }
+    .game-option span {
+        display: block;
+        color: #fff;
+    }
+    .password-strength {
+        height: 4px;
+        background: #333;
+        margin-top: 5px;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .strength-meter {
+        height: 100%;
+        width: 0;
+        transition: all 0.3s ease;
+    }
+    .strength-meter.weak { width: 33%; background: #ff3333; }
+    .strength-meter.medium { width: 66%; background: #ffa500; }
+    .strength-meter.strong { width: 100%; background: #00ff00; }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <?php if (!empty($errors)): ?>
-        <div class="php-errors">
-            <?php foreach ($errors as $error): ?>
-                <div><?php echo htmlspecialchars($error); ?></div>
-            <?php endforeach; ?>
-        </div>
+        <h1 class="auth-title">Create Account</h1>
+        
+        <?php if(!empty($errors)): ?>
+            <div class="php-errors">
+                <?php foreach($errors as $error): ?>
+                    <div><?php echo htmlspecialchars($error); ?></div>
+                <?php endforeach; ?>
+            </div>
         <?php endif; ?>
-
-        <form id="registrationForm" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
-            <!-- Progress Bar -->
-            <div class="progress-bar">
-                <div class="progress-step active" data-step="1"></div>
-                <div class="progress-step" data-step="2"></div>
-                <div class="progress-step" data-step="3"></div>
-                <div class="progress-step" data-step="4"></div>
-            </div>
-
+        
+        <form class="auth-form" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
             <!-- Step 1: Username & Email -->
-            <div class="form-step active" data-step="1">
-                <h2>Create Your Account</h2>
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
-                    <div class="error-message"></div>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                    <div class="error-message"></div>
-                </div>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-next">Next</button>
-                </div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars($username); ?>">
             </div>
-
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($email); ?>">
+            </div>
+            
             <!-- Step 2: Game & Password -->
-            <div class="form-step" data-step="2">
-                <h2>Game & Security</h2>
-                <div class="form-group">
-                    <label>Select Your Main Game</label>
-                    <div class="game-options">
-                        <div class="game-option" data-game="PUBG">
-                            <img src="../assets/images/games/pubg.png" alt="PUBG">
-                            <span>PUBG</span>
-                        </div>
-                        <div class="game-option" data-game="BGMI">
-                            <img src="../assets/images/games/bgmi.png" alt="BGMI">
-                            <span>BGMI</span>
-                        </div>
-                        <div class="game-option" data-game="FREE FIRE">
-                            <img src="../assets/images/games/freefire.png" alt="Free Fire">
-                            <span>Free Fire</span>
-                        </div>
-                        <div class="game-option" data-game="COD">
-                            <img src="../assets/images/games/cod.jpg" alt="Call of Duty Mobile">
-                            <span>COD Mobile</span>
-                        </div>
+            <div class="form-group">
+                <label>Select Your Main Game</label>
+                <div class="game-options">
+                    <div class="game-option <?php echo $main_game === 'PUBG' ? 'selected' : ''; ?>" data-game="PUBG">
+                        <img src="../assets/images/games/pubg.png" alt="PUBG">
+                        <span>PUBG</span>
                     </div>
-                    <input type="hidden" id="main_game" name="main_game" required>
-                    <div class="error-message"></div>
+                    <div class="game-option <?php echo $main_game === 'BGMI' ? 'selected' : ''; ?>" data-game="BGMI">
+                        <img src="../assets/images/games/bgmi.png" alt="BGMI">
+                        <span>BGMI</span>
+                    </div>
+                    <div class="game-option <?php echo $main_game === 'FREE FIRE' ? 'selected' : ''; ?>" data-game="FREE FIRE">
+                        <img src="../assets/images/games/freefire.png" alt="Free Fire">
+                        <span>Free Fire</span>
+                    </div>
+                    <div class="game-option <?php echo $main_game === 'COD' ? 'selected' : ''; ?>" data-game="COD">
+                        <img src="../assets/images/games/cod.jpg" alt="Call of Duty Mobile">
+                        <span>COD Mobile</span>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
+                <input type="hidden" id="main_game" name="main_game" required value="<?php echo htmlspecialchars($main_game); ?>">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-toggle">
                     <input type="password" id="password" name="password" required>
-                    <div class="password-strength">
-                        <div class="strength-meter"></div>
-                    </div>
-                    <div class="error-message"></div>
+                    <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
                 </div>
-                <div class="form-group">
-                    <label for="confirm_password">Confirm Password</label>
+                <div class="password-strength">
+                    <div class="strength-meter"></div>
+                </div>
+                <small class="password-hint">Password must be at least 8 characters long</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <div class="password-toggle">
                     <input type="password" id="confirm_password" name="confirm_password" required>
-                    <div class="error-message"></div>
-                </div>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-prev">Previous</button>
-                    <button type="button" class="btn btn-next">Next</button>
+                    <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
                 </div>
             </div>
-
+            
             <!-- Step 3: Phone -->
-            <div class="form-step" data-step="3">
-                <h2>Contact Information</h2>
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" required>
-                    <input type="hidden" id="full_phone" name="full_phone">
-                    <div class="error-message"></div>
-                    <div class="phone-hint">Enter your phone number with country code</div>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required>
+                <input type="hidden" id="full_phone" name="full_phone" value="<?php echo htmlspecialchars($phone); ?>">
+                <small class="phone-hint">Select country code and enter your phone number</small>
+            </div>
+            
+            <!-- Step 4: Terms & Submit -->
+            <div class="checkbox-group">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">I agree to the Terms & Conditions and Privacy Policy</label>
                 </div>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-prev">Previous</button>
-                    <button type="button" class="btn btn-next">Next</button>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="auto_login" name="auto_login" checked>
+                    <label for="auto_login">Sign me in automatically after registration</label>
                 </div>
             </div>
-
-            <!-- Step 4: Review & Submit -->
-            <div class="form-step" data-step="4">
-                <h2>Complete Registration</h2>
-                <div class="review-details">
-                    <p>Please review your information:</p>
-                    <div class="review-item">
-                        <strong>Username:</strong> <span id="review-username"></span>
-                    </div>
-                    <div class="review-item">
-                        <strong>Email:</strong> <span id="review-email"></span>
-                    </div>
-                    <div class="review-item">
-                        <strong>Main Game:</strong> <span id="review-game"></span>
-                    </div>
-                    <div class="review-item">
-                        <strong>Phone:</strong> <span id="review-phone"></span>
-                    </div>
-                </div>
-                <div class="form-group checkbox-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="terms" name="terms" required>
-                        <label for="terms">I agree to the Terms & Conditions and Privacy Policy</label>
-                    </div>
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="auto_login" name="auto_login" checked>
-                        <label for="auto_login">Sign me in automatically after registration</label>
-                    </div>
-                    <div class="error-message"></div>
-                </div>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-prev">Previous</button>
-                    <button type="submit" name="submit_registration" class="btn btn-submit">Complete Registration</button>
-                </div>
-            </div>
+            
+            <button type="submit" name="submit_registration" class="auth-btn">Register</button>
         </form>
+        
+        <div class="auth-links">
+            <p>Already have an account? <a href="../pages/login.php">Sign in</a></p>
+        </div>
     </div>
 
     <!-- Scripts -->
@@ -395,12 +391,6 @@ if (!empty($debug_log)) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize variables
-            let currentStep = 1;
-            const form = document.getElementById('registrationForm');
-            const steps = document.querySelectorAll('.form-step');
-            const progressSteps = document.querySelectorAll('.progress-step');
-            
             // Initialize phone input
             const phoneInput = document.querySelector("#phone");
             const fullPhoneInput = document.querySelector("#full_phone");
@@ -412,6 +402,11 @@ if (!empty($debug_log)) {
                 formatOnDisplay: true
             });
 
+            // Set initial phone value if exists
+            if (fullPhoneInput.value) {
+                iti.setNumber(fullPhoneInput.value);
+            }
+
             // Game selection
             const gameOptions = document.querySelectorAll('.game-option');
             const gameInput = document.getElementById('main_game');
@@ -421,7 +416,6 @@ if (!empty($debug_log)) {
                     gameOptions.forEach(opt => opt.classList.remove('selected'));
                     this.classList.add('selected');
                     gameInput.value = this.dataset.game;
-                    hideError(gameInput);
                 });
             });
 
@@ -453,183 +447,25 @@ if (!empty($debug_log)) {
                 strengthMeter.className = 'strength-meter ' + strength;
             }
 
-            // Navigation between steps
-            document.querySelectorAll('.btn-next').forEach(button => {
-                button.addEventListener('click', function() {
-                    if (validateStep(currentStep)) {
-                        if (currentStep < 4) {
-                            currentStep++;
-                            updateStep();
-                        }
-                    }
+            // Toggle password visibility
+            document.querySelectorAll('.toggle-password').forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const passwordInput = this.parentElement.querySelector('input');
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.name = type === 'password' ? 'eye-outline' : 'eye-off-outline';
                 });
             });
-
-            document.querySelectorAll('.btn-prev').forEach(button => {
-                button.addEventListener('click', () => {
-                    if (currentStep > 1) {
-                        currentStep--;
-                        updateStep();
-                    }
-                });
-            });
-
-            function updateStep() {
-                steps.forEach(step => step.classList.remove('active'));
-                progressSteps.forEach(step => step.classList.remove('active', 'completed'));
-                
-                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
-                
-                for (let i = 1; i <= 4; i++) {
-                    const step = document.querySelector(`.progress-step[data-step="${i}"]`);
-                    if (i < currentStep) {
-                        step.classList.add('completed');
-                    } else if (i === currentStep) {
-                        step.classList.add('active');
-                    }
-                }
-
-                if (currentStep === 4) {
-                    updateReviewDetails();
-                }
-            }
-
-            function validateStep(step) {
-                const currentStepElement = document.querySelector(`.form-step[data-step="${step}"]`);
-                let isValid = true;
-
-                // Step-specific validation
-                switch(step) {
-                    case 1:
-                        // Username and Email validation
-                        const username = document.getElementById('username').value;
-                        const email = document.getElementById('email').value;
-                        
-                        if (!username) {
-                            showError(document.getElementById('username'), 'Username is required');
-                            isValid = false;
-                        }
-                        
-                        if (!email) {
-                            showError(document.getElementById('email'), 'Email is required');
-                            isValid = false;
-                        } else if (!isValidEmail(email)) {
-                            showError(document.getElementById('email'), 'Please enter a valid email address');
-                            isValid = false;
-                        }
-                        break;
-
-                    case 2:
-                        // Game and Password validation
-                        const password = document.getElementById('password').value;
-                        const confirmPassword = document.getElementById('confirm_password').value;
-                        const game = document.getElementById('main_game').value;
-
-                        if (!game) {
-                            showError(gameInput, 'Please select your main game');
-                            isValid = false;
-                        }
-
-                        if (!password) {
-                            showError(document.getElementById('password'), 'Password is required');
-                            isValid = false;
-                        } else if (password.length < 8) {
-                            showError(document.getElementById('password'), 'Password must be at least 8 characters long');
-                            isValid = false;
-                        }
-
-                        if (!confirmPassword) {
-                            showError(document.getElementById('confirm_password'), 'Please confirm your password');
-                            isValid = false;
-                        } else if (password !== confirmPassword) {
-                            showError(document.getElementById('confirm_password'), 'Passwords do not match');
-                            isValid = false;
-                        }
-                        break;
-
-                    case 3:
-                        // Phone validation
-                        const phoneNumber = phoneInput.value.trim();
-                        if (!phoneNumber) {
-                            showError(phoneInput, 'Phone number is required');
-                            isValid = false;
-                        } else {
-                            // Update the full phone number
-                            const fullNumber = iti.getNumber();
-                            if (!fullNumber) {
-                                showError(phoneInput, 'Please enter a valid phone number');
-                                isValid = false;
-                            } else {
-                                fullPhoneInput.value = fullNumber;
-                                hideError(phoneInput);
-                            }
-                        }
-                        break;
-
-                    case 4:
-                        // Terms validation
-                        const termsCheckbox = document.getElementById('terms');
-                        if (!termsCheckbox.checked) {
-                            showError(termsCheckbox, 'You must agree to the Terms & Conditions');
-                            isValid = false;
-                        } else {
-                            hideError(termsCheckbox);
-                        }
-                        break;
-                }
-
-                return isValid;
-            }
-
-            function showError(input, message) {
-                const errorElement = input.parentElement.querySelector('.error-message');
-                if (errorElement) {
-                    errorElement.textContent = message;
-                    errorElement.style.display = 'block';
-                    input.parentElement.classList.add('error');
-                }
-            }
-
-            function hideError(input) {
-                const errorElement = input.parentElement.querySelector('.error-message');
-                if (errorElement) {
-                    errorElement.style.display = 'none';
-                    input.parentElement.classList.remove('error');
-                }
-            }
-
-            function isValidEmail(email) {
-                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-            }
-
-            function updateReviewDetails() {
-                document.getElementById('review-username').textContent = document.getElementById('username').value;
-                document.getElementById('review-email').textContent = document.getElementById('email').value;
-                document.getElementById('review-game').textContent = document.getElementById('main_game').value;
-                document.getElementById('review-phone').textContent = iti.getNumber();
-            }
 
             // Form submission
-            form.addEventListener('submit', function(e) {
-                if (!validateStep(currentStep)) {
+            document.querySelector('.auth-form').addEventListener('submit', function(e) {
+                const phoneNumber = phoneInput.value.trim();
+                if (phoneNumber && !iti.isValidNumber()) {
                     e.preventDefault();
+                    alert('Please enter a valid phone number');
+                    return;
                 }
-            });
-
-            // Phone input event listeners
-            phoneInput.addEventListener('input', function() {
-                hideError(phoneInput);
-            });
-
-            phoneInput.addEventListener('blur', function() {
-                if (phoneInput.value.trim()) {
-                    if (!iti.isValidNumber()) {
-                        showError(phoneInput, 'Please enter a valid phone number');
-                    } else {
-                        hideError(phoneInput);
-                        fullPhoneInput.value = iti.getNumber();
-                    }
-                }
+                fullPhoneInput.value = iti.getNumber();
             });
         });
     </script>
