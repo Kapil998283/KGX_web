@@ -222,28 +222,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                     <input type="tel" id="phone" name="phone" required>
                     <input type="hidden" id="full_phone" name="full_phone">
                     <div class="error-message"></div>
-                    <div class="success-message" style="display: none;"></div>
-                </div>
-                <div class="form-group">
-                    <button type="button" class="btn btn-send-otp" id="sendOtp">Send OTP</button>
-                    <div class="spinner"></div>
-                </div>
-                <div class="form-group otp-section" style="display: none;">
-                    <label>Enter OTP</label>
-                    <div class="otp-input-group">
-                        <input type="text" class="otp-input" maxlength="1" data-index="1">
-                        <input type="text" class="otp-input" maxlength="1" data-index="2">
-                        <input type="text" class="otp-input" maxlength="1" data-index="3">
-                        <input type="text" class="otp-input" maxlength="1" data-index="4">
-                    </div>
-                    <div class="error-message"></div>
-                    <div class="resend-timer" style="display: none;">
-                        Resend OTP in <span class="timer">300</span> seconds
-                    </div>
+                    <div class="phone-hint">Please enter a valid phone number for your selected country</div>
                 </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-prev">Previous</button>
-                    <button type="button" class="btn btn-next" id="verifyOtp" disabled>Verify & Continue</button>
+                    <button type="button" class="btn btn-next">Next</button>
                 </div>
             </div>
 
@@ -286,8 +269,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             const form = document.getElementById('registrationForm');
             const steps = document.querySelectorAll('.form-step');
             const progressSteps = document.querySelectorAll('.progress-step');
-            let otpTimer;
-            let isPhoneVerified = false;
             
             // Initialize phone input with improved options
             const phoneInput = document.querySelector("#phone");
@@ -310,7 +291,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 localizedCountries: { 'in': 'India', 'us': 'United States', 'gb': 'United Kingdom' },
                 customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
                     return "Enter " + selectedCountryPlaceholder;
-                }
+                },
+                allowDropdown: true,
+                searchCountries: true
             });
 
             // Add custom styling to the country dropdown
@@ -318,6 +301,78 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             if (countryList) {
                 countryList.style.maxHeight = '300px';
                 countryList.style.overflowY = 'auto';
+            }
+
+            // Add search input for countries
+            const flagContainer = document.querySelector('.iti__flag-container');
+            flagContainer.addEventListener('click', function() {
+                setTimeout(() => {
+                    if (!document.querySelector('.country-search')) {
+                        const searchDiv = document.createElement('div');
+                        searchDiv.className = 'country-search';
+                        const searchInput = document.createElement('input');
+                        searchInput.type = 'text';
+                        searchInput.placeholder = 'Search country...';
+                        searchInput.className = 'country-search-input';
+                        
+                        searchInput.addEventListener('input', function() {
+                            const query = this.value.toLowerCase();
+                            const countries = document.querySelectorAll('.iti__country');
+                            countries.forEach(country => {
+                                const name = country.querySelector('.iti__country-name').textContent.toLowerCase();
+                                const dialCode = country.querySelector('.iti__dial-code').textContent.toLowerCase();
+                                if (name.includes(query) || dialCode.includes(query)) {
+                                    country.style.display = '';
+                                } else {
+                                    country.style.display = 'none';
+                                }
+                            });
+                        });
+
+                        searchDiv.appendChild(searchInput);
+                        countryList.insertBefore(searchDiv, countryList.firstChild);
+                        searchInput.focus();
+                    }
+                }, 0);
+            });
+
+            // Phone number validation
+            phoneInput.addEventListener('input', function() {
+                validatePhoneNumber();
+            });
+
+            phoneInput.addEventListener('countrychange', function() {
+                validatePhoneNumber();
+            });
+
+            function validatePhoneNumber() {
+                const isValid = iti.isValidNumber();
+                const errorCode = iti.getValidationError();
+                const countryData = iti.getSelectedCountryData();
+                
+                if (!isValid) {
+                    let errorMsg = 'Invalid phone number';
+                    switch(errorCode) {
+                        case intlTelInputUtils.validationError.TOO_SHORT:
+                            errorMsg = `Phone number is too short for ${countryData.name}`;
+                            break;
+                        case intlTelInputUtils.validationError.TOO_LONG:
+                            errorMsg = `Phone number is too long for ${countryData.name}`;
+                            break;
+                        case intlTelInputUtils.validationError.INVALID_COUNTRY_CODE:
+                            errorMsg = 'Invalid country code';
+                            break;
+                        case intlTelInputUtils.validationError.NOT_A_NUMBER:
+                            errorMsg = 'Invalid phone number format';
+                            break;
+                    }
+                    showError(phoneInput, errorMsg);
+                    return false;
+                } else {
+                    hideError(phoneInput);
+                    fullPhoneInput.value = iti.getNumber();
+                    return true;
+                }
             }
 
             // AJAX validation for username
@@ -423,128 +478,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 strengthMeter.className = 'strength-meter ' + strength;
             }
 
-            // OTP handling
-            const sendOtpBtn = document.getElementById('sendOtp');
-            const verifyOtpBtn = document.getElementById('verifyOtp');
-            const otpSection = document.querySelector('.otp-section');
-            const otpInputs = document.querySelectorAll('.otp-input');
-            const resendTimer = document.querySelector('.resend-timer');
-            const timerSpan = document.querySelector('.timer');
-            
-            sendOtpBtn.addEventListener('click', function() {
-                if (!iti.isValidNumber()) {
-                    showError(phoneInput, 'Please enter a valid phone number');
-                    return;
-                }
-
-                const spinner = document.querySelector('.spinner');
-                const successMessage = phoneInput.parentElement.querySelector('.success-message');
-                spinner.style.display = 'inline-block';
-                sendOtpBtn.disabled = true;
-
-                fetch('ajax_handlers.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `action=send_otp&phone=${encodeURIComponent(iti.getNumber())}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        otpSection.style.display = 'block';
-                        startResendTimer();
-                        
-                        // Show development mode message
-                        if (data.is_dev) {
-                            successMessage.textContent = data.message;
-                            successMessage.style.display = 'block';
-                            // Auto-fill OTP for development
-                            const otp = data.debug_otp.split('');
-                            otpInputs.forEach((input, index) => {
-                                input.value = otp[index];
-                            });
-                            verifyOtp(); // Auto-verify in dev mode
-                        }
-                    } else {
-                        showError(phoneInput, data.error);
-                    }
-                })
-                .finally(() => {
-                    spinner.style.display = 'none';
-                    sendOtpBtn.disabled = false;
-                });
-            });
-
-            function startResendTimer() {
-                let timeLeft = 300; // 5 minutes
-                resendTimer.style.display = 'block';
-                sendOtpBtn.disabled = true;
-
-                clearInterval(otpTimer);
-                otpTimer = setInterval(() => {
-                    timeLeft--;
-                    timerSpan.textContent = timeLeft;
-
-                    if (timeLeft <= 0) {
-                        clearInterval(otpTimer);
-                        resendTimer.style.display = 'none';
-                        sendOtpBtn.disabled = false;
-                    }
-                }, 1000);
-            }
-
-            // OTP input handling
-            otpInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    if (this.value) {
-                        const next = document.querySelector(`.otp-input[data-index="${parseInt(this.dataset.index) + 1}"]`);
-                        if (next) next.focus();
-                    }
-
-                    // Check if all OTP inputs are filled
-                    const allFilled = Array.from(otpInputs).every(input => input.value.length === 1);
-                    if (allFilled) {
-                        verifyOtp();
-                    }
-                });
-
-                input.addEventListener('keydown', function(e) {
-                    if (e.key === 'Backspace' && !this.value) {
-                        const prev = document.querySelector(`.otp-input[data-index="${parseInt(this.dataset.index) - 1}"]`);
-                        if (prev) prev.focus();
-                    }
-                });
-            });
-
-            function verifyOtp() {
-                const otp = Array.from(otpInputs).map(input => input.value).join('');
-                const phone = iti.getNumber();
-
-                fetch('ajax_handlers.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `action=verify_otp&otp=${encodeURIComponent(otp)}&phone=${encodeURIComponent(phone)}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        isPhoneVerified = true;
-                        verifyOtpBtn.disabled = false;
-                        fullPhoneInput.value = phone;
-                        hideError(document.querySelector('.otp-section'));
-                    } else {
-                        showError(document.querySelector('.otp-section'), data.error);
-                        if (data.attempts_left) {
-                            showError(document.querySelector('.otp-section'), 
-                                `Invalid OTP. ${data.attempts_left} attempts remaining`);
-                        }
-                    }
-                });
-            }
-
             // Navigation between steps
             document.querySelectorAll('.btn-next').forEach(button => {
                 button.addEventListener('click', () => {
@@ -619,8 +552,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                                 }
                                 break;
                             case 'phone':
-                                if (!iti.isValidNumber()) {
-                                    showError(input, 'Please enter a valid phone number');
+                                if (!validatePhoneNumber()) {
                                     isValid = false;
                                 }
                                 break;
@@ -631,11 +563,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 // Additional step-specific validation
                 if (step === 2 && !gameInput.value) {
                     showError(gameInput, 'Please select your main game');
-                    isValid = false;
-                }
-
-                if (step === 3 && !isPhoneVerified) {
-                    showError(phoneInput, 'Please verify your phone number');
                     isValid = false;
                 }
 

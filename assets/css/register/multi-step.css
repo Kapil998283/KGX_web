@@ -394,11 +394,49 @@
     margin-bottom: 0.5rem;
 }
 
+/* Country Search */
+.country-search {
+    padding: 8px;
+    background: rgba(20, 20, 20, 0.95);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.country-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--white);
+    font-size: 14px;
+}
+
+.country-search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 255, 85, 0.1);
+}
+
+.country-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Phone Hint */
+.phone-hint {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 0.5rem;
+}
+
+/* Update International Telephone Input Styles */
 .iti__country-list {
-    background-color: rgba(30, 30, 30, 0.95) !important;
+    background-color: rgba(20, 20, 20, 0.95) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 8px;
     max-height: 300px !important;
+    width: 300px !important;
 }
 
 .iti__country {
@@ -432,20 +470,7 @@
 .iti__selected-flag {
     background-color: transparent !important;
     border-radius: 8px 0 0 8px;
-}
-
-/* Search within country list */
-.iti__search-input {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: var(--white) !important;
-    border-radius: 4px;
-    padding: 8px !important;
-    margin: 8px !important;
-}
-
-.iti__search-input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    padding: 0 12px !important;
 }
 
 /* Scrollbar for country list */
@@ -470,4 +495,13 @@
 /* Phone input when country selected */
 .iti--separate-dial-code .iti__selected-dial-code {
     color: var(--white) !important;
+}
+
+.iti--separate-dial-code input {
+    padding-left: 90px !important;
+}
+
+/* Error state */
+.form-group.error .iti__selected-flag {
+    border-color: #ff4444;
 } 
