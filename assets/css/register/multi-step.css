@@ -1,0 +1,384 @@
+/* Multi-step Form Container */
+.multi-step-form {
+    max-width: 600px;
+    margin: 2rem auto;
+    background: rgba(20, 20, 20, 0.95);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Progress Bar */
+.progress-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+    counter-reset: step;
+}
+
+.progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.progress-step {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.progress-step::before {
+    counter-increment: step;
+    content: counter(step);
+}
+
+.progress-step.active {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.progress-step.completed {
+    background: #00ff55;
+    color: var(--white);
+}
+
+/* Form Steps */
+.form-step {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.form-step.active {
+    display: block;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--white);
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--white);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 255, 85, 0.1);
+    outline: none;
+}
+
+/* Phone Input Group */
+.phone-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.phone-input-group .country-code {
+    width: 30%;
+}
+
+.phone-input-group .phone-number {
+    width: 70%;
+}
+
+/* OTP Input Group */
+.otp-input-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 1.5rem 0;
+}
+
+.otp-input {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--white);
+}
+
+/* Buttons */
+.btn-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-prev {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+}
+
+.btn-next,
+.btn-send-otp {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-submit {
+    background: #00ff55;
+    color: var(--raisin-black-1);
+    width: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Password Strength Indicator */
+.password-strength {
+    margin-top: 0.5rem;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.strength-meter {
+    height: 100%;
+    width: 0;
+    transition: all 0.3s ease;
+}
+
+.strength-meter.weak { width: 33.33%; background: #ff4444; }
+.strength-meter.medium { width: 66.66%; background: #ffbb33; }
+.strength-meter.strong { width: 100%; background: #00ff55; }
+
+/* Error Messages */
+.error-message {
+    color: #ff4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.form-group.error .error-message {
+    display: block;
+}
+
+.form-group.error input {
+    border-color: #ff4444;
+}
+
+/* Success Messages */
+.success-message {
+    color: #00ff55;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* Loading Spinner */
+.spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--white);
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Game Selection Styles */
+.game-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin: 1rem 0;
+}
+
+.game-option {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.game-option:hover {
+    background: rgba(0, 255, 85, 0.1);
+    border-color: #00ff55;
+}
+
+.game-option.selected {
+    background: rgba(0, 255, 85, 0.2);
+    border-color: #00ff55;
+}
+
+.game-option img {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 10px;
+}
+
+.game-option span {
+    display: block;
+    color: var(--white);
+    font-size: 0.875rem;
+}
+
+/* OTP Timer */
+.resend-timer {
+    text-align: center;
+    color: var(--white);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+    opacity: 0.7;
+}
+
+/* Review Details */
+.review-details {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.review-item {
+    margin-bottom: 1rem;
+    color: var(--white);
+}
+
+.review-item:last-child {
+    margin-bottom: 0;
+}
+
+.review-item strong {
+    display: inline-block;
+    width: 120px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .multi-step-form {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .progress-step {
+        width: 30px;
+        height: 30px;
+        font-size: 0.875rem;
+    }
+
+    .otp-input-group {
+        gap: 5px;
+    }
+
+    .otp-input {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+
+    .review-item strong {
+        width: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .multi-step-form {
+        padding: 1rem;
+    }
+
+    .btn-group {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .phone-input-group {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .phone-input-group .country-code,
+    .phone-input-group .phone-number {
+        width: 100%;
+    }
+
+    .review-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .review-item strong {
+        width: 100%;
+    }
+} 

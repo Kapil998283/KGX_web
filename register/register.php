@@ -1,8 +1,5 @@
 <?php
-// Only start session if one isn't already active
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 require_once '../includes/user-auth.php';
 
 // Get database connection
@@ -14,103 +11,104 @@ if(isset($_SESSION['user_id'])) {
     exit();
 }
 
-$error = '';
-$success = '';
+// Check if phone is verified
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_SESSION['phone_verified'])) {
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Phone number not verified']);
+    exit();
+}
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])) {
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-    $phone = trim($_POST['full_phone'] ?? ''); // Using the full phone number with country code
-    $main_game = trim($_POST['main_game'] ?? ''); // Add main game field
+    $main_game = trim($_POST['main_game'] ?? '');
+    $phone = trim($_POST['full_phone'] ?? '');
     
-    if (empty($username) || empty($email) || empty($password) || empty($confirm_password) || empty($phone) || empty($main_game)) {
-        $error = "Please fill in all fields";
-    } elseif ($password !== $confirm_password) {
-        $error = "Passwords do not match";
-    } elseif (strlen($password) < 8) {
-        $error = "Password must be at least 8 characters long";
-    } elseif (!preg_match("/^\+[1-9]\d{6,14}$/", $phone)) {
-        $error = "Please enter a valid phone number with country code";
-    } else {
-        // Check if email already exists
-        $sql = "SELECT id FROM users WHERE email = :email";
-        $stmt = $conn->prepare($sql);
-        $stmt->bindParam(":email", $email);
-        $stmt->execute();
+    // Validate inputs
+    $errors = [];
+    if (empty($username)) $errors[] = "Username is required";
+    if (empty($email)) $errors[] = "Email is required";
+    if (empty($password)) $errors[] = "Password is required";
+    if (empty($main_game)) $errors[] = "Main game selection is required";
+    if (empty($phone)) $errors[] = "Phone number is required";
+    
+    if (empty($errors)) {
+        // Start transaction
+        $conn->beginTransaction();
         
-        if ($stmt->rowCount() > 0) {
-            $error = "Email already exists";
-        } else {
-            // Check if username already exists
-            $sql = "SELECT id FROM users WHERE username = :username";
-            $stmt = $conn->prepare($sql);
+        try {
+            // Check if email exists
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = :email");
+            $stmt->bindParam(":email", $email);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() > 0) {
+                throw new Exception("Email already exists");
+            }
+            
+            // Check if username exists
+            $stmt = $conn->prepare("SELECT id FROM users WHERE username = :username");
             $stmt->bindParam(":username", $username);
             $stmt->execute();
             
             if ($stmt->rowCount() > 0) {
-                $error = "Username already exists";
-            } else {
-                // Start transaction
-                $conn->beginTransaction();
-                
-                try {
-                    // Hash password
-                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                    
-                    // Insert new user
-                    $sql = "INSERT INTO users (username, email, password, role, phone) VALUES (:username, :email, :password, 'user', :phone)";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bindParam(":username", $username);
-                    $stmt->bindParam(":email", $email);
-                    $stmt->bindParam(":password", $hashed_password);
-                    $stmt->bindParam(":phone", $phone);
-                    
-                    if ($stmt->execute()) {
-                        $user_id = $conn->lastInsertId();
-                        
-                        // First, check if user has any existing games and set their is_primary to 0
-                        $sql = "UPDATE user_games SET is_primary = 0 WHERE user_id = :user_id";
-                        $stmt = $conn->prepare($sql);
-                        $stmt->bindParam(":user_id", $user_id);
-                        $stmt->execute();
-                        
-                        // Add user's main game
-                        $sql = "INSERT INTO user_games (user_id, game_name, is_primary) VALUES (:user_id, :game_name, 1)";
-                        $stmt = $conn->prepare($sql);
-                        $stmt->bindParam(":user_id", $user_id);
-                        $stmt->bindParam(":game_name", $main_game);
-                        $stmt->execute();
-                        
-                        // Give new user 100 coins
-                        $sql = "INSERT INTO user_coins (user_id, coins) VALUES (:user_id, 100)";
-                        $stmt = $conn->prepare($sql);
-                        $stmt->bindParam(":user_id", $user_id);
-                        $stmt->execute();
-                        
-                        // Give new user 1 ticket
-                        $sql = "INSERT INTO user_tickets (user_id, tickets) VALUES (:user_id, 1)";
-                        $stmt = $conn->prepare($sql);
-                        $stmt->bindParam(":user_id", $user_id);
-                        $stmt->execute();
-                        
-                        // Commit transaction
-                        $conn->commit();
-                        
-                        $success = "Registration successful! Please login to continue.";
-                        // Remove the session setting and redirect to login
-                        header("Location: login.php?success=1");
-                        exit();
-                    } else {
-                        throw new Exception("Error creating user account");
-                    }
-                } catch (Exception $e) {
-                    // Rollback transaction on error
-                    $conn->rollBack();
-                    $error = "Registration failed: " . $e->getMessage();
-                }
+                throw new Exception("Username already exists");
             }
+            
+            // Hash password
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            
+            // Insert new user
+            $sql = "INSERT INTO users (username, email, password, role, phone) VALUES (:username, :email, :password, 'user', :phone)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":username", $username);
+            $stmt->bindParam(":email", $email);
+            $stmt->bindParam(":password", $hashed_password);
+            $stmt->bindParam(":phone", $phone);
+            
+            if ($stmt->execute()) {
+                $user_id = $conn->lastInsertId();
+                
+                // Add user's main game
+                $sql = "INSERT INTO user_games (user_id, game_name, is_primary) VALUES (:user_id, :game_name, 1)";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(":user_id", $user_id);
+                $stmt->bindParam(":game_name", $main_game);
+                $stmt->execute();
+                
+                // Give new user 100 coins
+                $sql = "INSERT INTO user_coins (user_id, coins) VALUES (:user_id, 100)";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(":user_id", $user_id);
+                $stmt->execute();
+                
+                // Give new user 1 ticket
+                $sql = "INSERT INTO user_tickets (user_id, tickets) VALUES (:user_id, 1)";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(":user_id", $user_id);
+                $stmt->execute();
+                
+                // Commit transaction
+                $conn->commit();
+                
+                // Log the user in
+                $_SESSION['user_id'] = $user_id;
+                $_SESSION['username'] = $username;
+                $_SESSION['email'] = $email;
+                $_SESSION['role'] = 'user';
+                
+                // Clear phone verification
+                unset($_SESSION['phone_verified']);
+                
+                // Redirect to home page
+                header("Location: ../index.php");
+                exit();
+            }
+        } catch (Exception $e) {
+            $conn->rollBack();
+            $errors[] = $e->getMessage();
         }
     }
 }
@@ -121,14 +119,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Esports Tournament Platform</title>
+    <title>Create Account - KGX Esports</title>
     
     <!-- Favicon -->
     <link rel="shortcut icon" href="../favicon.svg" type="image/svg+xml">
     
     <!-- CSS -->
     <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/auth.css">
+    <link rel="stylesheet" href="../assets/css/register/multi-step.css">
     
     <!-- International Telephone Input CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css">
@@ -141,231 +139,512 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <!-- Ion Icons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    
-    <style>
-    .iti {
-        width: 100%;
-    }
-    .iti__flag {
-        background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/img/flags.png");
-    }
-    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-        .iti__flag {
-            background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/img/flags@2x.png");
-        }
-    }
-    /* Style for the search dropdown */
-    .iti__country-list {
-        max-height: 300px;
-    }
-    .iti__search-container {
-        padding: 5px 10px;
-        position: sticky;
-        top: 0;
-        background-color: #fff;
-        z-index: 1;
-    }
-    .iti__search-input {
-        width: 100%;
-        padding: 5px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        margin-bottom: 5px;
-    }
-    </style>
 </head>
 <body>
     <div class="auth-container">
-        <h1 class="auth-title">Create Account</h1>
-        
-        <?php if($error): ?>
-            <div class="error-message"><?php echo $error; ?></div>
-        <?php endif; ?>
-        
-        <?php if($success): ?>
-            <div class="success-message"><?php echo $success; ?></div>
-        <?php endif; ?>
-        
-        <form class="auth-form" method="POST" action="">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars($username ?? ''); ?>">
+        <form id="registrationForm" class="multi-step-form" method="POST" action="">
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-step active" data-step="1"></div>
+                <div class="progress-step" data-step="2"></div>
+                <div class="progress-step" data-step="3"></div>
+                <div class="progress-step" data-step="4"></div>
             </div>
-            
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($email ?? ''); ?>">
+
+            <!-- Step 1: Username & Email -->
+            <div class="form-step active" data-step="1">
+                <h2>Create Your Account</h2>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                    <div class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                    <div class="error-message"></div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-next">Next</button>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" required class="form-control" maxlength="10" pattern="[0-9]{10}">
-                <input type="hidden" id="full_phone" name="full_phone">
-                <small class="phone-hint">Select country code and enter your 10-digit phone number</small>
-                <div id="phone-error" class="error-message" style="display: none;"></div>
-            </div>
-            
-            <div class="form-group">
-                <label for="main_game">Select Your Main Game</label>
-                <select id="main_game" name="main_game" required class="form-control">
-                    <option value="">Select a game</option>
-                    <option value="PUBG">PUBG</option>
-                    <option value="BGMI">BGMI</option>
-                    <option value="FREE FIRE">Free Fire</option>
-                    <option value="COD">Call of Duty Mobile</option>
-                </select>
-                <small class="game-hint">This will be set as your main game profile</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-toggle">
+
+            <!-- Step 2: Game & Password -->
+            <div class="form-step" data-step="2">
+                <h2>Game & Security</h2>
+                <div class="form-group">
+                    <label>Select Your Main Game</label>
+                    <div class="game-options">
+                        <div class="game-option" data-game="PUBG">
+                            <img src="../assets/images/games/pubg.png" alt="PUBG">
+                            <span>PUBG</span>
+                        </div>
+                        <div class="game-option" data-game="BGMI">
+                            <img src="../assets/images/games/bgmi.png" alt="BGMI">
+                            <span>BGMI</span>
+                        </div>
+                        <div class="game-option" data-game="FREE FIRE">
+                            <img src="../assets/images/games/freefire.png" alt="Free Fire">
+                            <span>Free Fire</span>
+                        </div>
+                        <div class="game-option" data-game="COD">
+                            <img src="../assets/images/games/cod.jpg" alt="Call of Duty Mobile">
+                            <span>COD Mobile</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="main_game" name="main_game" required>
+                    <div class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
-                    <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
+                    <div class="password-strength">
+                        <div class="strength-meter"></div>
+                    </div>
+                    <div class="error-message"></div>
                 </div>
-                <small class="password-hint">Password must be at least 8 characters long</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="confirm_password">Confirm Password</label>
-                <div class="password-toggle">
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
                     <input type="password" id="confirm_password" name="confirm_password" required>
-                    <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
+                    <div class="error-message"></div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-prev">Previous</button>
+                    <button type="button" class="btn btn-next">Next</button>
                 </div>
             </div>
-            
-            <button type="submit" class="auth-btn">Register</button>
-        </form>
-        
-        <div class="auth-links">
-            <p>Already have an account? <a href="login.php">Sign in</a></p>
-        </div>
-        
-        <div class="social-login">
-            <p class="social-login-title">Or register with</p>
-            <div class="social-buttons">
-                <button class="social-btn">
-                    <ion-icon name="logo-google"></ion-icon>
-                </button>
-                <button class="social-btn">
-                    <ion-icon name="logo-facebook"></ion-icon>
-                </button>
-                <button class="social-btn">
-                    <ion-icon name="logo-twitter"></ion-icon>
-                </button>
+
+            <!-- Step 3: Phone & OTP -->
+            <div class="form-step" data-step="3">
+                <h2>Phone Verification</h2>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" required>
+                    <input type="hidden" id="full_phone" name="full_phone">
+                    <div class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-send-otp" id="sendOtp">Send OTP</button>
+                    <div class="spinner"></div>
+                </div>
+                <div class="form-group otp-section" style="display: none;">
+                    <label>Enter OTP</label>
+                    <div class="otp-input-group">
+                        <input type="text" class="otp-input" maxlength="1" data-index="1">
+                        <input type="text" class="otp-input" maxlength="1" data-index="2">
+                        <input type="text" class="otp-input" maxlength="1" data-index="3">
+                        <input type="text" class="otp-input" maxlength="1" data-index="4">
+                    </div>
+                    <div class="error-message"></div>
+                    <div class="resend-timer" style="display: none;">
+                        Resend OTP in <span class="timer">300</span> seconds
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-prev">Previous</button>
+                    <button type="button" class="btn btn-next" id="verifyOtp" disabled>Verify & Continue</button>
+                </div>
             </div>
-        </div>
+
+            <!-- Step 4: Review & Submit -->
+            <div class="form-step" data-step="4">
+                <h2>Complete Registration</h2>
+                <div class="review-details">
+                    <p>Please review your information:</p>
+                    <div class="review-item">
+                        <strong>Username:</strong> <span id="review-username"></span>
+                    </div>
+                    <div class="review-item">
+                        <strong>Email:</strong> <span id="review-email"></span>
+                    </div>
+                    <div class="review-item">
+                        <strong>Main Game:</strong> <span id="review-game"></span>
+                    </div>
+                    <div class="review-item">
+                        <strong>Phone:</strong> <span id="review-phone"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="error-message"></div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-prev">Previous</button>
+                    <button type="submit" name="submit_registration" class="btn btn-submit">Complete Registration</button>
+                </div>
+            </div>
+        </form>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js"></script>
     <script>
-        // Initialize phone input
-        var phoneInput = document.querySelector("#phone");
-        var phoneError = document.querySelector("#phone-error");
-        var fullPhoneInput = document.querySelector("#full_phone");
-        
-        // Add search box to country dropdown
-        var countryListMarkup = '<div class="iti__search-container">' +
-            '<input type="text" class="iti__search-input" placeholder="Search countries...">' +
-            '</div>';
-
-        var iti = window.intlTelInput(phoneInput, {
-            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
-            separateDialCode: true,
-            initialCountry: "auto",
-            geoIpLookup: function(callback) {
-                fetch("https://ipapi.co/json")
-                .then(function(res) { return res.json(); })
-                .then(function(data) { callback(data.country_code); })
-                .catch(function() { callback("us"); });
-            },
-            preferredCountries: ["us", "gb", "in"],
-            nationalMode: true,
-            formatOnDisplay: true,
-            autoPlaceholder: "polite"
-        });
-
-        // Add search functionality
-        var countryList = document.querySelector('.iti__country-list');
-        countryList.insertAdjacentHTML('afterbegin', countryListMarkup);
-        
-        var searchInput = document.querySelector('.iti__search-input');
-        var countryItems = countryList.querySelectorAll('li.iti__country');
-        
-        searchInput.addEventListener('input', function() {
-            var query = this.value.toLowerCase();
-            countryItems.forEach(function(item) {
-                var countryName = item.getAttribute('data-country-name').toLowerCase();
-                var dialCode = item.getAttribute('data-dial-code');
-                if (countryName.includes(query) || dialCode.includes(query)) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize variables
+            let currentStep = 1;
+            const form = document.getElementById('registrationForm');
+            const steps = document.querySelectorAll('.form-step');
+            const progressSteps = document.querySelectorAll('.progress-step');
+            let otpTimer;
+            let isPhoneVerified = false;
+            
+            // Initialize phone input
+            const phoneInput = document.querySelector("#phone");
+            const fullPhoneInput = document.querySelector("#full_phone");
+            const iti = window.intlTelInput(phoneInput, {
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
+                separateDialCode: true,
+                initialCountry: "auto",
+                geoIpLookup: function(callback) {
+                    fetch("https://ipapi.co/json")
+                    .then(res => res.json())
+                    .then(data => callback(data.country_code))
+                    .catch(() => callback("us"));
                 }
             });
-        });
 
-        // Prevent search input from closing dropdown
-        searchInput.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-
-        // Enforce 10-digit limit and numbers only
-        phoneInput.addEventListener('input', function(e) {
-            // Remove any non-digit characters
-            this.value = this.value.replace(/\D/g, '');
+            // AJAX validation for username
+            const usernameInput = document.getElementById('username');
+            let usernameTimeout;
             
-            // Limit to 10 digits
-            if (this.value.length > 10) {
-                this.value = this.value.slice(0, 10);
+            usernameInput.addEventListener('input', function() {
+                clearTimeout(usernameTimeout);
+                usernameTimeout = setTimeout(() => {
+                    if (this.value.length >= 3) {
+                        validateUsername(this.value);
+                    }
+                }, 500);
+            });
+
+            function validateUsername(username) {
+                fetch('ajax_handlers.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=check_username&username=${encodeURIComponent(username)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        showError(usernameInput, 'Username already exists');
+                    } else {
+                        hideError(usernameInput);
+                    }
+                });
             }
 
-            // Update validation status
-            if (this.value.length === 10) {
-                if (iti.isValidNumber()) {
-                    phoneError.style.display = 'none';
-                } else {
-                    phoneError.style.display = 'block';
-                    phoneError.textContent = 'Please enter a valid 10-digit phone number';
+            // AJAX validation for email
+            const emailInput = document.getElementById('email');
+            let emailTimeout;
+            
+            emailInput.addEventListener('input', function() {
+                clearTimeout(emailTimeout);
+                emailTimeout = setTimeout(() => {
+                    if (isValidEmail(this.value)) {
+                        validateEmail(this.value);
+                    }
+                }, 500);
+            });
+
+            function validateEmail(email) {
+                fetch('ajax_handlers.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=check_email&email=${encodeURIComponent(email)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        showError(emailInput, 'Email already exists');
+                    } else {
+                        hideError(emailInput);
+                    }
+                });
+            }
+
+            // Game selection
+            const gameOptions = document.querySelectorAll('.game-option');
+            const gameInput = document.getElementById('main_game');
+            
+            gameOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    gameOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    gameInput.value = this.dataset.game;
+                    hideError(gameInput);
+                });
+            });
+
+            // Password strength checker
+            const passwordInput = document.getElementById('password');
+            const strengthMeter = document.querySelector('.strength-meter');
+            
+            passwordInput.addEventListener('input', function() {
+                const strength = checkPasswordStrength(this.value);
+                updateStrengthMeter(strength);
+            });
+
+            function checkPasswordStrength(password) {
+                if (password.length < 8) return 'weak';
+                const hasUpperCase = /[A-Z]/.test(password);
+                const hasLowerCase = /[a-z]/.test(password);
+                const hasNumbers = /\d/.test(password);
+                const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+                
+                const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecial]
+                    .filter(Boolean).length;
+                
+                if (strength < 2) return 'weak';
+                if (strength < 4) return 'medium';
+                return 'strong';
+            }
+
+            function updateStrengthMeter(strength) {
+                strengthMeter.className = 'strength-meter ' + strength;
+            }
+
+            // OTP handling
+            const sendOtpBtn = document.getElementById('sendOtp');
+            const verifyOtpBtn = document.getElementById('verifyOtp');
+            const otpSection = document.querySelector('.otp-section');
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const resendTimer = document.querySelector('.resend-timer');
+            const timerSpan = document.querySelector('.timer');
+            
+            sendOtpBtn.addEventListener('click', function() {
+                if (!iti.isValidNumber()) {
+                    showError(phoneInput, 'Please enter a valid phone number');
+                    return;
+                }
+
+                const spinner = document.querySelector('.spinner');
+                spinner.style.display = 'inline-block';
+                sendOtpBtn.disabled = true;
+
+                fetch('ajax_handlers.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=send_otp&phone=${encodeURIComponent(iti.getNumber())}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        otpSection.style.display = 'block';
+                        startResendTimer();
+                        // For development only
+                        if (data.debug_otp) {
+                            console.log('Debug OTP:', data.debug_otp);
+                        }
+                    } else {
+                        showError(phoneInput, data.error);
+                    }
+                })
+                .finally(() => {
+                    spinner.style.display = 'none';
+                    sendOtpBtn.disabled = false;
+                });
+            });
+
+            function startResendTimer() {
+                let timeLeft = 300; // 5 minutes
+                resendTimer.style.display = 'block';
+                sendOtpBtn.disabled = true;
+
+                clearInterval(otpTimer);
+                otpTimer = setInterval(() => {
+                    timeLeft--;
+                    timerSpan.textContent = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(otpTimer);
+                        resendTimer.style.display = 'none';
+                        sendOtpBtn.disabled = false;
+                    }
+                }, 1000);
+            }
+
+            // OTP input handling
+            otpInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    if (this.value) {
+                        const next = document.querySelector(`.otp-input[data-index="${parseInt(this.dataset.index) + 1}"]`);
+                        if (next) next.focus();
+                    }
+
+                    // Check if all OTP inputs are filled
+                    const allFilled = Array.from(otpInputs).every(input => input.value.length === 1);
+                    if (allFilled) {
+                        verifyOtp();
+                    }
+                });
+
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !this.value) {
+                        const prev = document.querySelector(`.otp-input[data-index="${parseInt(this.dataset.index) - 1}"]`);
+                        if (prev) prev.focus();
+                    }
+                });
+            });
+
+            function verifyOtp() {
+                const otp = Array.from(otpInputs).map(input => input.value).join('');
+                const phone = iti.getNumber();
+
+                fetch('ajax_handlers.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=verify_otp&otp=${encodeURIComponent(otp)}&phone=${encodeURIComponent(phone)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isPhoneVerified = true;
+                        verifyOtpBtn.disabled = false;
+                        fullPhoneInput.value = phone;
+                        hideError(document.querySelector('.otp-section'));
+                    } else {
+                        showError(document.querySelector('.otp-section'), data.error);
+                        if (data.attempts_left) {
+                            showError(document.querySelector('.otp-section'), 
+                                `Invalid OTP. ${data.attempts_left} attempts remaining`);
+                        }
+                    }
+                });
+            }
+
+            // Navigation between steps
+            document.querySelectorAll('.btn-next').forEach(button => {
+                button.addEventListener('click', () => {
+                    if (validateStep(currentStep)) {
+                        if (currentStep < 4) {
+                            currentStep++;
+                            updateStep();
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.btn-prev').forEach(button => {
+                button.addEventListener('click', () => {
+                    if (currentStep > 1) {
+                        currentStep--;
+                        updateStep();
+                    }
+                });
+            });
+
+            function updateStep() {
+                steps.forEach(step => step.classList.remove('active'));
+                progressSteps.forEach(step => step.classList.remove('active', 'completed'));
+                
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+                
+                for (let i = 1; i <= 4; i++) {
+                    const step = document.querySelector(`.progress-step[data-step="${i}"]`);
+                    if (i < currentStep) {
+                        step.classList.add('completed');
+                    } else if (i === currentStep) {
+                        step.classList.add('active');
+                    }
+                }
+
+                if (currentStep === 4) {
+                    updateReviewDetails();
                 }
             }
-        });
 
-        // Validate phone number on form submit
-        document.querySelector(".auth-form").addEventListener("submit", function(e) {
-            var phoneValue = phoneInput.value.replace(/\D/g, '');
-            var isValid = true;
-            var errorMsg = "";
+            function validateStep(step) {
+                const currentStepElement = document.querySelector(`.form-step[data-step="${step}"]`);
+                const inputs = currentStepElement.querySelectorAll('input[required]');
+                let isValid = true;
 
-            if (!phoneValue) {
-                isValid = false;
-                errorMsg = "Phone number is required.";
-            } else if (phoneValue.length !== 10) {
-                isValid = false;
-                errorMsg = "Phone number must be exactly 10 digits.";
-            } else if (!iti.isValidNumber()) {
-                isValid = false;
-                errorMsg = "Please enter a valid phone number.";
+                inputs.forEach(input => {
+                    if (!input.value) {
+                        showError(input, 'This field is required');
+                        isValid = false;
+                    } else {
+                        hideError(input);
+                        
+                        // Additional validation based on input type
+                        switch(input.id) {
+                            case 'email':
+                                if (!isValidEmail(input.value)) {
+                                    showError(input, 'Please enter a valid email address');
+                                    isValid = false;
+                                }
+                                break;
+                            case 'password':
+                                if (input.value.length < 8) {
+                                    showError(input, 'Password must be at least 8 characters long');
+                                    isValid = false;
+                                }
+                                break;
+                            case 'confirm_password':
+                                if (input.value !== passwordInput.value) {
+                                    showError(input, 'Passwords do not match');
+                                    isValid = false;
+                                }
+                                break;
+                            case 'phone':
+                                if (!iti.isValidNumber()) {
+                                    showError(input, 'Please enter a valid phone number');
+                                    isValid = false;
+                                }
+                                break;
+                        }
+                    }
+                });
+
+                // Additional step-specific validation
+                if (step === 2 && !gameInput.value) {
+                    showError(gameInput, 'Please select your main game');
+                    isValid = false;
+                }
+
+                if (step === 3 && !isPhoneVerified) {
+                    showError(phoneInput, 'Please verify your phone number');
+                    isValid = false;
+                }
+
+                return isValid;
             }
 
-            if (!isValid) {
-                e.preventDefault();
-                phoneError.style.display = "block";
-                phoneError.textContent = errorMsg;
-            } else {
-                phoneError.style.display = "none";
-                fullPhoneInput.value = iti.getNumber(); // E.164 format
+            function showError(input, message) {
+                const errorElement = input.parentElement.querySelector('.error-message');
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                input.parentElement.classList.add('error');
             }
-        });
 
-        // Toggle password visibility for all password fields
-        document.querySelectorAll('.toggle-password').forEach(function(toggle) {
-            toggle.addEventListener('click', function() {
-                const passwordInput = this.parentElement.querySelector('input');
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                this.name = type === 'password' ? 'eye-outline' : 'eye-off-outline';
+            function hideError(input) {
+                const errorElement = input.parentElement.querySelector('.error-message');
+                errorElement.style.display = 'none';
+                input.parentElement.classList.remove('error');
+            }
+
+            function isValidEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+
+            function updateReviewDetails() {
+                document.getElementById('review-username').textContent = document.getElementById('username').value;
+                document.getElementById('review-email').textContent = document.getElementById('email').value;
+                document.getElementById('review-game').textContent = document.getElementById('main_game').value;
+                document.getElementById('review-phone').textContent = iti.getNumber();
+            }
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                if (!validateStep(currentStep)) {
+                    e.preventDefault();
+                }
             });
         });
     </script>
