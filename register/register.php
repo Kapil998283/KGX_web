@@ -11,13 +11,6 @@ if(isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Check if phone is verified
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_SESSION['phone_verified'])) {
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'Phone number not verified']);
-    exit();
-}
-
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])) {
     $username = trim($_POST['username'] ?? '');
@@ -98,9 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 $_SESSION['username'] = $username;
                 $_SESSION['email'] = $email;
                 $_SESSION['role'] = 'user';
-                
-                // Clear phone verification
-                unset($_SESSION['phone_verified']);
                 
                 // Redirect to home page
                 header("Location: ../index.php");
@@ -214,15 +204,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 </div>
             </div>
 
-            <!-- Step 3: Phone & OTP -->
+            <!-- Step 3: Phone -->
             <div class="form-step" data-step="3">
-                <h2>Phone Verification</h2>
+                <h2>Contact Information</h2>
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
                     <input type="tel" id="phone" name="phone" required>
                     <input type="hidden" id="full_phone" name="full_phone">
                     <div class="error-message"></div>
-                    <div class="phone-hint">Please enter a valid phone number for your selected country</div>
+                    <div class="phone-hint">Enter your phone number with country code</div>
                 </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-prev">Previous</button>
@@ -283,159 +273,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                     .then(data => callback(data.country_code))
                     .catch(() => callback("in")); // Default to India if geolocation fails
                 },
-                // Enable search and dropdown
                 dropdownContainer: document.body,
                 formatOnDisplay: true,
                 autoPlaceholder: "aggressive",
-                preferredCountries: ['in', 'us', 'gb', 'ca', 'au'],
-                localizedCountries: { 'in': 'India', 'us': 'United States', 'gb': 'United Kingdom' },
-                customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
-                    return "Enter " + selectedCountryPlaceholder;
-                },
-                allowDropdown: true,
-                searchCountries: true
+                preferredCountries: ['in', 'us', 'gb', 'ca', 'au']
             });
-
-            // Add custom styling to the country dropdown
-            const countryList = document.querySelector('.iti__country-list');
-            if (countryList) {
-                countryList.style.maxHeight = '300px';
-                countryList.style.overflowY = 'auto';
-            }
-
-            // Add search input for countries
-            const flagContainer = document.querySelector('.iti__flag-container');
-            flagContainer.addEventListener('click', function() {
-                setTimeout(() => {
-                    if (!document.querySelector('.country-search')) {
-                        const searchDiv = document.createElement('div');
-                        searchDiv.className = 'country-search';
-                        const searchInput = document.createElement('input');
-                        searchInput.type = 'text';
-                        searchInput.placeholder = 'Search country...';
-                        searchInput.className = 'country-search-input';
-                        
-                        searchInput.addEventListener('input', function() {
-                            const query = this.value.toLowerCase();
-                            const countries = document.querySelectorAll('.iti__country');
-                            countries.forEach(country => {
-                                const name = country.querySelector('.iti__country-name').textContent.toLowerCase();
-                                const dialCode = country.querySelector('.iti__dial-code').textContent.toLowerCase();
-                                if (name.includes(query) || dialCode.includes(query)) {
-                                    country.style.display = '';
-                                } else {
-                                    country.style.display = 'none';
-                                }
-                            });
-                        });
-
-                        searchDiv.appendChild(searchInput);
-                        countryList.insertBefore(searchDiv, countryList.firstChild);
-                        searchInput.focus();
-                    }
-                }, 0);
-            });
-
-            // Phone number validation
-            phoneInput.addEventListener('input', function() {
-                validatePhoneNumber();
-            });
-
-            phoneInput.addEventListener('countrychange', function() {
-                validatePhoneNumber();
-            });
-
-            function validatePhoneNumber() {
-                const isValid = iti.isValidNumber();
-                const errorCode = iti.getValidationError();
-                const countryData = iti.getSelectedCountryData();
-                
-                if (!isValid) {
-                    let errorMsg = 'Invalid phone number';
-                    switch(errorCode) {
-                        case intlTelInputUtils.validationError.TOO_SHORT:
-                            errorMsg = `Phone number is too short for ${countryData.name}`;
-                            break;
-                        case intlTelInputUtils.validationError.TOO_LONG:
-                            errorMsg = `Phone number is too long for ${countryData.name}`;
-                            break;
-                        case intlTelInputUtils.validationError.INVALID_COUNTRY_CODE:
-                            errorMsg = 'Invalid country code';
-                            break;
-                        case intlTelInputUtils.validationError.NOT_A_NUMBER:
-                            errorMsg = 'Invalid phone number format';
-                            break;
-                    }
-                    showError(phoneInput, errorMsg);
-                    return false;
-                } else {
-                    hideError(phoneInput);
-                    fullPhoneInput.value = iti.getNumber();
-                    return true;
-                }
-            }
-
-            // AJAX validation for username
-            const usernameInput = document.getElementById('username');
-            let usernameTimeout;
-            
-            usernameInput.addEventListener('input', function() {
-                clearTimeout(usernameTimeout);
-                usernameTimeout = setTimeout(() => {
-                    if (this.value.length >= 3) {
-                        validateUsername(this.value);
-                    }
-                }, 500);
-            });
-
-            function validateUsername(username) {
-                fetch('ajax_handlers.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `action=check_username&username=${encodeURIComponent(username)}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.exists) {
-                        showError(usernameInput, 'Username already exists');
-                    } else {
-                        hideError(usernameInput);
-                    }
-                });
-            }
-
-            // AJAX validation for email
-            const emailInput = document.getElementById('email');
-            let emailTimeout;
-            
-            emailInput.addEventListener('input', function() {
-                clearTimeout(emailTimeout);
-                emailTimeout = setTimeout(() => {
-                    if (isValidEmail(this.value)) {
-                        validateEmail(this.value);
-                    }
-                }, 500);
-            });
-
-            function validateEmail(email) {
-                fetch('ajax_handlers.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `action=check_email&email=${encodeURIComponent(email)}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.exists) {
-                        showError(emailInput, 'Email already exists');
-                    } else {
-                        hideError(emailInput);
-                    }
-                });
-            }
 
             // Game selection
             const gameOptions = document.querySelectorAll('.game-option');
@@ -552,9 +394,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                                 }
                                 break;
                             case 'phone':
-                                if (!validatePhoneNumber()) {
-                                    isValid = false;
-                                }
+                                fullPhoneInput.value = iti.getNumber();
                                 break;
                         }
                     }
@@ -598,6 +438,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 if (!validateStep(currentStep)) {
                     e.preventDefault();
                 }
+            });
+
+            // Update full phone number when phone input changes
+            phoneInput.addEventListener('input', function() {
+                fullPhoneInput.value = iti.getNumber();
             });
         });
     </script>
