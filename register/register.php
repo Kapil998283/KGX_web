@@ -260,23 +260,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             const steps = document.querySelectorAll('.form-step');
             const progressSteps = document.querySelectorAll('.progress-step');
             
-            // Initialize phone input with improved options
+            // Initialize phone input
             const phoneInput = document.querySelector("#phone");
             const fullPhoneInput = document.querySelector("#full_phone");
             const iti = window.intlTelInput(phoneInput, {
                 utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
                 separateDialCode: true,
-                initialCountry: "auto",
-                geoIpLookup: function(callback) {
-                    fetch("https://ipapi.co/json")
-                    .then(res => res.json())
-                    .then(data => callback(data.country_code))
-                    .catch(() => callback("in")); // Default to India if geolocation fails
-                },
-                dropdownContainer: document.body,
-                formatOnDisplay: true,
-                autoPlaceholder: "aggressive",
-                preferredCountries: ['in', 'us', 'gb', 'ca', 'au']
+                initialCountry: "in",
+                preferredCountries: ['in', 'us', 'gb'],
+                formatOnDisplay: true
             });
 
             // Game selection
@@ -322,7 +314,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
 
             // Navigation between steps
             document.querySelectorAll('.btn-next').forEach(button => {
-                button.addEventListener('click', () => {
+                button.addEventListener('click', function() {
                     if (validateStep(currentStep)) {
                         if (currentStep < 4) {
                             currentStep++;
@@ -363,52 +355,75 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
 
             function validateStep(step) {
                 const currentStepElement = document.querySelector(`.form-step[data-step="${step}"]`);
-                const inputs = currentStepElement.querySelectorAll('input[required]');
                 let isValid = true;
 
-                inputs.forEach(input => {
-                    if (!input.value && input.id !== 'full_phone') {  // Skip full_phone validation here
-                        showError(input, 'This field is required');
-                        isValid = false;
-                    } else {
-                        hideError(input);
+                // Step-specific validation
+                switch(step) {
+                    case 1:
+                        // Username and Email validation
+                        const username = document.getElementById('username').value;
+                        const email = document.getElementById('email').value;
                         
-                        // Additional validation based on input type
-                        switch(input.id) {
-                            case 'email':
-                                if (!isValidEmail(input.value)) {
-                                    showError(input, 'Please enter a valid email address');
-                                    isValid = false;
-                                }
-                                break;
-                            case 'password':
-                                if (input.value.length < 8) {
-                                    showError(input, 'Password must be at least 8 characters long');
-                                    isValid = false;
-                                }
-                                break;
-                            case 'confirm_password':
-                                if (input.value !== passwordInput.value) {
-                                    showError(input, 'Passwords do not match');
-                                    isValid = false;
-                                }
-                                break;
-                            case 'phone':
-                                if (!iti.isValidNumber()) {
-                                    showError(input, 'Please enter a valid phone number');
-                                    isValid = false;
-                                } else {
-                                    fullPhoneInput.value = iti.getNumber();
-                                }
-                                break;
+                        if (!username) {
+                            showError(document.getElementById('username'), 'Username is required');
+                            isValid = false;
                         }
-                    }
-                });
+                        
+                        if (!email) {
+                            showError(document.getElementById('email'), 'Email is required');
+                            isValid = false;
+                        } else if (!isValidEmail(email)) {
+                            showError(document.getElementById('email'), 'Please enter a valid email address');
+                            isValid = false;
+                        }
+                        break;
 
-                // Additional step-specific validation
-                if (step === 2 && !gameInput.value) {
-                    showError(gameInput, 'Please select your main game');
-                    isValid = false;
+                    case 2:
+                        // Game and Password validation
+                        const password = document.getElementById('password').value;
+                        const confirmPassword = document.getElementById('confirm_password').value;
+                        const game = document.getElementById('main_game').value;
+
+                        if (!game) {
+                            showError(gameInput, 'Please select your main game');
+                            isValid = false;
+                        }
+
+                        if (!password) {
+                            showError(document.getElementById('password'), 'Password is required');
+                            isValid = false;
+                        } else if (password.length < 8) {
+                            showError(document.getElementById('password'), 'Password must be at least 8 characters long');
+                            isValid = false;
+                        }
+
+                        if (!confirmPassword) {
+                            showError(document.getElementById('confirm_password'), 'Please confirm your password');
+                            isValid = false;
+                        } else if (password !== confirmPassword) {
+                            showError(document.getElementById('confirm_password'), 'Passwords do not match');
+                            isValid = false;
+                        }
+                        break;
+
+                    case 3:
+                        // Phone validation
+                        const phoneNumber = phoneInput.value.trim();
+                        if (!phoneNumber) {
+                            showError(phoneInput, 'Phone number is required');
+                            isValid = false;
+                        } else {
+                            // Update the full phone number
+                            const fullNumber = iti.getNumber();
+                            if (!fullNumber) {
+                                showError(phoneInput, 'Please enter a valid phone number');
+                                isValid = false;
+                            } else {
+                                fullPhoneInput.value = fullNumber;
+                                hideError(phoneInput);
+                            }
+                        }
+                        break;
                 }
 
                 return isValid;
@@ -416,15 +431,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
 
             function showError(input, message) {
                 const errorElement = input.parentElement.querySelector('.error-message');
-                errorElement.textContent = message;
-                errorElement.style.display = 'block';
-                input.parentElement.classList.add('error');
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                    input.parentElement.classList.add('error');
+                }
             }
 
             function hideError(input) {
                 const errorElement = input.parentElement.querySelector('.error-message');
-                errorElement.style.display = 'none';
-                input.parentElement.classList.remove('error');
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                    input.parentElement.classList.remove('error');
+                }
             }
 
             function isValidEmail(email) {
@@ -445,9 +464,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 }
             });
 
-            // Update full phone number when phone input changes
+            // Phone input event listeners
             phoneInput.addEventListener('input', function() {
-                fullPhoneInput.value = iti.getNumber();
+                hideError(phoneInput);
+            });
+
+            phoneInput.addEventListener('blur', function() {
+                if (phoneInput.value.trim()) {
+                    if (!iti.isValidNumber()) {
+                        showError(phoneInput, 'Please enter a valid phone number');
+                    } else {
+                        hideError(phoneInput);
+                        fullPhoneInput.value = iti.getNumber();
+                    }
+                }
             });
         });
     </script>
