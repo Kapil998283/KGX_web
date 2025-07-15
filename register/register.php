@@ -1,9 +1,11 @@
 <?php
 session_start();
+require_once '../config/database.php';
 require_once '../includes/user-auth.php';
 
 // Get database connection
-$conn = getDbConnection();
+$db = new Database();
+$conn = $db->connect();
 
 // Check if user is already logged in
 if(isset($_SESSION['user_id'])) {
@@ -28,6 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
     if (empty($main_game)) $errors[] = "Main game selection is required";
     if (empty($phone)) $errors[] = "Phone number is required";
     if (!isset($_POST['terms'])) $errors[] = "You must agree to the Terms & Conditions";
+
+    // Check email format
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid email format";
+    }
     
     if (empty($errors)) {
         // Start transaction
@@ -35,75 +42,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
         
         try {
             // Check if email exists
-            $stmt = $conn->prepare("SELECT id FROM users WHERE email = :email");
-            $stmt->bindParam(":email", $email);
-            $stmt->execute();
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$email]);
             
             if ($stmt->rowCount() > 0) {
                 throw new Exception("Email already exists");
             }
             
             // Check if username exists
-            $stmt = $conn->prepare("SELECT id FROM users WHERE username = :username");
-            $stmt->bindParam(":username", $username);
-            $stmt->execute();
+            $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
+            $stmt->execute([$username]);
             
             if ($stmt->rowCount() > 0) {
                 throw new Exception("Username already exists");
+            }
+
+            // Check if phone exists
+            $stmt = $conn->prepare("SELECT id FROM users WHERE phone = ?");
+            $stmt->execute([$phone]);
+            
+            if ($stmt->rowCount() > 0) {
+                throw new Exception("Phone number already exists");
             }
             
             // Hash password
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             
             // Insert new user
-            $sql = "INSERT INTO users (username, email, password, role, phone) VALUES (:username, :email, :password, 'user', :phone)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bindParam(":username", $username);
-            $stmt->bindParam(":email", $email);
-            $stmt->bindParam(":password", $hashed_password);
-            $stmt->bindParam(":phone", $phone);
+            $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, phone, created_at) VALUES (?, ?, ?, 'user', ?, NOW())");
             
-            if ($stmt->execute()) {
-                $user_id = $conn->lastInsertId();
+            if (!$stmt->execute([$username, $email, $hashed_password, $phone])) {
+                throw new Exception("Failed to create user account");
+            }
+            
+            $user_id = $conn->lastInsertId();
+            
+            // Add user's main game
+            $stmt = $conn->prepare("INSERT INTO user_games (user_id, game_name, is_primary) VALUES (?, ?, 1)");
+            if (!$stmt->execute([$user_id, $main_game])) {
+                throw new Exception("Failed to set main game");
+            }
+            
+            // Give new user 100 coins
+            $stmt = $conn->prepare("INSERT INTO user_coins (user_id, coins) VALUES (?, 100)");
+            if (!$stmt->execute([$user_id])) {
+                throw new Exception("Failed to set initial coins");
+            }
+            
+            // Give new user 1 ticket
+            $stmt = $conn->prepare("INSERT INTO user_tickets (user_id, tickets) VALUES (?, 1)");
+            if (!$stmt->execute([$user_id])) {
+                throw new Exception("Failed to set initial tickets");
+            }
+            
+            // Commit transaction
+            $conn->commit();
+            
+            if ($auto_login) {
+                // Log the user in automatically
+                $_SESSION['user_id'] = $user_id;
+                $_SESSION['username'] = $username;
+                $_SESSION['email'] = $email;
+                $_SESSION['role'] = 'user';
                 
-                // Add user's main game
-                $sql = "INSERT INTO user_games (user_id, game_name, is_primary) VALUES (:user_id, :game_name, 1)";
-                $stmt = $conn->prepare($sql);
-                $stmt->bindParam(":user_id", $user_id);
-                $stmt->bindParam(":game_name", $main_game);
-                $stmt->execute();
-                
-                // Give new user 100 coins
-                $sql = "INSERT INTO user_coins (user_id, coins) VALUES (:user_id, 100)";
-                $stmt = $conn->prepare($sql);
-                $stmt->bindParam(":user_id", $user_id);
-                $stmt->execute();
-                
-                // Give new user 1 ticket
-                $sql = "INSERT INTO user_tickets (user_id, tickets) VALUES (:user_id, 1)";
-                $stmt = $conn->prepare($sql);
-                $stmt->bindParam(":user_id", $user_id);
-                $stmt->execute();
-                
-                // Commit transaction
-                $conn->commit();
-                
-                if ($auto_login) {
-                    // Log the user in automatically
-                    $_SESSION['user_id'] = $user_id;
-                    $_SESSION['username'] = $username;
-                    $_SESSION['email'] = $email;
-                    $_SESSION['role'] = 'user';
-                    
-                    // Redirect to home page
-                    header("Location: ../home.php");
-                    exit();
-                } else {
-                    // Redirect to login page with success message
-                    $_SESSION['registration_success'] = "Registration successful! Please login to continue.";
-                    header("Location: ../pages/login.php");
-                    exit();
-                }
+                // Redirect to home page
+                header("Location: ../home.php");
+                exit();
+            } else {
+                // Redirect to login page with success message
+                $_SESSION['registration_success'] = "Registration successful! Please login to continue.";
+                header("Location: ../pages/login.php");
+                exit();
             }
         } catch (Exception $e) {
             $conn->rollBack();
