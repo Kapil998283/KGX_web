@@ -3,34 +3,10 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-require_once '../config/database.php';
-require_once '../includes/auth.php';
 require_once '../includes/user-auth.php';
 
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Initialize variables
-$errors = [];
-$debug_log = [];
-$username = '';
-$email = '';
-$main_game = '';
-$phone = '';
-
 // Get database connection
-try {
-    $conn = getDbConnection();
-    if (!$conn) {
-        throw new Exception("Database connection failed");
-    }
-    $debug_log[] = "Database connection successful";
-} catch (Exception $e) {
-    $errors[] = "Database Error: " . $e->getMessage();
-    $debug_log[] = "Database Error: " . $e->getMessage();
-}
+$conn = getDbConnection();
 
 // Check if user is already logged in
 if(isset($_SESSION['user_id'])) {
@@ -38,140 +14,143 @@ if(isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])) {
-    $debug_log[] = "Form submitted";
-    
-    // Get form data
+$error = '';
+$success = '';
+$username = '';
+$email = '';
+$main_game = '';
+$phone = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
-    $main_game = trim($_POST['main_game'] ?? '');
-    $phone = trim($_POST['full_phone'] ?? '');
-    $auto_login = isset($_POST['auto_login']) ? true : false;
+    $phone = trim($_POST['full_phone'] ?? ''); // Using the full phone number with country code
+    $main_game = trim($_POST['main_game'] ?? ''); // Add main game field
     
-    $debug_log[] = "Form data received: Username: $username, Email: $email, Game: $main_game, Phone: $phone";
-    
-    // Validate inputs
-    if (empty($username)) $errors[] = "Username is required";
-    if (empty($email)) $errors[] = "Email is required";
-    if (empty($password)) $errors[] = "Password is required";
-    if (empty($confirm_password)) $errors[] = "Password confirmation is required";
-    if (empty($main_game)) $errors[] = "Main game selection is required";
-    if (empty($phone)) $errors[] = "Phone number is required";
-    if (!isset($_POST['terms'])) $errors[] = "You must agree to the Terms & Conditions";
-
-    // Additional validation
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Invalid email format";
-    }
-    if (strlen($password) < 8) {
-        $errors[] = "Password must be at least 8 characters long";
-    }
-    if ($password !== $confirm_password) {
-        $errors[] = "Passwords do not match";
-    }
-    if (!preg_match("/^\+[1-9]\d{6,14}$/", $phone)) {
-        $errors[] = "Please enter a valid phone number with country code";
-    }
-    
-    $debug_log[] = empty($errors) ? "Validation passed" : "Validation errors: " . implode(", ", $errors);
-    
-    if (empty($errors)) {
-        // Start transaction
-        try {
-            $conn->beginTransaction();
-            $debug_log[] = "Transaction started";
+    // Enhanced validation with specific error messages
+    if (empty($username)) {
+        $error = "Username is required";
+    } elseif (strlen($username) < 3) {
+        $error = "Username must be at least 3 characters long";
+    } elseif (strlen($username) > 20) {
+        $error = "Username cannot exceed 20 characters";
+    } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+        $error = "Username can only contain letters, numbers, and underscores";
+    } elseif (empty($email)) {
+        $error = "Email is required";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Please enter a valid email address";
+    } elseif (empty($password)) {
+        $error = "Password is required";
+    } elseif (strlen($password) < 8) {
+        $error = "Password must be at least 8 characters long";
+    } elseif (!preg_match('/[A-Z]/', $password)) {
+        $error = "Password must contain at least one uppercase letter";
+    } elseif (!preg_match('/[a-z]/', $password)) {
+        $error = "Password must contain at least one lowercase letter";
+    } elseif (!preg_match('/[0-9]/', $password)) {
+        $error = "Password must contain at least one number";
+    } elseif ($password !== $confirm_password) {
+        $error = "Passwords do not match";
+    } elseif (empty($phone)) {
+        $error = "Phone number is required";
+    } elseif (!preg_match("/^\+[1-9]\d{6,14}$/", $phone)) {
+        $error = "Please enter a valid phone number with country code";
+    } elseif (empty($main_game)) {
+        $error = "Please select your main game";
+    } else {
+        // Check if email already exists
+        $sql = "SELECT id FROM users WHERE email = :email";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":email", $email);
+        $stmt->execute();
+        
+        if ($stmt->rowCount() > 0) {
+            $error = "Email already exists";
+        } else {
+            // Check if username already exists
+            $sql = "SELECT id FROM users WHERE username = :username";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":username", $username);
+            $stmt->execute();
             
-            // Check if email exists
-            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->execute([$email]);
             if ($stmt->rowCount() > 0) {
-                throw new Exception("Email already exists");
-            }
-            
-            // Check if username exists
-            $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
-            $stmt->execute([$username]);
-            if ($stmt->rowCount() > 0) {
-                throw new Exception("Username already exists");
-            }
-
-            // Check if phone exists
-            $stmt = $conn->prepare("SELECT id FROM users WHERE phone = ?");
-            $stmt->execute([$phone]);
-            if ($stmt->rowCount() > 0) {
-                throw new Exception("Phone number already exists");
-            }
-            
-            // Hash password
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            
-            // Insert new user
-            $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, phone, created_at) VALUES (?, ?, ?, 'user', ?, NOW())");
-            if (!$stmt->execute([$username, $email, $hashed_password, $phone])) {
-                throw new Exception("Failed to create user account");
-            }
-            
-            $user_id = $conn->lastInsertId();
-            if (!$user_id) {
-                throw new Exception("Failed to get new user ID");
-            }
-            
-            // Add user's main game
-            $stmt = $conn->prepare("INSERT INTO user_games (user_id, game_name, is_primary) VALUES (?, ?, 1)");
-            if (!$stmt->execute([$user_id, $main_game])) {
-                throw new Exception("Failed to set main game");
-            }
-            
-            // Give new user 100 coins
-            $stmt = $conn->prepare("INSERT INTO user_coins (user_id, coins) VALUES (?, 100)");
-            if (!$stmt->execute([$user_id])) {
-                throw new Exception("Failed to set initial coins");
-            }
-            
-            // Give new user 1 ticket
-            $stmt = $conn->prepare("INSERT INTO user_tickets (user_id, tickets) VALUES (?, 1)");
-            if (!$stmt->execute([$user_id])) {
-                throw new Exception("Failed to set initial tickets");
-            }
-            
-            // Commit transaction
-            $conn->commit();
-            $debug_log[] = "Transaction committed successfully";
-            
-            if ($auto_login) {
-                // Log the user in automatically
-                $_SESSION['user_id'] = $user_id;
-                $_SESSION['username'] = $username;
-                $_SESSION['email'] = $email;
-                $_SESSION['role'] = 'user';
-                
-                $debug_log[] = "Auto login successful";
-                header("Location: ../home.php");
-                exit();
+                $error = "Username already exists";
             } else {
-                // Redirect to login page with success message
-                $_SESSION['registration_success'] = "Registration successful! Please login to continue.";
-                $debug_log[] = "Registration successful, redirecting to login";
-                header("Location: ../pages/login.php");
-                exit();
+                // Check if phone exists
+                $sql = "SELECT id FROM users WHERE phone = :phone";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(":phone", $phone);
+                $stmt->execute();
+                
+                if ($stmt->rowCount() > 0) {
+                    $error = "Phone number already registered";
+                } else {
+                    // Start transaction
+                    $conn->beginTransaction();
+                    
+                    try {
+                        // Hash password
+                        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                        
+                        // Insert new user with additional fields
+                        $sql = "INSERT INTO users (username, email, password, role, phone, created_at) VALUES (:username, :email, :password, 'user', :phone, NOW())";
+                        $stmt = $conn->prepare($sql);
+                        $stmt->bindParam(":username", $username);
+                        $stmt->bindParam(":email", $email);
+                        $stmt->bindParam(":password", $hashed_password);
+                        $stmt->bindParam(":phone", $phone);
+                        
+                        if ($stmt->execute()) {
+                            $user_id = $conn->lastInsertId();
+                            
+                            // Add user's main game
+                            $sql = "INSERT INTO user_games (user_id, game_name, is_primary) VALUES (:user_id, :game_name, 1)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->bindParam(":user_id", $user_id);
+                            $stmt->bindParam(":game_name", $main_game);
+                            $stmt->execute();
+                            
+                            // Give new user 100 coins as welcome bonus
+                            $sql = "INSERT INTO user_coins (user_id, coins) VALUES (:user_id, 100)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->bindParam(":user_id", $user_id);
+                            $stmt->execute();
+                            
+                            // Give new user 1 ticket as welcome bonus
+                            $sql = "INSERT INTO user_tickets (user_id, tickets) VALUES (:user_id, 1)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->bindParam(":user_id", $user_id);
+                            $stmt->execute();
+                            
+                            // Commit transaction
+                            $conn->commit();
+                            
+                            // Set success message and redirect
+                            $_SESSION['registration_success'] = "Welcome to KGX Esports! You've received 100 coins and 1 ticket as a welcome bonus.";
+                            
+                            // Auto login the user
+                            $_SESSION['user_id'] = $user_id;
+                            $_SESSION['username'] = $username;
+                            $_SESSION['email'] = $email;
+                            $_SESSION['role'] = 'user';
+                            
+                            header("Location: ../home.php?welcome=1");
+                            exit();
+                        } else {
+                            throw new Exception("Error creating user account");
+                        }
+                    } catch (Exception $e) {
+                        // Rollback transaction on error
+                        $conn->rollBack();
+                        $error = "Registration failed: " . $e->getMessage();
+                    }
+                }
             }
-        } catch (Exception $e) {
-            $conn->rollBack();
-            $debug_log[] = "Error occurred: " . $e->getMessage();
-            $debug_log[] = "Transaction rolled back";
-            $errors[] = $e->getMessage();
         }
     }
-}
-
-// For debugging - add this at the bottom of the page
-if (!empty($debug_log)) {
-    echo "<!-- Debug Log:\n";
-    echo implode("\n", $debug_log);
-    echo "\n-->";
 }
 ?>
 
@@ -180,7 +159,7 @@ if (!empty($debug_log)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account - KGX Esports</title>
+    <title>Join KGX Esports - Create Your Gaming Account</title>
     
     <!-- Favicon -->
     <link rel="shortcut icon" href="../favicon.svg" type="image/svg+xml">
@@ -213,51 +192,71 @@ if (!empty($debug_log)) {
             background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/img/flags@2x.png");
         }
     }
-    .checkbox-group {
-        margin: 20px 0;
+    .auth-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
     }
-    .checkbox-wrapper {
-        display: flex;
-        align-items: center;
-        margin: 10px 0;
+    .auth-title {
+        color: #fff;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        text-transform: uppercase;
     }
-    .checkbox-wrapper input[type="checkbox"] {
-        margin-right: 10px;
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
+    .form-group {
+        margin-bottom: 1.5rem;
     }
-    .checkbox-wrapper label {
-        font-size: 14px;
+    .form-group label {
+        color: #fff;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #333;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #00ff00;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+    }
+    .password-toggle {
+        position: relative;
+    }
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
         cursor: pointer;
         color: #fff;
-    }
-    .error-message {
-        color: #ff3333;
-        font-size: 14px;
-        margin-top: 5px;
-    }
-    .php-errors {
-        background: rgba(255, 51, 51, 0.1);
-        border: 1px solid #ff3333;
-        padding: 10px;
-        margin-bottom: 20px;
-        color: #ff3333;
-        border-radius: 4px;
     }
     .game-options {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        margin-top: 10px;
+        gap: 1rem;
+        margin-top: 0.5rem;
     }
     .game-option {
         border: 2px solid #333;
         border-radius: 8px;
-        padding: 10px;
+        padding: 1rem;
         text-align: center;
         cursor: pointer;
         transition: all 0.3s ease;
+    }
+    .game-option:hover {
+        border-color: #00ff00;
+        transform: translateY(-2px);
     }
     .game-option.selected {
         border-color: #00ff00;
@@ -265,18 +264,57 @@ if (!empty($debug_log)) {
     }
     .game-option img {
         width: 100%;
-        max-width: 100px;
+        max-width: 80px;
         height: auto;
-        margin-bottom: 10px;
+        margin-bottom: 0.5rem;
     }
-    .game-option span {
-        display: block;
-        color: #fff;
+    .error-message {
+        background: rgba(255, 0, 0, 0.1);
+        border: 1px solid #ff3333;
+        color: #ff3333;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .success-message {
+        background: rgba(0, 255, 0, 0.1);
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .auth-btn {
+        width: 100%;
+        padding: 1rem;
+        background: #00ff00;
+        color: #000;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .auth-btn:hover {
+        background: #00cc00;
+        transform: translateY(-2px);
+    }
+    .auth-links {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+    .auth-links a {
+        color: #00ff00;
+        text-decoration: none;
+    }
+    .auth-links a:hover {
+        text-decoration: underline;
     }
     .password-strength {
         height: 4px;
         background: #333;
-        margin-top: 5px;
+        margin-top: 0.5rem;
         border-radius: 2px;
         overflow: hidden;
     }
@@ -288,33 +326,72 @@ if (!empty($debug_log)) {
     .strength-meter.weak { width: 33%; background: #ff3333; }
     .strength-meter.medium { width: 66%; background: #ffa500; }
     .strength-meter.strong { width: 100%; background: #00ff00; }
+    .phone-hint, .password-hint {
+        color: #999;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+    .welcome-bonus {
+        background: rgba(0, 255, 0, 0.1);
+        border: 1px solid #00ff00;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .welcome-bonus h3 {
+        color: #00ff00;
+        margin-bottom: 0.5rem;
+    }
+    .welcome-bonus p {
+        color: #fff;
+        margin: 0;
+    }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <h1 class="auth-title">Create Account</h1>
+        <h1 class="auth-title">Join KGX Esports</h1>
         
-        <?php if(!empty($errors)): ?>
-            <div class="php-errors">
-                <?php foreach($errors as $error): ?>
-                    <div><?php echo htmlspecialchars($error); ?></div>
-                <?php endforeach; ?>
-            </div>
+        <div class="welcome-bonus">
+            <h3>Welcome Bonus!</h3>
+            <p>Get 100 coins and 1 ticket when you join</p>
+        </div>
+        
+        <?php if($error): ?>
+            <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
         
-        <form class="auth-form" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
-            <!-- Step 1: Username & Email -->
+        <?php if($success): ?>
+            <div class="success-message"><?php echo htmlspecialchars($success); ?></div>
+        <?php endif; ?>
+        
+        <form class="auth-form" method="POST" action="" novalidate>
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars($username); ?>">
+                <input type="text" id="username" name="username" class="form-control" required 
+                       value="<?php echo htmlspecialchars($username); ?>"
+                       pattern="[a-zA-Z0-9_]+" 
+                       minlength="3" 
+                       maxlength="20"
+                       title="Username can only contain letters, numbers, and underscores">
+                <small class="phone-hint">3-20 characters, letters, numbers, and underscores only</small>
             </div>
             
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($email); ?>">
+                <input type="email" id="email" name="email" class="form-control" required 
+                       value="<?php echo htmlspecialchars($email); ?>">
             </div>
             
-            <!-- Step 2: Game & Password -->
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" class="form-control" required>
+                <input type="hidden" id="full_phone" name="full_phone" value="<?php echo htmlspecialchars($phone); ?>">
+                <small class="phone-hint">Select country code and enter your phone number</small>
+                <div id="phone-error" class="error-message" style="display: none;"></div>
+            </div>
+            
             <div class="form-group">
                 <label>Select Your Main Game</label>
                 <div class="game-options">
@@ -341,44 +418,24 @@ if (!empty($debug_log)) {
             <div class="form-group">
                 <label for="password">Password</label>
                 <div class="password-toggle">
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password" class="form-control" required>
                     <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
                 </div>
                 <div class="password-strength">
                     <div class="strength-meter"></div>
                 </div>
-                <small class="password-hint">Password must be at least 8 characters long</small>
+                <small class="password-hint">Minimum 8 characters with uppercase, lowercase, and numbers</small>
             </div>
             
             <div class="form-group">
                 <label for="confirm_password">Confirm Password</label>
                 <div class="password-toggle">
-                    <input type="password" id="confirm_password" name="confirm_password" required>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
                     <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
                 </div>
             </div>
             
-            <!-- Step 3: Phone -->
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" required>
-                <input type="hidden" id="full_phone" name="full_phone" value="<?php echo htmlspecialchars($phone); ?>">
-                <small class="phone-hint">Select country code and enter your phone number</small>
-            </div>
-            
-            <!-- Step 4: Terms & Submit -->
-            <div class="checkbox-group">
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" id="terms" name="terms" required>
-                    <label for="terms">I agree to the Terms & Conditions and Privacy Policy</label>
-                </div>
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" id="auto_login" name="auto_login" checked>
-                    <label for="auto_login">Sign me in automatically after registration</label>
-                </div>
-            </div>
-            
-            <button type="submit" name="submit_registration" class="auth-btn">Register</button>
+            <button type="submit" class="auth-btn">Create Account</button>
         </form>
         
         <div class="auth-links">
@@ -386,20 +443,29 @@ if (!empty($debug_log)) {
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize phone input
             const phoneInput = document.querySelector("#phone");
+            const phoneError = document.querySelector("#phone-error");
             const fullPhoneInput = document.querySelector("#full_phone");
+            
             const iti = window.intlTelInput(phoneInput, {
                 utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
                 separateDialCode: true,
-                initialCountry: "in",
-                preferredCountries: ['in', 'us', 'gb'],
-                formatOnDisplay: true
+                initialCountry: "auto",
+                geoIpLookup: function(callback) {
+                    fetch("https://ipapi.co/json")
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { callback(data.country_code); })
+                    .catch(function() { callback("in"); });
+                },
+                preferredCountries: ["in", "us", "gb"],
+                nationalMode: true,
+                formatOnDisplay: true,
+                autoPlaceholder: "polite"
             });
 
             // Set initial phone value if exists
@@ -432,7 +498,7 @@ if (!empty($debug_log)) {
                 if (password.length < 8) return 'weak';
                 const hasUpperCase = /[A-Z]/.test(password);
                 const hasLowerCase = /[a-z]/.test(password);
-                const hasNumbers = /\d/.test(password);
+                const hasNumbers = /[0-9]/.test(password);
                 const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
                 
                 const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecial]
@@ -457,15 +523,42 @@ if (!empty($debug_log)) {
                 });
             });
 
+            // Real-time validation
+            const usernameInput = document.getElementById('username');
+            const emailInput = document.getElementById('email');
+            const confirmPasswordInput = document.getElementById('confirm_password');
+
+            usernameInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '');
+            });
+
+            confirmPasswordInput.addEventListener('input', function() {
+                if (this.value !== passwordInput.value) {
+                    this.setCustomValidity('Passwords do not match');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+
             // Form submission
             document.querySelector('.auth-form').addEventListener('submit', function(e) {
                 const phoneNumber = phoneInput.value.trim();
                 if (phoneNumber && !iti.isValidNumber()) {
                     e.preventDefault();
-                    alert('Please enter a valid phone number');
+                    phoneError.style.display = 'block';
+                    phoneError.textContent = 'Please enter a valid phone number';
                     return;
                 }
                 fullPhoneInput.value = iti.getNumber();
+            });
+
+            // Show password requirements on focus
+            passwordInput.addEventListener('focus', function() {
+                document.querySelector('.password-hint').style.color = '#00ff00';
+            });
+
+            passwordInput.addEventListener('blur', function() {
+                document.querySelector('.password-hint').style.color = '#999';
             });
         });
     </script>
