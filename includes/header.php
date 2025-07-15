@@ -172,11 +172,7 @@ if (isset($_SESSION['user_id'])) {
       <ul class="navbar-list">
         <li><a href="/KGX/home.php" class="navbar-link">Home</a></li>
         <li class="dropdown">
-          <a href="#" class="navbar-link dropdown-toggle">Tournaments <ion-icon name="chevron-down-outline"></ion-icon></a>
-          <ul class="dropdown-menu">
-            <li><a href="/KGX/pages/tournaments/index.php" class="dropdown-item">All Tournaments</a></li>
-            <li><a href="/KGX/pages/tournaments/my-registrations.php" class="dropdown-item">My Registrations</a></li>
-          </ul>
+          <a href="/KGX/pages/tournaments/index.php" class="navbar-link">Tournaments</a>
         </li>
         
         <li><a href="/KGX/pages/matches/index.php" class="navbar-link">Matches</a></li>

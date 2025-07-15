@@ -52,7 +52,15 @@ function getRegistrationUrl($tournament) {
 <main>
     <section class="tournaments-section" style="padding: 120px 0 60px;">
         <div class="container">
-            <h2 class="section-title text-center mb-5">Active Tournaments</h2>
+            <div class="section-header d-flex justify-content-between align-items-center mb-5">
+                <h2 class="section-title">Active Tournaments</h2>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="my-registrations.php" class="btn btn-primary">
+                        <ion-icon name="trophy-outline" class="me-2"></ion-icon>
+                        My Registrations
+                    </a>
+                <?php endif; ?>
+            </div>
             
             <div class="row g-4">
                 <?php foreach ($tournaments as $tournament): ?>
