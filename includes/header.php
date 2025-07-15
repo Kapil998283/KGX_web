@@ -183,8 +183,8 @@ if (isset($_SESSION['user_id'])) {
             <li><a href="/KGX/pages/teams/yourteams.php" class="dropdown-item">Your Teams</a></li>
           </ul>
         </li>
-        <li><a href="./Shop/index.php" class="navbar-link">Pricing</a></li>
-        <li><a href="./pages/community.php" class="navbar-link">Community</a></li>
+        <li><a href="/KGX/pages/shop/index.php" class="navbar-link">Pricing</a></li>
+        <li><a href="/KGX/pages/community.php" class="navbar-link">Community</a></li>
       </ul>
       <ul class="nav-social-list">
         <li><a href="#" class="social-link"><ion-icon name="logo-facebook"></ion-icon></a></li>
@@ -266,15 +266,15 @@ if (isset($_SESSION['user_id'])) {
                     <a href="/KGX/pages/logout.php">Logout</a>
                 <?php else:
                 ?>
-                    <a href="/KGX/pages/login.php">Login</a>
-                    <a href="/KGX/pages/register.php">Register</a>
+                    <a href="/KGX/register/login.php">Login</a>
+                    <a href="/KGX/register/register.php">Register</a>
                 <?php endif; ?>
               </div>
             </div>
           </div>
         <?php else: ?>
           <!-- User is not logged in - show sign in button -->
-          <a href="/KGX/pages/login.php">
+          <a href="/KGX/register/login.php">
             <button id="btn-signup">
               <div class="icon-box">
                 <ion-icon name="log-in-outline"></ion-icon>

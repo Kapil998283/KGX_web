@@ -1,6 +1,12 @@
 <?php
-session_start();
-require_once '../config/database.php';
+// Only start session if one isn't already active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once '../includes/user-auth.php';
+
+// Get database connection
+$conn = getDbConnection();
 
 $error = '';
 $success = '';

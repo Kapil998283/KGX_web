@@ -213,7 +213,7 @@ function getRegistrationUrl($tournament) {
                                                 </button>
                                             <?php endif; ?>
                                         <?php else: ?>
-                                            <a href="../login.php" class="btn btn-secondary">
+                                            <a href="../../register/login.php" class="btn btn-secondary">
                                                 Login to Register
                                             </a>
                                         <?php endif; ?>
