@@ -159,407 +159,264 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join KGX Esports - Create Your Gaming Account</title>
-    
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="../favicon.svg" type="image/svg+xml">
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <title>Register - KGX Esports</title>
     <link rel="stylesheet" href="../assets/css/auth.css">
-    
-    <!-- International Telephone Input CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css">
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Ion Icons -->
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    
     <style>
-    .iti {
-        width: 100%;
-    }
-    .iti__flag {
-        background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/img/flags.png");
-    }
-    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-        .iti__flag {
-            background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/img/flags@2x.png");
+        .field-feedback {
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none;
+            padding: 5px 10px;
+            border-radius: 4px;
         }
-    }
-    .auth-container {
-        max-width: 500px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: rgba(0, 0, 0, 0.8);
-        border-radius: 15px;
-        box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
-    }
-    .auth-title {
-        color: #fff;
-        text-align: center;
-        margin-bottom: 2rem;
-        font-size: 2rem;
-        text-transform: uppercase;
-    }
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    .form-group label {
-        color: #fff;
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-    }
-    .form-control {
-        width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #333;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        transition: all 0.3s ease;
-    }
-    .form-control:focus {
-        border-color: #00ff00;
-        box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
-    }
-    .password-toggle {
-        position: relative;
-    }
-    .toggle-password {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
-        color: #fff;
-    }
-    .game-options {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-        margin-top: 0.5rem;
-    }
-    .game-option {
-        border: 2px solid #333;
-        border-radius: 8px;
-        padding: 1rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    .game-option:hover {
-        border-color: #00ff00;
-        transform: translateY(-2px);
-    }
-    .game-option.selected {
-        border-color: #00ff00;
-        background: rgba(0, 255, 0, 0.1);
-    }
-    .game-option img {
-        width: 100%;
-        max-width: 80px;
-        height: auto;
-        margin-bottom: 0.5rem;
-    }
-    .error-message {
-        background: rgba(255, 0, 0, 0.1);
-        border: 1px solid #ff3333;
-        color: #ff3333;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-    }
-    .success-message {
-        background: rgba(0, 255, 0, 0.1);
-        border: 1px solid #00ff00;
-        color: #00ff00;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-    }
-    .auth-btn {
-        width: 100%;
-        padding: 1rem;
-        background: #00ff00;
-        color: #000;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    .auth-btn:hover {
-        background: #00cc00;
-        transform: translateY(-2px);
-    }
-    .auth-links {
-        text-align: center;
-        margin-top: 1.5rem;
-    }
-    .auth-links a {
-        color: #00ff00;
-        text-decoration: none;
-    }
-    .auth-links a:hover {
-        text-decoration: underline;
-    }
-    .password-strength {
-        height: 4px;
-        background: #333;
-        margin-top: 0.5rem;
-        border-radius: 2px;
-        overflow: hidden;
-    }
-    .strength-meter {
-        height: 100%;
-        width: 0;
-        transition: all 0.3s ease;
-    }
-    .strength-meter.weak { width: 33%; background: #ff3333; }
-    .strength-meter.medium { width: 66%; background: #ffa500; }
-    .strength-meter.strong { width: 100%; background: #00ff00; }
-    .phone-hint, .password-hint {
-        color: #999;
-        font-size: 0.85rem;
-        margin-top: 0.5rem;
-    }
-    .welcome-bonus {
-        background: rgba(0, 255, 0, 0.1);
-        border: 1px solid #00ff00;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-    .welcome-bonus h3 {
-        color: #00ff00;
-        margin-bottom: 0.5rem;
-    }
-    .welcome-bonus p {
-        color: #fff;
-        margin: 0;
-    }
+        
+        .field-feedback.success {
+            display: block;
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .field-feedback.error {
+            display: block;
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-wrapper input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-wrapper input.validating {
+            border-color: #ffd700;
+        }
+        
+        .input-wrapper input.valid {
+            border-color: #28a745;
+        }
+        
+        .input-wrapper input.invalid {
+            border-color: #dc3545;
+        }
+        
+        .spinner {
+            display: none;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: translateY(-50%) rotate(0deg); }
+            100% { transform: translateY(-50%) rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <h1 class="auth-title">Join KGX Esports</h1>
-        
-        <div class="welcome-bonus">
-            <h3>Welcome Bonus!</h3>
-            <p>Get 100 coins and 1 ticket when you join</p>
-        </div>
-        
-        <?php if($error): ?>
-            <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
-        <?php endif; ?>
-        
-        <?php if($success): ?>
-            <div class="success-message"><?php echo htmlspecialchars($success); ?></div>
-        <?php endif; ?>
-        
-        <form class="auth-form" method="POST" action="" novalidate>
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" class="form-control" required 
-                       value="<?php echo htmlspecialchars($username); ?>"
-                       pattern="[a-zA-Z0-9_]+" 
-                       minlength="3" 
-                       maxlength="20"
-                       title="Username can only contain letters, numbers, and underscores">
-                <small class="phone-hint">3-20 characters, letters, numbers, and underscores only</small>
+        <div class="auth-box">
+            <div class="auth-header">
+                <h2>Create Account</h2>
+                <p>Join KGX Esports Community</p>
             </div>
             
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" class="form-control" required 
-                       value="<?php echo htmlspecialchars($email); ?>">
+            <div class="welcome-bonus">
+                <h3>Welcome Bonus!</h3>
+                <p>Get 100 coins + 1 ticket on signup</p>
             </div>
-            
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" class="form-control" required>
-                <input type="hidden" id="full_phone" name="full_phone" value="<?php echo htmlspecialchars($phone); ?>">
-                <small class="phone-hint">Select country code and enter your phone number</small>
-                <div id="phone-error" class="error-message" style="display: none;"></div>
-            </div>
-            
-            <div class="form-group">
-                <label>Select Your Main Game</label>
-                <div class="game-options">
-                    <div class="game-option <?php echo $main_game === 'PUBG' ? 'selected' : ''; ?>" data-game="PUBG">
-                        <img src="../assets/images/games/pubg.png" alt="PUBG">
-                        <span>PUBG</span>
-                    </div>
-                    <div class="game-option <?php echo $main_game === 'BGMI' ? 'selected' : ''; ?>" data-game="BGMI">
-                        <img src="../assets/images/games/bgmi.png" alt="BGMI">
-                        <span>BGMI</span>
-                    </div>
-                    <div class="game-option <?php echo $main_game === 'FREE FIRE' ? 'selected' : ''; ?>" data-game="FREE FIRE">
-                        <img src="../assets/images/games/freefire.png" alt="Free Fire">
-                        <span>Free Fire</span>
-                    </div>
-                    <div class="game-option <?php echo $main_game === 'COD' ? 'selected' : ''; ?>" data-game="COD">
-                        <img src="../assets/images/games/cod.jpg" alt="Call of Duty Mobile">
-                        <span>COD Mobile</span>
-                    </div>
+
+            <form id="registerForm" method="POST" action="process_register.php">
+                <div class="input-wrapper">
+                    <input type="text" name="username" id="username" placeholder="Username" required>
+                    <div class="spinner" id="usernameSpinner"></div>
+                    <div class="field-feedback" id="usernameFeedback"></div>
                 </div>
-                <input type="hidden" id="main_game" name="main_game" required value="<?php echo htmlspecialchars($main_game); ?>">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-toggle">
-                    <input type="password" id="password" name="password" class="form-control" required>
-                    <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
+
+                <div class="input-wrapper">
+                    <input type="email" name="email" id="email" placeholder="Email" required>
+                    <div class="spinner" id="emailSpinner"></div>
+                    <div class="field-feedback" id="emailFeedback"></div>
                 </div>
-                <div class="password-strength">
-                    <div class="strength-meter"></div>
+
+                <div class="input-wrapper">
+                    <input type="password" name="password" id="password" placeholder="Password" required>
+                    <div class="field-feedback" id="passwordFeedback"></div>
                 </div>
-                <small class="password-hint">Minimum 8 characters with uppercase, lowercase, and numbers</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="confirm_password">Confirm Password</label>
-                <div class="password-toggle">
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
-                    <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
+
+                <div class="input-wrapper">
+                    <input type="tel" name="phone" id="phone" placeholder="Phone Number" required>
+                    <div class="field-feedback" id="phoneFeedback"></div>
                 </div>
+
+                <div class="game-selection">
+                    <label>Select your main game:</label>
+                    <select name="main_game" required>
+                        <option value="pubg">PUBG</option>
+                        <option value="bgmi">BGMI</option>
+                        <option value="freefire">Free Fire</option>
+                        <option value="cod">Call of Duty Mobile</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="submitBtn">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="login.php">Login here</a></p>
             </div>
-            
-            <button type="submit" class="auth-btn">Create Account</button>
-        </form>
-        
-        <div class="auth-links">
-            <p>Already have an account? <a href="../pages/login.php">Sign in</a></p>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize phone input
-            const phoneInput = document.querySelector("#phone");
-            const phoneError = document.querySelector("#phone-error");
-            const fullPhoneInput = document.querySelector("#full_phone");
+        let usernameTimeout = null;
+        let emailTimeout = null;
+        const debounceTime = 500; // milliseconds
+
+        function validateField(field, value) {
+            const spinner = document.getElementById(`${field}Spinner`);
+            const feedback = document.getElementById(`${field}Feedback`);
+            const input = document.getElementById(field);
             
-            const iti = window.intlTelInput(phoneInput, {
-                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
-                separateDialCode: true,
-                initialCountry: "auto",
-                geoIpLookup: function(callback) {
-                    fetch("https://ipapi.co/json")
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) { callback(data.country_code); })
-                    .catch(function() { callback("in"); });
+            // Show spinner and set validating state
+            spinner.style.display = 'block';
+            input.classList.add('validating');
+            input.classList.remove('valid', 'invalid');
+            
+            fetch('check_availability.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                preferredCountries: ["in", "us", "gb"],
-                nationalMode: true,
-                formatOnDisplay: true,
-                autoPlaceholder: "polite"
-            });
-
-            // Set initial phone value if exists
-            if (fullPhoneInput.value) {
-                iti.setNumber(fullPhoneInput.value);
-            }
-
-            // Game selection
-            const gameOptions = document.querySelectorAll('.game-option');
-            const gameInput = document.getElementById('main_game');
-            
-            gameOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    gameOptions.forEach(opt => opt.classList.remove('selected'));
-                    this.classList.add('selected');
-                    gameInput.value = this.dataset.game;
-                });
-            });
-
-            // Password strength checker
-            const passwordInput = document.getElementById('password');
-            const strengthMeter = document.querySelector('.strength-meter');
-            
-            passwordInput.addEventListener('input', function() {
-                const strength = checkPasswordStrength(this.value);
-                updateStrengthMeter(strength);
-            });
-
-            function checkPasswordStrength(password) {
-                if (password.length < 8) return 'weak';
-                const hasUpperCase = /[A-Z]/.test(password);
-                const hasLowerCase = /[a-z]/.test(password);
-                const hasNumbers = /[0-9]/.test(password);
-                const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+                body: `field=${field}&value=${encodeURIComponent(value)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                spinner.style.display = 'none';
+                input.classList.remove('validating');
                 
-                const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecial]
-                    .filter(Boolean).length;
-                
-                if (strength < 2) return 'weak';
-                if (strength < 4) return 'medium';
-                return 'strong';
-            }
-
-            function updateStrengthMeter(strength) {
-                strengthMeter.className = 'strength-meter ' + strength;
-            }
-
-            // Toggle password visibility
-            document.querySelectorAll('.toggle-password').forEach(function(toggle) {
-                toggle.addEventListener('click', function() {
-                    const passwordInput = this.parentElement.querySelector('input');
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-                    this.name = type === 'password' ? 'eye-outline' : 'eye-off-outline';
-                });
-            });
-
-            // Real-time validation
-            const usernameInput = document.getElementById('username');
-            const emailInput = document.getElementById('email');
-            const confirmPasswordInput = document.getElementById('confirm_password');
-
-            usernameInput.addEventListener('input', function() {
-                this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '');
-            });
-
-            confirmPasswordInput.addEventListener('input', function() {
-                if (this.value !== passwordInput.value) {
-                    this.setCustomValidity('Passwords do not match');
+                if (data.error) {
+                    feedback.textContent = 'Error checking availability';
+                    feedback.className = 'field-feedback error';
+                    input.classList.add('invalid');
                 } else {
-                    this.setCustomValidity('');
+                    feedback.textContent = data.message;
+                    feedback.className = `field-feedback ${data.available ? 'success' : 'error'}`;
+                    input.classList.add(data.available ? 'valid' : 'invalid');
+                }
+                feedback.style.display = 'block';
+            })
+            .catch(error => {
+                spinner.style.display = 'none';
+                input.classList.remove('validating');
+                feedback.textContent = 'Error checking availability';
+                feedback.className = 'field-feedback error';
+                input.classList.add('invalid');
+            });
+        }
+
+        document.getElementById('username').addEventListener('input', (e) => {
+            const value = e.target.value.trim();
+            if (value.length < 3) {
+                document.getElementById('usernameFeedback').textContent = 'Username must be at least 3 characters';
+                document.getElementById('usernameFeedback').className = 'field-feedback error';
+                e.target.classList.add('invalid');
+                return;
+            }
+            
+            clearTimeout(usernameTimeout);
+            usernameTimeout = setTimeout(() => validateField('username', value), debounceTime);
+        });
+
+        document.getElementById('email').addEventListener('input', (e) => {
+            const value = e.target.value.trim();
+            if (!value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                document.getElementById('emailFeedback').textContent = 'Please enter a valid email address';
+                document.getElementById('emailFeedback').className = 'field-feedback error';
+                e.target.classList.add('invalid');
+                return;
+            }
+            
+            clearTimeout(emailTimeout);
+            emailTimeout = setTimeout(() => validateField('email', value), debounceTime);
+        });
+
+        // Password validation
+        document.getElementById('password').addEventListener('input', (e) => {
+            const value = e.target.value;
+            const feedback = document.getElementById('passwordFeedback');
+            const input = e.target;
+            
+            if (value.length < 8) {
+                feedback.textContent = 'Password must be at least 8 characters';
+                feedback.className = 'field-feedback error';
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+            } else if (!value.match(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/)) {
+                feedback.textContent = 'Password must contain both letters and numbers';
+                feedback.className = 'field-feedback error';
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+            } else {
+                feedback.textContent = 'Password is valid';
+                feedback.className = 'field-feedback success';
+                input.classList.add('valid');
+                input.classList.remove('invalid');
+            }
+            feedback.style.display = 'block';
+        });
+
+        // Phone number validation
+        document.getElementById('phone').addEventListener('input', (e) => {
+            const value = e.target.value.trim();
+            const feedback = document.getElementById('phoneFeedback');
+            const input = e.target;
+            
+            if (!value.match(/^\+?[\d\s-]{10,}$/)) {
+                feedback.textContent = 'Please enter a valid phone number';
+                feedback.className = 'field-feedback error';
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+            } else {
+                feedback.textContent = 'Phone number is valid';
+                feedback.className = 'field-feedback success';
+                input.classList.add('valid');
+                input.classList.remove('invalid');
+            }
+            feedback.style.display = 'block';
+        });
+
+        // Form submission
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
+            const inputs = e.target.querySelectorAll('input');
+            let hasInvalid = false;
+            
+            inputs.forEach(input => {
+                if (input.classList.contains('invalid')) {
+                    hasInvalid = true;
                 }
             });
-
-            // Form submission
-            document.querySelector('.auth-form').addEventListener('submit', function(e) {
-                const phoneNumber = phoneInput.value.trim();
-                if (phoneNumber && !iti.isValidNumber()) {
-                    e.preventDefault();
-                    phoneError.style.display = 'block';
-                    phoneError.textContent = 'Please enter a valid phone number';
-                    return;
-                }
-                fullPhoneInput.value = iti.getNumber();
-            });
-
-            // Show password requirements on focus
-            passwordInput.addEventListener('focus', function() {
-                document.querySelector('.password-hint').style.color = '#00ff00';
-            });
-
-            passwordInput.addEventListener('blur', function() {
-                document.querySelector('.password-hint').style.color = '#999';
-            });
+            
+            if (hasInvalid) {
+                e.preventDefault();
+                alert('Please fix the errors in the form before submitting.');
+            }
         });
     </script>
 </body>
