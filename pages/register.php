@@ -70,6 +70,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     if ($stmt->execute()) {
                         $user_id = $conn->lastInsertId();
                         
+                        // First, check if user has any existing games and set their is_primary to 0
+                        $sql = "UPDATE user_games SET is_primary = 0 WHERE user_id = :user_id";
+                        $stmt = $conn->prepare($sql);
+                        $stmt->bindParam(":user_id", $user_id);
+                        $stmt->execute();
+                        
                         // Add user's main game
                         $sql = "INSERT INTO user_games (user_id, game_name, is_primary) VALUES (:user_id, :game_name, 1)";
                         $stmt = $conn->prepare($sql);

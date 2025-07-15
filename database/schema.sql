@@ -803,31 +803,9 @@ END //
 
 DELIMITER ;
 
--- Add trigger to ensure only one primary game per user
-DELIMITER //
-CREATE TRIGGER before_user_games_insert 
-BEFORE INSERT ON user_games
-FOR EACH ROW
-BEGIN
-    IF NEW.is_primary = 1 THEN
-        UPDATE user_games 
-        SET is_primary = 0 
-        WHERE user_id = NEW.user_id;
-    END IF;
-END//
-
-CREATE TRIGGER before_user_games_update
-BEFORE UPDATE ON user_games
-FOR EACH ROW
-BEGIN
-    IF NEW.is_primary = 1 AND OLD.is_primary = 0 THEN
-        UPDATE user_games 
-        SET is_primary = 0 
-        WHERE user_id = NEW.user_id 
-        AND id != NEW.id;
-    END IF;
-END//
-DELIMITER ;
+-- Drop existing triggers if they exist
+DROP TRIGGER IF EXISTS before_user_games_insert;
+DROP TRIGGER IF EXISTS before_user_games_update;
 
 -- Drop existing streak tables if they exist (in reverse order of dependencies)
 DROP TABLE IF EXISTS streak_conversion_log;
