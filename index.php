@@ -56,9 +56,14 @@ require_once 'config/database.php';
 </head>
 <body>
     <div class="preloader">
-        <video id="preloader-video" autoplay muted>
-            <source src="assets/images/kgx_preloader.mp4" type="video/mp4">
-        </video>
+        <div class="preloader-content">
+            <div class="preloader-logo">KGX</div>
+            <div class="preloader-text">ESPORTS</div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <div class="loading-text">Loading...</div>
+        </div>
     </div>
 
     <script>

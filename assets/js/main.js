@@ -112,6 +112,40 @@ document.querySelectorAll(".winner-card").forEach((card) => {
   });
 });
 
+// Preloader
+document.addEventListener('DOMContentLoaded', () => {
+    const preloader = document.querySelector('.preloader');
+    
+    // Simulate loading progress (you can modify this based on actual loading needs)
+    let progress = 0;
+    const progressBar = document.querySelector('.loading-progress');
+    const loadingText = document.querySelector('.loading-text');
+    
+    const updateProgress = () => {
+        if (progress < 100) {
+            progress += Math.random() * 30;
+            if (progress > 100) progress = 100;
+            
+            progressBar.style.width = `${progress}%`;
+            loadingText.textContent = `Loading... ${Math.floor(progress)}%`;
+            
+            if (progress < 100) {
+                setTimeout(updateProgress, 200 + Math.random() * 500);
+            } else {
+                setTimeout(() => {
+                    preloader.classList.add('fade-out');
+                    setTimeout(() => {
+                        preloader.style.display = 'none';
+                    }, 500);
+                }, 500);
+            }
+        }
+    };
+    
+    // Start progress animation
+    setTimeout(updateProgress, 500);
+});
+
 document.addEventListener("DOMContentLoaded", function () {
   // Navbar Dropdowns - Keep this section as it handles navigation dropdowns
   const navbarDropdowns = document.querySelectorAll(".navbar .dropdown");
