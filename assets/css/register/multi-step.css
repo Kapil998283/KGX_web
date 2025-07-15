@@ -231,6 +231,11 @@
     color: #00ff55;
     font-size: 0.875rem;
     margin-top: 0.5rem;
+    padding: 10px;
+    background: rgba(0, 255, 85, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 85, 0.2);
+    display: none;
 }
 
 /* Loading Spinner */
@@ -381,4 +386,88 @@
     .review-item strong {
         width: 100%;
     }
+} 
+
+/* International Telephone Input Styles */
+.iti {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.iti__country-list {
+    background-color: rgba(30, 30, 30, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px;
+    max-height: 300px !important;
+}
+
+.iti__country {
+    padding: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: all 0.2s ease;
+}
+
+.iti__country:hover {
+    background-color: rgba(0, 255, 85, 0.1) !important;
+}
+
+.iti__country.iti__active {
+    background-color: rgba(0, 255, 85, 0.2) !important;
+}
+
+.iti__country-name {
+    color: var(--white) !important;
+    margin-left: 10px !important;
+}
+
+.iti__dial-code {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.iti__flag-container:hover .iti__selected-flag {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.iti__selected-flag {
+    background-color: transparent !important;
+    border-radius: 8px 0 0 8px;
+}
+
+/* Search within country list */
+.iti__search-input {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--white) !important;
+    border-radius: 4px;
+    padding: 8px !important;
+    margin: 8px !important;
+}
+
+.iti__search-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Scrollbar for country list */
+.iti__country-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.iti__country-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.iti__country-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.iti__country-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Phone input when country selected */
+.iti--separate-dial-code .iti__selected-dial-code {
+    color: var(--white) !important;
 } 

@@ -222,6 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                     <input type="tel" id="phone" name="phone" required>
                     <input type="hidden" id="full_phone" name="full_phone">
                     <div class="error-message"></div>
+                    <div class="success-message" style="display: none;"></div>
                 </div>
                 <div class="form-group">
                     <button type="button" class="btn btn-send-otp" id="sendOtp">Send OTP</button>
@@ -288,7 +289,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             let otpTimer;
             let isPhoneVerified = false;
             
-            // Initialize phone input
+            // Initialize phone input with improved options
             const phoneInput = document.querySelector("#phone");
             const fullPhoneInput = document.querySelector("#full_phone");
             const iti = window.intlTelInput(phoneInput, {
@@ -299,9 +300,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                     fetch("https://ipapi.co/json")
                     .then(res => res.json())
                     .then(data => callback(data.country_code))
-                    .catch(() => callback("us"));
+                    .catch(() => callback("in")); // Default to India if geolocation fails
+                },
+                // Enable search and dropdown
+                dropdownContainer: document.body,
+                formatOnDisplay: true,
+                autoPlaceholder: "aggressive",
+                preferredCountries: ['in', 'us', 'gb', 'ca', 'au'],
+                localizedCountries: { 'in': 'India', 'us': 'United States', 'gb': 'United Kingdom' },
+                customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
+                    return "Enter " + selectedCountryPlaceholder;
                 }
             });
+
+            // Add custom styling to the country dropdown
+            const countryList = document.querySelector('.iti__country-list');
+            if (countryList) {
+                countryList.style.maxHeight = '300px';
+                countryList.style.overflowY = 'auto';
+            }
 
             // AJAX validation for username
             const usernameInput = document.getElementById('username');
@@ -421,6 +438,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 }
 
                 const spinner = document.querySelector('.spinner');
+                const successMessage = phoneInput.parentElement.querySelector('.success-message');
                 spinner.style.display = 'inline-block';
                 sendOtpBtn.disabled = true;
 
@@ -436,9 +454,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                     if (data.success) {
                         otpSection.style.display = 'block';
                         startResendTimer();
-                        // For development only
-                        if (data.debug_otp) {
-                            console.log('Debug OTP:', data.debug_otp);
+                        
+                        // Show development mode message
+                        if (data.is_dev) {
+                            successMessage.textContent = data.message;
+                            successMessage.style.display = 'block';
+                            // Auto-fill OTP for development
+                            const otp = data.debug_otp.split('');
+                            otpInputs.forEach((input, index) => {
+                                input.value = otp[index];
+                            });
+                            verifyOtp(); // Auto-verify in dev mode
                         }
                     } else {
                         showError(phoneInput, data.error);

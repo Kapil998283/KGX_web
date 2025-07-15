@@ -47,8 +47,8 @@ switch($action) {
             exit;
         }
 
-        // Generate OTP
-        $otp = sprintf("%04d", rand(0, 9999));
+        // For development: Use a fixed OTP
+        $otp = '1234'; // Fixed test OTP
         
         // Store OTP in session with timestamp
         $_SESSION['registration_otp'] = [
@@ -58,12 +58,12 @@ switch($action) {
             'attempts' => 0
         ];
 
-        // TODO: Integrate with actual SMS service
-        // For now, just return success
+        // Return success with the test OTP
         echo json_encode([
             'success' => true,
-            'message' => 'OTP sent successfully',
-            'debug_otp' => $otp // Remove this in production
+            'message' => '[DEVELOPMENT MODE] Your OTP is: 1234',
+            'debug_otp' => $otp,
+            'is_dev' => true
         ]);
         break;
 
