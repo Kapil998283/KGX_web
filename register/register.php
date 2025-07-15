@@ -9,6 +9,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Initialize error array
+$errors = [];
 $debug_log = [];
 
 // Get database connection
@@ -20,8 +21,8 @@ try {
     }
     $debug_log[] = "Database connection successful";
 } catch (Exception $e) {
+    $errors[] = "Database Error: " . $e->getMessage();
     $debug_log[] = "Database Error: " . $e->getMessage();
-    die("Database connection failed: " . $e->getMessage());
 }
 
 // Check if user is already logged in
@@ -45,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
     $debug_log[] = "Form data received: Username: $username, Email: $email, Game: $main_game, Phone: $phone";
     
     // Validate inputs
-    $errors = [];
     if (empty($username)) $errors[] = "Username is required";
     if (empty($email)) $errors[] = "Email is required";
     if (empty($password)) $errors[] = "Password is required";
@@ -100,31 +100,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, phone, created_at) VALUES (?, ?, ?, 'user', ?, NOW())");
             
             if (!$stmt->execute([$username, $email, $hashed_password, $phone])) {
-                throw new Exception("Failed to create user account: " . implode(", ", $stmt->errorInfo()));
+                $error_info = $stmt->errorInfo();
+                throw new Exception("Failed to create user account: " . $error_info[2]);
             }
             $debug_log[] = "User inserted successfully";
             
             $user_id = $conn->lastInsertId();
+            if (!$user_id) {
+                throw new Exception("Failed to get new user ID");
+            }
             $debug_log[] = "Got user ID: " . $user_id;
             
             // Add user's main game
             $stmt = $conn->prepare("INSERT INTO user_games (user_id, game_name, is_primary) VALUES (?, ?, 1)");
             if (!$stmt->execute([$user_id, $main_game])) {
-                throw new Exception("Failed to set main game: " . implode(", ", $stmt->errorInfo()));
+                $error_info = $stmt->errorInfo();
+                throw new Exception("Failed to set main game: " . $error_info[2]);
             }
             $debug_log[] = "Main game set successfully";
             
             // Give new user 100 coins
             $stmt = $conn->prepare("INSERT INTO user_coins (user_id, coins) VALUES (?, 100)");
             if (!$stmt->execute([$user_id])) {
-                throw new Exception("Failed to set initial coins: " . implode(", ", $stmt->errorInfo()));
+                $error_info = $stmt->errorInfo();
+                throw new Exception("Failed to set initial coins: " . $error_info[2]);
             }
             $debug_log[] = "Initial coins set successfully";
             
             // Give new user 1 ticket
             $stmt = $conn->prepare("INSERT INTO user_tickets (user_id, tickets) VALUES (?, 1)");
             if (!$stmt->execute([$user_id])) {
-                throw new Exception("Failed to set initial tickets: " . implode(", ", $stmt->errorInfo()));
+                $error_info = $stmt->errorInfo();
+                throw new Exception("Failed to set initial tickets: " . $error_info[2]);
             }
             $debug_log[] = "Initial tickets set successfully";
             
@@ -179,7 +186,7 @@ if (!empty($debug_log)) {
     
     <!-- CSS -->
     <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/register/multi-step.css">
+    <link rel="stylesheet" href="../assets/css/auth.css">
     
     <!-- International Telephone Input CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css">
@@ -192,8 +199,8 @@ if (!empty($debug_log)) {
     <!-- Ion Icons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    
     <style>
-    /* Add these styles to your existing CSS */
     .checkbox-group {
         margin: 20px 0;
     }
@@ -225,11 +232,40 @@ if (!empty($debug_log)) {
     .checkbox-wrapper a:hover {
         text-decoration: underline;
     }
+
+    .error-message {
+        color: #ff3333;
+        font-size: 14px;
+        margin-top: 5px;
+        display: none;
+    }
+
+    .form-group.error .error-message {
+        display: block;
+    }
+
+    /* Display PHP errors at the top */
+    .php-errors {
+        background: rgba(255, 51, 51, 0.1);
+        border: 1px solid #ff3333;
+        padding: 10px;
+        margin-bottom: 20px;
+        color: #ff3333;
+        border-radius: 4px;
+    }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <form id="registrationForm" class="multi-step-form" method="POST" action="">
+        <?php if (!empty($errors)): ?>
+        <div class="php-errors">
+            <?php foreach ($errors as $error): ?>
+                <div><?php echo htmlspecialchars($error); ?></div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <form id="registrationForm" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
             <!-- Progress Bar -->
             <div class="progress-bar">
                 <div class="progress-step active" data-step="1"></div>
