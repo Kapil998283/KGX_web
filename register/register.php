@@ -1,11 +1,28 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once '../includes/auth.php';
 require_once '../includes/user-auth.php';
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Initialize error array
+$debug_log = [];
+
 // Get database connection
-$db = new Database();
-$conn = $db->connect();
+try {
+    $db = new Database();
+    $conn = $db->connect();
+    if (!$conn) {
+        throw new Exception("Database connection failed");
+    }
+    $debug_log[] = "Database connection successful";
+} catch (Exception $e) {
+    $debug_log[] = "Database Error: " . $e->getMessage();
+    die("Database connection failed: " . $e->getMessage());
+}
 
 // Check if user is already logged in
 if(isset($_SESSION['user_id'])) {
@@ -15,12 +32,17 @@ if(isset($_SESSION['user_id'])) {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])) {
+    $debug_log[] = "Form submitted";
+    
+    // Get form data
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $main_game = trim($_POST['main_game'] ?? '');
     $phone = trim($_POST['full_phone'] ?? '');
     $auto_login = isset($_POST['auto_login']) ? true : false;
+    
+    $debug_log[] = "Form data received: Username: $username, Email: $email, Game: $main_game, Phone: $phone";
     
     // Validate inputs
     $errors = [];
@@ -36,11 +58,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
         $errors[] = "Invalid email format";
     }
     
+    $debug_log[] = empty($errors) ? "Validation passed" : "Validation errors: " . implode(", ", $errors);
+    
     if (empty($errors)) {
         // Start transaction
-        $conn->beginTransaction();
-        
         try {
+            $conn->beginTransaction();
+            $debug_log[] = "Transaction started";
+            
             // Check if email exists
             $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
@@ -48,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             if ($stmt->rowCount() > 0) {
                 throw new Exception("Email already exists");
             }
+            $debug_log[] = "Email check passed";
             
             // Check if username exists
             $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
@@ -56,6 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             if ($stmt->rowCount() > 0) {
                 throw new Exception("Username already exists");
             }
+            $debug_log[] = "Username check passed";
 
             // Check if phone exists
             $stmt = $conn->prepare("SELECT id FROM users WHERE phone = ?");
@@ -64,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             if ($stmt->rowCount() > 0) {
                 throw new Exception("Phone number already exists");
             }
+            $debug_log[] = "Phone check passed";
             
             // Hash password
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -72,31 +100,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
             $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, phone, created_at) VALUES (?, ?, ?, 'user', ?, NOW())");
             
             if (!$stmt->execute([$username, $email, $hashed_password, $phone])) {
-                throw new Exception("Failed to create user account");
+                throw new Exception("Failed to create user account: " . implode(", ", $stmt->errorInfo()));
             }
+            $debug_log[] = "User inserted successfully";
             
             $user_id = $conn->lastInsertId();
+            $debug_log[] = "Got user ID: " . $user_id;
             
             // Add user's main game
             $stmt = $conn->prepare("INSERT INTO user_games (user_id, game_name, is_primary) VALUES (?, ?, 1)");
             if (!$stmt->execute([$user_id, $main_game])) {
-                throw new Exception("Failed to set main game");
+                throw new Exception("Failed to set main game: " . implode(", ", $stmt->errorInfo()));
             }
+            $debug_log[] = "Main game set successfully";
             
             // Give new user 100 coins
             $stmt = $conn->prepare("INSERT INTO user_coins (user_id, coins) VALUES (?, 100)");
             if (!$stmt->execute([$user_id])) {
-                throw new Exception("Failed to set initial coins");
+                throw new Exception("Failed to set initial coins: " . implode(", ", $stmt->errorInfo()));
             }
+            $debug_log[] = "Initial coins set successfully";
             
             // Give new user 1 ticket
             $stmt = $conn->prepare("INSERT INTO user_tickets (user_id, tickets) VALUES (?, 1)");
             if (!$stmt->execute([$user_id])) {
-                throw new Exception("Failed to set initial tickets");
+                throw new Exception("Failed to set initial tickets: " . implode(", ", $stmt->errorInfo()));
             }
+            $debug_log[] = "Initial tickets set successfully";
             
             // Commit transaction
             $conn->commit();
+            $debug_log[] = "Transaction committed successfully";
             
             if ($auto_login) {
                 // Log the user in automatically
@@ -105,20 +139,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 $_SESSION['email'] = $email;
                 $_SESSION['role'] = 'user';
                 
+                $debug_log[] = "Auto login successful";
                 // Redirect to home page
                 header("Location: ../home.php");
                 exit();
             } else {
                 // Redirect to login page with success message
                 $_SESSION['registration_success'] = "Registration successful! Please login to continue.";
+                $debug_log[] = "Registration successful, redirecting to login";
                 header("Location: ../pages/login.php");
                 exit();
             }
         } catch (Exception $e) {
             $conn->rollBack();
+            $debug_log[] = "Error occurred: " . $e->getMessage();
+            $debug_log[] = "Transaction rolled back";
             $errors[] = $e->getMessage();
         }
     }
+}
+
+// For debugging - add this at the bottom of the page
+if (!empty($debug_log)) {
+    echo "<!-- Debug Log:\n";
+    echo implode("\n", $debug_log);
+    echo "\n-->";
 }
 ?>
 
