@@ -271,7 +271,10 @@ CREATE TABLE IF NOT EXISTS tournament_player_history (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Trigger to create tournament history records
+DROP TRIGGER IF EXISTS after_tournament_registration;
+
 DELIMITER //
+
 CREATE TRIGGER after_tournament_registration
 AFTER INSERT ON tournament_registrations
 FOR EACH ROW
@@ -297,6 +300,7 @@ BEGIN
     WHERE tm.team_id = NEW.team_id
     AND tm.status = 'active';
 END //
+
 DELIMITER ;
 
 -- Tournament waitlist table
@@ -636,10 +640,6 @@ INSERT INTO video_categories (name, description) VALUES
 
 INSERT INTO profile_images (image_path, is_active, is_default) VALUES
 ('https://t3.ftcdn.net/jpg/09/68/64/82/360_F_968648260_97v6FNQWP3alhvyfLWtQTWGcrWZvAr1C.jpg', 1, 1);
-
--- Add position column to match_participants table if it doesn't exist
-ALTER TABLE match_participants
-ADD COLUMN position INT DEFAULT NULL;
 
 -- Create user_games table
 CREATE TABLE IF NOT EXISTS user_games (
