@@ -803,17 +803,6 @@ END //
 
 DELIMITER ;
 
--- Drop existing triggers if they exist
-DROP TRIGGER IF EXISTS before_user_games_insert;
-DROP TRIGGER IF EXISTS before_user_games_update;
-
--- Drop existing streak tables if they exist (in reverse order of dependencies)
-DROP TABLE IF EXISTS streak_conversion_log;
-DROP TABLE IF EXISTS user_streak_milestones;
-DROP TABLE IF EXISTS streak_milestones;
-DROP TABLE IF EXISTS user_streak_tasks;
-DROP TABLE IF EXISTS user_streaks;
-DROP TABLE IF EXISTS streak_tasks;
 
 -- Streak Tasks
 CREATE TABLE IF NOT EXISTS streak_tasks (
