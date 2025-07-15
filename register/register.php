@@ -367,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                 let isValid = true;
 
                 inputs.forEach(input => {
-                    if (!input.value) {
+                    if (!input.value && input.id !== 'full_phone') {  // Skip full_phone validation here
                         showError(input, 'This field is required');
                         isValid = false;
                     } else {
@@ -394,7 +394,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_registration'])
                                 }
                                 break;
                             case 'phone':
-                                fullPhoneInput.value = iti.getNumber();
+                                if (!iti.isValidNumber()) {
+                                    showError(input, 'Please enter a valid phone number');
+                                    isValid = false;
+                                } else {
+                                    fullPhoneInput.value = iti.getNumber();
+                                }
                                 break;
                         }
                     }
