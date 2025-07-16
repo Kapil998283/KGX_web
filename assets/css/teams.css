@@ -5,303 +5,300 @@
 
     @import url('root.css');
 
-    article {
-      background-color: var(--raisin-black-1);
-      padding-top: 90px;
-      /* Adjust bottom padding to account for bottom nav */
-      padding-bottom: calc(100px + 70px);
+    main {
       min-height: 100vh;
+      background-color: var(--raisin-black-1);
+      padding-top: var(--header-height); /* Use header height variable from root.css */
     }
-  
-  
-      /*-----------------------------------*\
-        #teams-create-request
-      \*-----------------------------------*/
-  
-      .teams-section {
-        padding: 2rem;
-        background-color: var(--raisin-black-2);
-        color: var(--white);
-        min-height: calc(100vh - 160px); /* Adjusted for top and bottom nav */
-        margin-bottom: 70px; /* Space for bottom nav */
-      }
-      
-      .section-tle {
-        font-size: 2.5rem;
-        margin-bottom: 2rem;
-        text-align: center;
-        font-weight: 700;
-        color: var(--white);
-        text-transform: uppercase;
-        letter-spacing: 2px;
-      }
-      
-      .search-wrapper {
-        position: relative;
-        max-width: 600px;
-        margin: 0 auto 3rem;
-      }
-      
-      .search-bar {
-        position: relative;
-        display: flex;
-        align-items: center;
-        background: linear-gradient(145deg, var(--raisin-black-2), var(--raisin-black-3));
-        border-radius: 12px;
-        padding: 0.5rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-      }
-      
-      .search-bar:focus-within {
-        box-shadow: 0 4px 25px rgba(255, 140, 0, 0.15);
-        border-color: var(--orange);
-        transform: translateY(-2px);
-      }
-      
-      .search-bar input {
-        flex: 1;
-        padding: 1rem 1.5rem;
-        background: transparent;
-        border: none;
-        color: var(--white);
-        font-size: 1rem;
-        outline: none;
-        transition: all 0.3s ease;
-      }
-      
-      .search-bar input::placeholder {
-        color: var(--light-gray);
-        opacity: 0.7;
-        transition: opacity 0.3s ease;
-      }
-      
-      .search-bar input:focus::placeholder {
-        opacity: 0.4;
-      }
-      
-      .search-btn {
-        background: var(--orange);
-        color: var(--white);
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        min-width: 100px;
-      }
-      
-      .search-btn:hover {
-        background: var(--xiketic);
-        transform: translateX(2px);
-        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.2);
-      }
-      
-      .search-btn:active {
-        transform: translateX(2px) scale(0.98);
-      }
-      
-      .search-btn i {
-        font-size: 1rem;
-        transition: transform 0.3s ease;
-      }
-      
-      .search-btn:hover i {
-        transform: scale(1.1);
-      }
-      
-      .team-cards-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 2rem;
-        padding: 1rem;
-        min-height: 200px;
-        position: relative;
-      }
 
-      .team-card h3 {
-        font-size: 1.2rem;
-        margin: 0.5rem 0;
-      }
-      
-      .team-card p {
-        font-size: 0.9rem;
-        margin: 0.25rem 0;
-        color: #ccc;
-      }
-      
+    .teams-section {
+      padding: 2rem;
+      background-color: var(--raisin-black-2);
+      color: var(--white);
+      position: relative;
+      min-height: calc(100vh - var(--header-height));
+    }
+
+    /* Container adjustments for bottom nav */
+    .container {
+      padding-bottom: 100px; /* Space for bottom nav */
+    }
+
+    .section-tle {
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .search-wrapper {
+      position: relative;
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+    
+    .search-bar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(145deg, var(--raisin-black-2), var(--raisin-black-3));
+      border-radius: 12px;
+      padding: 0.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .search-bar:focus-within {
+      box-shadow: 0 4px 25px rgba(255, 140, 0, 0.15);
+      border-color: var(--orange);
+      transform: translateY(-2px);
+    }
+    
+    .search-bar input {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      background: transparent;
+      border: none;
+      color: var(--white);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    
+    .search-bar input::placeholder {
+      color: var(--light-gray);
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
+    }
+    
+    .search-bar input:focus::placeholder {
+      opacity: 0.4;
+    }
+    
+    .search-btn {
+      background: var(--orange);
+      color: var(--white);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      min-width: 100px;
+    }
+    
+    .search-btn:hover {
+      background: var(--xiketic);
+      transform: translateX(2px);
+      box-shadow: 0 4px 15px rgba(255, 140, 0, 0.2);
+    }
+    
+    .search-btn:active {
+      transform: translateX(2px) scale(0.98);
+    }
+    
+    .search-btn i {
+      font-size: 1rem;
+      transition: transform 0.3s ease;
+    }
+    
+    .search-btn:hover i {
+      transform: scale(1.1);
+    }
+    
+    .team-cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .team-card h3 {
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+    
+    .team-card p {
+      font-size: 0.9rem;
+      margin: 0.25rem 0;
+      color: #ccc;
+    }
+    
   
-      .rc-btn {
-        margin-top: 1rem;
-        padding: 0.6rem 1.2rem;
-        background-color: #ff4c60;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        display: inline-block;
-        text-align: center;
-      }
-      
-      .rc-btn:hover {
-        background-color: #ff2a45;
-        transform: scale(1.05);
-      }
-      
+    .rc-btn {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background-color: #ff4c60;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      display: inline-block;
+      text-align: center;
+    }
+    
+    .rc-btn:hover {
+      background-color: #ff2a45;
+      transform: scale(1.05);
+    }
+    
   
       
      
       
       
-      .team-card {
-        background: linear-gradient(145deg, var(--raisin-black-2), var(--raisin-black-3));
-        border-radius: 16px;
-        padding: 2rem;
-        text-align: center;
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        animation: slideUp 0.4s ease-out;
-        animation-fill-mode: both;
-      }
-      
-      .team-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-        border-color: var(--orange);
-      }
-      
-      .team-logo {
-        width: 100px;
-        height: 100px;
-        min-width: 100px;
-        min-height: 100px;
-        border-radius: 50%;
-        object-fit: cover;
-        object-position: center;
-        margin-bottom: 1.5rem;
-        border: 3px solid var(--orange);
-        padding: 3px;
-        background-color: var(--raisin-black-1);
-        transition: all 0.3s ease;
-        overflow: hidden;
-      }
-      
-      .team-logo img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-      }
-      
-      .team-card:hover .team-logo {
-        transform: scale(1.1);
-        box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
-      }
-      
-      .team-card h3 {
-        font-size: 1.4rem;
-        margin: 0.75rem 0;
-        color: var(--white);
-        font-weight: 600;
-        letter-spacing: 1px;
-      }
-      
-      .team-card p {
-        font-size: 1rem;
-        margin: 0.5rem 0;
-        color: var(--light-gray);
-        line-height: 1.6;
-      }
-      
+    .team-card {
+      background: linear-gradient(145deg, var(--raisin-black-2), var(--raisin-black-3));
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.4s ease-out;
+      animation-fill-mode: both;
+    }
+    
+    .team-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      border-color: var(--orange);
+    }
+    
+    .team-logo {
+      width: 100px;
+      height: 100px;
+      min-width: 100px;
+      min-height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center;
+      margin-bottom: 1.5rem;
+      border: 3px solid var(--orange);
+      padding: 3px;
+      background-color: var(--raisin-black-1);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .team-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+    
+    .team-card:hover .team-logo {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
+    }
+    
+    .team-card h3 {
+      font-size: 1.4rem;
+      margin: 0.75rem 0;
+      color: var(--white);
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    
+    .team-card p {
+      font-size: 1rem;
+      margin: 0.5rem 0;
+      color: var(--light-gray);
+      line-height: 1.6;
+    }
+    
   
-      .rc-btn {
-        margin-top: 1.5rem;
-        padding: 0.8rem 2rem;
-        background-color: var(--orange);
-        color: var(--white);
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: inline-block;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        position: relative;
-        overflow: hidden;
-      }
-      
-      .rc-btn:hover {
-        background-color: var(--xiketic);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.2);
-      }
-      
-      .rc-btn::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 120%;
-        height: 120%;
-        background: rgba(255, 255, 255, 0.1);
-        transform: translate(-50%, -50%) scale(0);
-        border-radius: 50%;
-        transition: transform 0.5s ease;
-      }
-      
-      .rc-btn:hover::after {
-        transform: translate(-50%, -50%) scale(1);
-      }
-      
-  
-      
-      .btn.disabled {
-        background-color: #555;
-        cursor: not-allowed;
-      }
-      
-  
+    .rc-btn {
+      margin-top: 1.5rem;
+      padding: 0.8rem 2rem;
+      background-color: var(--orange);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-block;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .rc-btn:hover {
+      background-color: var(--xiketic);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 140, 0, 0.2);
+    }
+    
+    .rc-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120%;
+      height: 120%;
+      background: rgba(255, 255, 255, 0.1);
+      transform: translate(-50%, -50%) scale(0);
+      border-radius: 50%;
+      transition: transform 0.5s ease;
+    }
+    
+    .rc-btn:hover::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    
   
       
-      /* Create Team Box Style */
-      .create-box {
-        background-color: #23233b;
-        color: #aaa;
-      }
+    .btn.disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+    
+  
+  
       
-      .create-image {
-        width: 80px;
-        height: 80px;
-        background-color: #333;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1rem auto;
-      }
-      
-      .create-image i {
-        font-size: 1.5rem;
-        color: #ff4c60;
-      }
-      
+    /* Create Team Box Style */
+    .create-box {
+      background-color: #23233b;
+      color: #aaa;
+    }
+    
+    .create-image {
+      width: 80px;
+      height: 80px;
+      background-color: #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem auto;
+    }
+    
+    .create-image i {
+      font-size: 1.5rem;
+      color: #ff4c60;
+    }
+    
   
   /* Slide Modal Styles */
   .wallet-modal {
@@ -929,17 +926,16 @@
       
   /* Mobile and Tablet Adjustments */
   @media (max-width: 1024px) {
-    article {
-      padding-bottom: calc(100px + 85px); /* Extra space for bottom nav */
-    }
-
     .teams-section {
       padding: 1.5rem;
-      margin-bottom: 85px;
+    }
+
+    .container {
+      padding-bottom: 120px; /* Increased space for bottom nav on mobile */
     }
 
     .team-cards-container {
-      padding-bottom: 70px; /* Space for bottom nav */
+      gap: 1.5rem;
     }
 
     /* Adjust search bar for mobile */
@@ -955,12 +951,17 @@
 
   /* Specific Mobile Adjustments */
   @media (max-width: 768px) {
-    article {
-      padding-top: 70px;
-    }
-
     .teams-section {
       padding: 1rem;
+    }
+
+    .container {
+      padding-bottom: 100px;
+    }
+
+    .team-cards-container {
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
 
     .team-logo {

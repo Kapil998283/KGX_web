@@ -54,18 +54,17 @@ if (isset($_SESSION['success_message'])) {
 <link rel="stylesheet" href="../assets/css/teams.css">
 
 <main>
-    <article>
-        <!-- Team Section -->
-        <section class="teams-section">
-            <div class="container">
-                <?php if (isset($_SESSION['success_message'])): ?>
-                    <div class="alert alert-success">
-                        <?php 
-                        echo htmlspecialchars($_SESSION['success_message']); 
-                        unset($_SESSION['success_message']);
-                        ?>
-                    </div>
-                <?php endif; ?>
+    <!-- Team Section -->
+    <section class="teams-section">
+        <div class="container">
+            <?php if (isset($_SESSION['success_message'])): ?>
+                <div class="alert alert-success">
+                    <?php 
+                    echo htmlspecialchars($_SESSION['success_message']); 
+                    unset($_SESSION['success_message']);
+                    ?>
+                </div>
+            <?php endif; ?>
 
                 <?php if (isset($_SESSION['error_message'])): ?>
                     <div class="alert alert-danger">
@@ -147,8 +146,7 @@ if (isset($_SESSION['success_message'])) {
                 </div>
             </div>
         </section>
-    </article>
-</main>
+    </main>
 
 <!-- Add Teams JS -->
 <script src="../assets/js/teams.js"></script>
