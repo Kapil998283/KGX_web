@@ -54,17 +54,18 @@ if (isset($_SESSION['success_message'])) {
 <link rel="stylesheet" href="../assets/css/teams.css">
 
 <main>
-    <!-- Team Section -->
-    <section class="teams-section">
-        <div class="container">
-            <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="alert alert-success">
-                    <?php 
-                    echo htmlspecialchars($_SESSION['success_message']); 
-                    unset($_SESSION['success_message']);
-                    ?>
-                </div>
-            <?php endif; ?>
+    <article>
+        <!-- Team Section -->
+        <section class="teams-section">
+            <div class="container">
+                <?php if (isset($_SESSION['success_message'])): ?>
+                    <div class="alert alert-success">
+                        <?php 
+                        echo htmlspecialchars($_SESSION['success_message']); 
+                        unset($_SESSION['success_message']);
+                        ?>
+                    </div>
+                <?php endif; ?>
 
                 <?php if (isset($_SESSION['error_message'])): ?>
                     <div class="alert alert-danger">

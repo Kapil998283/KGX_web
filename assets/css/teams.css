@@ -19,7 +19,7 @@
       \*-----------------------------------*/
   
       .teams-section {
-        padding: 2rem;
+        padding: 3rem;
         background-color: var(--raisin-black-2);
         color: var(--white);
         min-height: calc(100vh - 160px); /* Adjusted for top and bottom nav */
