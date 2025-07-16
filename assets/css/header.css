@@ -408,6 +408,18 @@
   transform: translateY(-28px);
 }
 
+/* Desktop Profile Section */
+.desktop-only-profile {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 1023px) {
+  .desktop-only-profile {
+    display: none !important;
+  }
+}
+
 /* Mobile Styles Update */
 @media (max-width: 768px) {
   .header {
@@ -442,6 +454,11 @@
 
   .header-icons {
     gap: 10px;
+  }
+
+  /* Adjust spacing when profile is hidden */
+  .header-icons {
+    margin-right: 10px;
   }
 
   .ticket-container {
