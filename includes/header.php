@@ -177,13 +177,18 @@ if (isset($_SESSION['user_id'])) {
         </li>
         
         <li><a href="/KGX/pages/matches/index.php" class="navbar-link">Matches</a></li>
-        <li class="dropdown">
-          <a href="#" class="navbar-link dropdown-toggle">Teams <ion-icon name="chevron-down-outline"></ion-icon></a>
-          <ul class="dropdown-menu">
-            <li><a href="/KGX/pages/teams/index.php" class="dropdown-item">All Teams</a></li>
-            <li><a href="/KGX/pages/teams/yourteams.php" class="dropdown-item">Your Teams</a></li>
-          </ul>
-        </li>
+        <li>
+            <?php
+            // Check if user is in any team
+            $user_id = $_SESSION['user_id'];
+            $check_team = $db->prepare("SELECT COUNT(*) as count FROM team_members WHERE user_id = ?");
+            $check_team->execute([$user_id]);
+            $result = $check_team->fetch(PDO::FETCH_ASSOC);
+            
+            $teams_url = ($result['count'] > 0) ? '/KGX/pages/teams/yourteams.php' : '/KGX/pages/teams/index.php';
+            ?>
+            <a href="<?php echo $teams_url; ?>" class="navbar-link">Teams</a>
+          </li>
         <li><a href="/KGX/shop/index.php" class="navbar-link">Shop</a></li>
         <li><a href="/KGX/pages/community.php" class="navbar-link">Community</a></li>
       </ul>
