@@ -1,98 +1,101 @@
 <?php
-// Only start session if one isn't already active
+// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/auth.php';
+
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/auth.php';
 
-// Get database connection
-$conn = getDbConnection();
+// Initialize database connection
+$database = new Database();
+$db = $database->connect();
 
-// Get user's ticket count if logged in
+// Initialize variables
 $ticket_count = 0;
-if(isset($_SESSION['user_id'])) {
-    $user_id = $_SESSION['user_id'];
-    $sql = "SELECT tickets as total_tickets FROM user_tickets WHERE user_id = :user_id";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':user_id', $user_id);
-    $stmt->execute();
-    $ticket_data = $stmt->fetch(PDO::FETCH_ASSOC);
-    $ticket_count = $ticket_data['total_tickets'] ?? 0;
-    
-    // Get user's notification count
-    $notification_count = 0;
-    $notifications = [];
-    
-    // Check if notifications table exists
-    $table_check = $conn->query("SHOW TABLES LIKE 'notifications'");
-    if ($table_check->rowCount() > 0) {
-        // Get unread notification count
-        $notif_sql = "SELECT COUNT(*) as count FROM notifications 
-                     WHERE user_id = :user_id AND is_read = 0 AND deleted_at IS NULL";
-        $notif_stmt = $conn->prepare($notif_sql);
-        $notif_stmt->bindParam(':user_id', $user_id);
-        $notif_stmt->execute();
-        $notif_data = $notif_stmt->fetch(PDO::FETCH_ASSOC);
-        $notification_count = $notif_data['count'] ?? 0;
-        
-        // Get notifications (limit to 7 most recent)
-        $get_notifs_sql = "SELECT * FROM notifications 
-                          WHERE user_id = :user_id AND deleted_at IS NULL 
-                          ORDER BY created_at DESC LIMIT 7";
-        $get_notifs_stmt = $conn->prepare($get_notifs_sql);
-        $get_notifs_stmt->bindParam(':user_id', $user_id);
-        $get_notifs_stmt->execute();
-        $notifications = $get_notifs_stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-}
-
-// Fetch active tournaments for dropdown
-$tournaments_sql = "SELECT id, name FROM tournaments WHERE status = 'active' OR status = 'upcoming' ORDER BY playing_start_date DESC";
-$stmt = $conn->prepare($tournaments_sql);
-$stmt->execute();
-$tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// --- Determine Profile Image for Header ---
-$header_profile_image = './assets/images/guest-icon.png'; // Default Guest/Fallback Image Path
+$notification_count = 0;
+$notifications = [];
+$teams_url = '/KGX/pages/teams/index.php'; // Default URL
+$header_profile_image = '/KGX/assets/images/guest-icon.png'; // Default profile image
 
 // Check if user is logged in
 if (isset($_SESSION['user_id'])) {
-    $header_user_id = $_SESSION['user_id'];
-    $header_user_specific_image = null;
-
-    // 1. Check user's specific setting
-    $sql_header_user = "SELECT profile_image FROM users WHERE id = :user_id";
-    $stmt_header_user = $conn->prepare($sql_header_user);
-    $stmt_header_user->bindParam(':user_id', $header_user_id);
-    $stmt_header_user->execute();
-    $user_data_header = $stmt_header_user->fetch(PDO::FETCH_ASSOC);
+    $user_id = $_SESSION['user_id'];
     
-    if ($user_data_header && !empty($user_data_header['profile_image'])) {
-        $header_user_specific_image = $user_data_header['profile_image'];
+    // Check user's team status
+    $check_team = $db->prepare("SELECT COUNT(*) as count FROM team_members WHERE user_id = ?");
+    $check_team->execute([$user_id]);
+    $result = $check_team->fetch(PDO::FETCH_ASSOC);
+    
+    if ($result['count'] > 0) {
+        $teams_url = '/KGX/pages/teams/yourteams.php';
     }
 
-    if ($header_user_specific_image) {
-        $header_profile_image = $header_user_specific_image;
-    } else {
-        // 2. Check for admin-defined default image
-        $sql_header_default = "SELECT image_path FROM profile_images WHERE is_default = 1 AND is_active = 1 LIMIT 1";
-        $stmt_header_default = $conn->prepare($sql_header_default);
-        $stmt_header_default->execute();
-        $default_image_data_header = $stmt_header_default->fetch(PDO::FETCH_ASSOC);
-        
-        if ($default_image_data_header) {
-            $header_profile_image = $default_image_data_header['image_path'];
+    // Get user's ticket count
+    try {
+        $sql = "SELECT tickets as total_tickets FROM user_tickets WHERE user_id = :user_id";
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':user_id', $user_id);
+        $stmt->execute();
+        $ticket_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $ticket_count = $ticket_data['total_tickets'] ?? 0;
+    } catch (PDOException $e) {
+        error_log("Error fetching tickets: " . $e->getMessage());
+    }
+
+    // Get user's notification count and notifications
+    try {
+        // Check if notifications table exists
+        $table_check = $db->query("SHOW TABLES LIKE 'notifications'");
+        if ($table_check->rowCount() > 0) {
+            // Get unread notification count
+            $notif_sql = "SELECT COUNT(*) as count FROM notifications 
+                         WHERE user_id = :user_id AND is_read = 0 AND deleted_at IS NULL";
+            $notif_stmt = $db->prepare($notif_sql);
+            $notif_stmt->bindParam(':user_id', $user_id);
+            $notif_stmt->execute();
+            $notif_data = $notif_stmt->fetch(PDO::FETCH_ASSOC);
+            $notification_count = $notif_data['count'] ?? 0;
+            
+            // Get notifications (limit to 7 most recent)
+            $get_notifs_sql = "SELECT * FROM notifications 
+                              WHERE user_id = :user_id AND deleted_at IS NULL 
+                              ORDER BY created_at DESC LIMIT 7";
+            $get_notifs_stmt = $db->prepare($get_notifs_sql);
+            $get_notifs_stmt->bindParam(':user_id', $user_id);
+            $get_notifs_stmt->execute();
+            $notifications = $get_notifs_stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+    } catch (PDOException $e) {
+        error_log("Error fetching notifications: " . $e->getMessage());
     }
 
-    // Adjust path for local assets if needed (prepend .)
-    if (strpos($header_profile_image, '/assets/') === 0 && strpos($header_profile_image, '.') !== 0) {
-        $header_profile_image = '.' . $header_profile_image;
+    // Get user's profile image
+    try {
+        // Check user's specific setting
+        $sql_header_user = "SELECT profile_image FROM users WHERE id = :user_id";
+        $stmt_header_user = $db->prepare($sql_header_user);
+        $stmt_header_user->bindParam(':user_id', $user_id);
+        $stmt_header_user->execute();
+        $user_data_header = $stmt_header_user->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user_data_header && !empty($user_data_header['profile_image'])) {
+            $header_profile_image = $user_data_header['profile_image'];
+        } else {
+            // Check for admin-defined default image
+            $sql_header_default = "SELECT image_path FROM profile_images WHERE is_default = 1 AND is_active = 1 LIMIT 1";
+            $stmt_header_default = $db->prepare($sql_header_default);
+            $stmt_header_default->execute();
+            $default_image_data_header = $stmt_header_default->fetch(PDO::FETCH_ASSOC);
+            
+            if ($default_image_data_header) {
+                $header_profile_image = $default_image_data_header['image_path'];
+            }
+        }
+    } catch (PDOException $e) {
+        error_log("Error fetching profile image: " . $e->getMessage());
     }
 }
-
-// --- End Determine Profile Image for Header ---
 ?>
 
 
@@ -178,17 +181,8 @@ if (isset($_SESSION['user_id'])) {
         
         <li><a href="/KGX/pages/matches/index.php" class="navbar-link">Matches</a></li>
         <li>
-            <?php
-            // Check if user is in any team
-            $user_id = $_SESSION['user_id'];
-            $check_team = $db->prepare("SELECT COUNT(*) as count FROM team_members WHERE user_id = ?");
-            $check_team->execute([$user_id]);
-            $result = $check_team->fetch(PDO::FETCH_ASSOC);
-            
-            $teams_url = ($result['count'] > 0) ? '/KGX/pages/teams/yourteams.php' : '/KGX/pages/teams/index.php';
-            ?>
-            <a href="<?php echo $teams_url; ?>" class="navbar-link">Teams</a>
-          </li>
+          <a href="<?php echo $teams_url; ?>" class="navbar-link">Teams</a>
+        </li>
         <li><a href="/KGX/shop/index.php" class="navbar-link">Shop</a></li>
         <li><a href="/KGX/pages/community.php" class="navbar-link">Community</a></li>
       </ul>
