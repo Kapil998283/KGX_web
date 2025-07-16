@@ -1,0 +1,54 @@
+/*-----------------------------------*\
+  #ROOT CSS VARIABLES
+\*-----------------------------------*/
+
+:root {
+  /* Colors */
+  --raisin-black-1: hsl(240, 14%, 7%);
+  --raisin-black-2: hsl(240, 12%, 12%);
+  --raisin-black-3: hsl(240, 10%, 18%);
+  --eerie-black: hsl(240, 20%, 5%);
+  --light-gray: hsl(0, 0%, 90%);
+  --platinum: hsl(0, 0%, 97%);
+  --xiketic: hsl(140, 100%, 20%);
+  --orange: hsla(140, 100%, 50%, 0.985);
+  --white: hsl(0, 0%, 100%);
+  --onyx: hsl(240, 10%, 22%);
+
+  /* Typography */
+  --ff-refault: "Refault", Georgia;
+  --ff-oswald: 'Oswald', sans-serif;
+  --ff-poppins: 'Poppins', sans-serif;
+
+  /* Font Sizes */
+  --fs-1: 54px;
+  --fs-2: 34px;
+  --fs-3: 30px;
+  --fs-4: 26px;
+  --fs-5: 22px;
+  --fs-6: 20px;
+  --fs-7: 18px;
+  --fs-8: 15px;
+  --fs-9: 14px;
+  --fs-10: 13px;
+  --fs-11: 12px;
+
+  /* Font Weights */
+  --fw-400: 400;
+  --fw-500: 500;
+  --fw-700: 700;
+
+  /* Transitions */
+  --transition-1: 0.15s ease-in-out;
+  --transition-2: 0.15s ease-in;
+  --transition-3: 0.25s ease-out;
+
+  /* Spacing */
+  --section-padding: 60px;
+
+  /* Clip Paths */
+  --polygon-1: polygon(90% 0, 100% 34%, 100% 100%, 10% 100%, 0 66%, 0 0);
+  --polygon-2: polygon(0 0, 100% 0%, 82% 100%, 0% 100%);
+  --polygon-3: polygon(0 0, 100% 0%, 100% 100%, 18% 100%);
+  --polygon-4: polygon(96% 0, 100% 36%, 100% 100%, 4% 100%, 0 66%, 0 0);
+} 

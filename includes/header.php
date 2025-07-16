@@ -113,7 +113,10 @@ if (isset($_SESSION['user_id'])) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 
   <!-- custom css link -->
-  <link rel="stylesheet" href="/KGX/assets/css/style.css">
+  <link rel="stylesheet" href="/KGX/assets/css/root.css">
+  <link rel="stylesheet" href="/KGX/assets/css/header.css">
+  <link rel="stylesheet" href="/KGX/assets/css/home.css">
+  <link rel="stylesheet" href="/KGX/assets/css/footer.css">
   <link rel="stylesheet" href="/KGX/assets/css/auth.css">
 
   <!-- google font link -->
