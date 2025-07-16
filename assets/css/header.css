@@ -484,4 +484,121 @@
   .navbar-link {
     padding-block: 45px;
   }
+}
+
+/* Bottom Navigation Bar Styles */
+.bottom-nav {
+  display: none; /* Hidden by default */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--raisin-black-1);
+  padding: 10px 20px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--white);
+  text-decoration: none;
+  padding: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.bottom-nav-item ion-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+.bottom-nav-item span {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Home button special styling */
+.bottom-nav-item.home-btn {
+  transform: translateY(-25px);
+  background: var(--orange);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+}
+
+.bottom-nav-item.home-btn ion-icon {
+  font-size: 30px;
+  margin: 0;
+}
+
+.bottom-nav-item.home-btn span {
+  display: none;
+}
+
+/* Active state for nav items */
+.bottom-nav-item:hover,
+.bottom-nav-item.active {
+  color: var(--orange);
+}
+
+.bottom-nav-item.home-btn:hover {
+  color: var(--white);
+  transform: translateY(-28px);
+}
+
+/* Mobile Styles Update */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex;
+  }
+
+  .navbar {
+    display: none; /* Hide the original navbar on mobile */
+  }
+
+  .nav-open-btn {
+    display: none; /* Hide the menu button */
+  }
+
+  .header {
+    padding: 15px 0;
+  }
+
+  .header .container {
+    padding: 0 15px;
+  }
+
+  /* Adjust logo position */
+  .logo img {
+    height: 40px;
+  }
+
+  /* Adjust header actions for mobile */
+  .header-icons {
+    gap: 10px;
+  }
+
+  .icon-button {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+  }
+
+  /* Add padding to main content to account for bottom nav */
+  main {
+    padding-bottom: 85px;
+  }
 } 

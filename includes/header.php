@@ -197,16 +197,13 @@ if (isset($_SESSION['user_id'])) {
     
     <div class="header-actions">
         <?php if(isset($_SESSION['user_id'])): ?>
-          <!-- User is logged in - show ticket, notification, and profile options -->
+          <!-- User is logged in - show ticket and notification only -->
           <div class="header-icons">
-            <!-- ticket Section (Dropdown + Tickets) -->
-            <div class="ticket-container dropdown">
-              <!-- ticket Button -->
+            <!-- ticket Section -->
+            <div class="ticket-container">
               <button class="icon-button header-action-btn" id="ticket-btn">
                 <ion-icon name="wallet-outline"></ion-icon>
               </button>
-
-              <!-- Ticket Amount Display -->
               <span class="ticket-text"><?php echo $ticket_count; ?></span>
               <span class="ticket-text" id="ticket-label"> Tickets</span>
 
@@ -220,7 +217,6 @@ if (isset($_SESSION['user_id'])) {
 
             <!-- Notifications -->
             <div class="dropdown notification-container">
-              <!-- Notification Button -->
               <button class="icon-button header-action-btn" id="notif-btn">
                 <ion-icon name="notifications-outline"></ion-icon>
                 <?php if ($notification_count > 0): ?>
@@ -228,7 +224,7 @@ if (isset($_SESSION['user_id'])) {
                 <?php endif; ?>
               </button>
 
-              <!-- Dropdown Content -->
+              <!-- Notification Dropdown Content -->
               <div class="dropdown-content" id="notif-dropdown">
                 <?php if (empty($notifications)): ?>
                   <div class="no-notifications">No notifications yet</div>
@@ -284,6 +280,37 @@ if (isset($_SESSION['user_id'])) {
           </a>
         <?php endif; ?>
     </div>
+
+    <!-- Bottom Navigation Bar for Mobile -->
+    <nav class="bottom-nav">
+      <a href="/KGX/pages/tournaments/index.php" class="bottom-nav-item">
+        <ion-icon name="trophy-outline"></ion-icon>
+        <span>Tournaments</span>
+      </a>
+      <a href="/KGX/pages/matches/index.php" class="bottom-nav-item">
+        <ion-icon name="game-controller-outline"></ion-icon>
+        <span>Matches</span>
+      </a>
+      <a href="/KGX/home.php" class="bottom-nav-item home-btn">
+        <ion-icon name="home"></ion-icon>
+        <span>Home</span>
+      </a>
+      <a href="<?php echo $teams_url; ?>" class="bottom-nav-item">
+        <ion-icon name="people-outline"></ion-icon>
+        <span>Teams</span>
+      </a>
+      <?php if(isset($_SESSION['user_id'])): ?>
+        <a href="/KGX/pages/dashboard/dashboard.php" class="bottom-nav-item">
+          <ion-icon name="person-outline"></ion-icon>
+          <span>Profile</span>
+        </a>
+      <?php else: ?>
+        <a href="/KGX/register/login.php" class="bottom-nav-item">
+          <ion-icon name="log-in-outline"></ion-icon>
+          <span>Login</span>
+        </a>
+      <?php endif; ?>
+    </nav>
   </div>
 </header>
 
