@@ -147,7 +147,8 @@ if (isset($_SESSION['success_message'])) {
                 </div>
             </div>
         </section>
-    </main>
+    </article>
+</main>
 
 <!-- Add Teams JS -->
 <script src="../assets/js/teams.js"></script>
