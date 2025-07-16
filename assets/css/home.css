@@ -11,7 +11,7 @@
   background-position: center;
   margin-top: 90px;
   padding: var(--section-padding) 0;
-  height: 100vh;
+  height: calc(100vh - 90px); /* Adjusted to account for bottom nav */
   max-height: 1000px;
   display: flex;
   justify-content: center;
@@ -609,5 +609,33 @@
 
   .about {
     padding-right: 150px;
+  }
+} 
+
+/* Mobile and Tablet Adjustments for Bottom Nav */
+@media (max-width: 1024px) {
+  /* Add padding to bottom of main sections to prevent overlap with bottom nav */
+  .games,
+  .about,
+  .tournament {
+    padding-bottom: calc(var(--section-padding) + 85px);
+  }
+
+  /* Adjust section wrapper padding */
+  .section-wrapper {
+    padding-bottom: 85px;
+  }
+
+  /* Ensure content doesn't get hidden behind bottom nav */
+  .games-list {
+    margin-bottom: 20px;
+  }
+}
+
+/* Specific Mobile Adjustments */
+@media (max-width: 768px) {
+  .hero {
+    height: calc(100vh - 140px); /* Additional adjustment for mobile */
+    margin-bottom: 20px;
   }
 } 

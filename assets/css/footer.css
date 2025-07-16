@@ -223,17 +223,18 @@
   margin-inline: auto;
 }
 
-/* Go to Top Button */
+/* Go to Top Button - Adjusted for Bottom Nav */
 .go-top {
   --polygon-1: polygon(70% 0, 100% 30%, 100% 100%, 30% 100%, 0 70%, 0 0);
   position: fixed;
-  bottom: 20px;
+  bottom: 100px; /* Adjusted to be above bottom nav */
   right: 20px;
   padding: 15px;
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
   transition: var(--transition-1);
+  z-index: 999;
 }
 
 .go-top.active {
@@ -409,5 +410,39 @@
 
   .footer-menu-list {
     justify-content: flex-end;
+  }
+}
+
+/* Mobile and Tablet Adjustments */
+@media (max-width: 1024px) {
+  .footer-top {
+    padding-bottom: calc(var(--section-padding) + 70px);
+  }
+
+  .community {
+    padding-bottom: 180px; /* Increased padding for bottom nav */
+  }
+
+  /* Adjust go-top button position */
+  .go-top {
+    bottom: 90px;
+  }
+
+  /* Hide go-top button when very close to footer */
+  .go-top.near-footer {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Desktop Styles - Reset Bottom Nav Adjustments */
+@media (min-width: 1025px) {
+  .go-top {
+    bottom: 20px;
+  }
+
+  .footer-top,
+  .community {
+    padding-bottom: var(--section-padding);
   }
 } 
