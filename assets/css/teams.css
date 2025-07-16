@@ -3,10 +3,14 @@
       #Team
     \*-----------------------------------*/
 
-    article{
-      background-color: black;
-      padding-top: 100px;
-      padding-bottom: 100px;
+    @import url('root.css');
+
+    article {
+      background-color: var(--raisin-black-1);
+      padding-top: 90px;
+      /* Adjust bottom padding to account for bottom nav */
+      padding-bottom: calc(100px + 70px);
+      min-height: 100vh;
     }
   
   
@@ -15,10 +19,11 @@
       \*-----------------------------------*/
   
       .teams-section {
-        padding: 3rem;
+        padding: 2rem;
         background-color: var(--raisin-black-2);
         color: var(--white);
-        min-height: 100vh;
+        min-height: calc(100vh - 160px); /* Adjusted for top and bottom nav */
+        margin-bottom: 70px; /* Space for bottom nav */
       }
       
       .section-tle {
@@ -920,5 +925,62 @@
 
   .loading.pulse {
     animation: pulse 1.5s ease-in-out infinite;
+  }
+      
+  /* Mobile and Tablet Adjustments */
+  @media (max-width: 1024px) {
+    article {
+      padding-bottom: calc(100px + 85px); /* Extra space for bottom nav */
+    }
+
+    .teams-section {
+      padding: 1.5rem;
+      margin-bottom: 85px;
+    }
+
+    .team-cards-container {
+      padding-bottom: 70px; /* Space for bottom nav */
+    }
+
+    /* Adjust search bar for mobile */
+    .search-bar {
+      margin-bottom: 20px;
+    }
+
+    /* Adjust team cards for better mobile view */
+    .team-card {
+      padding: 1.5rem;
+    }
+  }
+
+  /* Specific Mobile Adjustments */
+  @media (max-width: 768px) {
+    article {
+      padding-top: 70px;
+    }
+
+    .teams-section {
+      padding: 1rem;
+    }
+
+    .team-logo {
+      width: 80px;
+      height: 80px;
+      min-width: 80px;
+      min-height: 80px;
+    }
+
+    .team-card h3 {
+      font-size: 1.2rem;
+    }
+
+    .team-card p {
+      font-size: 0.9rem;
+    }
+
+    .rc-btn {
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+    }
   }
       

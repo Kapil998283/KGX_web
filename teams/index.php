@@ -139,7 +139,7 @@ if (isset($_SESSION['success_message'])) {
                                         </form>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    <a href="../../pages/login.php" class="rc-btn">Login to Join</a>
+                                    <a href="../register/login.php" class="rc-btn">Login to Join</a>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
@@ -153,4 +153,5 @@ if (isset($_SESSION['success_message'])) {
 <!-- Add Teams JS -->
 <script src="../assets/js/teams.js"></script>
 
-<?php require_once '../includes/footer.php'; ?> 
+</body>
+</html> 
