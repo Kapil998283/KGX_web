@@ -182,61 +182,99 @@
   gap: 15px;
 }
 
-/* ticket Container Styles */
-.ticket-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 5px 12px;
-  border-radius: 20px;
-  margin-right: 5px;
+/* Common styles for dropdowns */
+.dropdown {
+  position: relative;
 }
 
-.ticket-text {
-  color: var(--white);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* Icon Button Styles */
-.icon-button {
-  background: rgba(255, 255, 255, 0.1);
+.icon-button, .profile-button {
+  background: transparent;
   border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  cursor: pointer;
+  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--white);
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  color: white;
+  padding: 8px;
+  transition: transform 0.2s ease-in-out;
 }
 
-.icon-button:hover {
-  background: rgba(221, 230, 224, 0.248);
-  color: #00ff55;
+.icon-button:hover, .profile-button:hover {
   transform: scale(1.1);
 }
 
-/* Notification Badge */
+/* Profile image button */
+.profile-button img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ticket & Bell Icon Styles */
+.icon-button {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hover effect - Green */
+.icon-button:hover {
+  background: rgba(221, 230, 224, 0.248);
+  color: #00ff55;
+}
+
+/* Profile Icon */
+.profile-button img {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Profile Hover Effect */
+.profile-button:hover img {
+  transform: scale(1.1);
+}
+
+/* Notification Container */
+.notification-container {
+  position: relative;
+}
+
+/* Notification Button */
+.icon-button {
+  position: relative;
+  font-size: 22px;
+  color: white;
+}
+
+/* Notification Badge (Red Circle) */
 .notif-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -3px;
+  right: -3px;
   background: red;
   color: white;
   font-size: 12px;
   font-weight: bold;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
+  padding: 3px 6px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 5px;
+  min-width: 18px;
+  min-height: 18px;
 }
 
 /* Notification Dropdown */
@@ -360,10 +398,9 @@
   display: none;
 }
 
-/* Active state for nav items */
-.bottom-nav-item:hover,
-.bottom-nav-item.active {
-  color: var(--orange);
+.logo-mobile-only img {
+  width: auto;
+  height: 45px;
 }
 
 .bottom-nav-item.home-btn:hover {
