@@ -10,6 +10,7 @@ $db = $database->connect();
 $stmt = $db->query("SELECT * FROM hero_settings WHERE is_active = 1 ORDER BY id DESC LIMIT 1");
 $hero_settings = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
+<link rel="stylesheet" href="/KGX/assets/css/home.css">
 
 <main>
     <article>

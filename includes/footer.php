@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="/KGX/assets/css/footer.css">
 
   <!-- 
     - #FOOTER

@@ -115,8 +115,6 @@ if (isset($_SESSION['user_id'])) {
   <!-- custom css link -->
   <link rel="stylesheet" href="/KGX/assets/css/root.css">
   <link rel="stylesheet" href="/KGX/assets/css/header.css">
-  <link rel="stylesheet" href="/KGX/assets/css/home.css">
-  <link rel="stylesheet" href="/KGX/assets/css/footer.css">
   <link rel="stylesheet" href="/KGX/assets/css/auth.css">
 
   <!-- google font link -->
@@ -186,7 +184,7 @@ if (isset($_SESSION['user_id'])) {
             <li><a href="/KGX/pages/teams/yourteams.php" class="dropdown-item">Your Teams</a></li>
           </ul>
         </li>
-        <li><a href="/KGX/pages/shop/index.php" class="navbar-link">Pricing</a></li>
+        <li><a href="/KGX/shop/index.php" class="navbar-link">Shop</a></li>
         <li><a href="/KGX/pages/community.php" class="navbar-link">Community</a></li>
       </ul>
       <ul class="nav-social-list">
