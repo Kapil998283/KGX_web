@@ -4,6 +4,12 @@
 
 @import url('root.css');
 
+body {
+  background-color: var(--raisin-black-1);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
 /* Hero Section */
 .hero {
   background: url("../images/hero-banner1.png") no-repeat;
@@ -60,6 +66,8 @@
   padding: var(--section-padding) 0;
   color: var(--white);
   text-align: center;
+  background-color: var(--raisin-black-1);
+  margin-bottom: -1px; /* Remove any gap */
 }
 
 .tournament-content {
@@ -201,6 +209,8 @@
 /* Games Section */
 .games {
   padding: var(--section-padding) 0;
+  background-color: var(--raisin-black-1);
+  margin-bottom: -1px; /* Remove any gap */
 }
 
 .games-list {
@@ -335,6 +345,8 @@
   background: url("../images/section-wrapper-bg.png") no-repeat;
   background-size: cover;
   background-position: center;
+  background-color: var(--raisin-black-1);
+  margin-bottom: -1px; /* Remove any gap */
 }
 
 .about {
@@ -342,6 +354,8 @@
   background-size: 100%;
   background-position: center;
   padding: 120px 0 var(--section-padding);
+  background-color: var(--raisin-black-1);
+  margin-bottom: -1px; /* Remove any gap */
 }
 
 .about-banner {
@@ -619,16 +633,23 @@
   .about,
   .tournament {
     padding-bottom: calc(var(--section-padding) + 85px);
+    margin-bottom: -1px;
   }
 
   /* Adjust section wrapper padding */
   .section-wrapper {
     padding-bottom: 85px;
+    margin-bottom: -1px;
   }
 
   /* Ensure content doesn't get hidden behind bottom nav */
   .games-list {
     margin-bottom: 20px;
+  }
+
+  /* Fix potential overflow issues */
+  .container {
+    overflow: hidden;
   }
 }
 

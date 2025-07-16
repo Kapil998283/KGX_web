@@ -7,6 +7,8 @@
 /* Community Section */
 .community {
   padding: var(--section-padding) 0 120px;
+  background-color: var(--raisin-black-1);
+  margin-top: -1px; /* Remove any gap from previous section */
 }
 
 .community-card {
@@ -16,6 +18,7 @@
   padding: 50px 25px;
   border-radius: 12px;
   text-align: center;
+  margin-bottom: -1px; /* Remove any gap */
 }
 
 .community-content {
@@ -62,6 +65,20 @@
   background-size: cover;
   background-position: center;
   padding: var(--section-padding) 0;
+  margin-top: -1px; /* Remove any gap */
+  position: relative;
+  z-index: 1;
+}
+
+.footer-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--raisin-black-1);
+  z-index: -1;
 }
 
 .footer-brand-wrapper {
@@ -417,10 +434,20 @@
 @media (max-width: 1024px) {
   .footer-top {
     padding-bottom: calc(var(--section-padding) + 70px);
+    margin-top: -1px;
   }
 
   .community {
     padding-bottom: 180px; /* Increased padding for bottom nav */
+    margin-top: -1px;
+  }
+
+  /* Ensure no white gaps between sections */
+  .footer-brand-wrapper,
+  .footer-menu-wrapper,
+  .footer-quicklinks {
+    margin-bottom: 0;
+    padding-bottom: 0;
   }
 
   /* Adjust go-top button position */
