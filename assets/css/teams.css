@@ -19,9 +19,14 @@
       min-height: calc(100vh - var(--header-height));
     }
 
-    /* Container adjustments for bottom nav */
+    /* Container adjustments for spacing */
     .container {
       padding-bottom: 100px; /* Space for bottom nav */
+    }
+
+    /* Fix for section title spacing */
+    .d-flex {
+      margin-top: 20px;
     }
 
     .section-tle {
@@ -788,12 +793,13 @@
 
   .section-title {
     font-size: 2.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     text-align: center;
     color: var(--white);
     text-transform: uppercase;
     letter-spacing: 2px;
     font-weight: 700;
+    padding-top: 20px; /* Add padding to prevent overlap */
     background: linear-gradient(to right, var(--orange), var(--xiketic));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -930,6 +936,15 @@
       padding: 1.5rem;
     }
 
+    .d-flex {
+      margin-top: 15px;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      padding-top: 15px;
+    }
+
     .container {
       padding-bottom: 120px; /* Increased space for bottom nav on mobile */
     }
@@ -953,6 +968,18 @@
   @media (max-width: 768px) {
     .teams-section {
       padding: 1rem;
+    }
+
+    .d-flex {
+      margin-top: 10px;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      padding-top: 10px;
     }
 
     .container {
