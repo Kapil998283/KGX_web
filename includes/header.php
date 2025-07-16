@@ -161,9 +161,7 @@ if (isset($_SESSION['user_id'])) {
   <img src="/KGX/favicon.svg" alt="KGX Mobile Logo">
 </a>
 
-    <button class="nav-open-btn" data-nav-open-btn>
-      <ion-icon name="menu-outline"></ion-icon>
-    </button>
+    <!-- Desktop Navigation -->
     <nav class="navbar" data-nav>
       <div class="navbar-top">
         <a href="/KGX/home.php" class="logo">
@@ -175,26 +173,15 @@ if (isset($_SESSION['user_id'])) {
       </div>
       <ul class="navbar-list">
         <li><a href="/KGX/home.php" class="navbar-link">Home</a></li>
-        <li class="dropdown">
-          <a href="/KGX/pages/tournaments/index.php" class="navbar-link">Tournaments</a>
-        </li>
-        
+        <li><a href="/KGX/pages/tournaments/index.php" class="navbar-link">Tournaments</a></li>
         <li><a href="/KGX/pages/matches/index.php" class="navbar-link">Matches</a></li>
-        <li>
-          <a href="<?php echo $teams_url; ?>" class="navbar-link">Teams</a>
-        </li>
+        <li><a href="<?php echo $teams_url; ?>" class="navbar-link">Teams</a></li>
         <li><a href="/KGX/shop/index.php" class="navbar-link">Shop</a></li>
         <li><a href="/KGX/pages/community.php" class="navbar-link">Community</a></li>
       </ul>
-      <ul class="nav-social-list">
-        <li><a href="#" class="social-link"><ion-icon name="logo-facebook"></ion-icon></a></li>
-        <li><a href="#" class="social-link"><ion-icon name="paper-plane"></ion-icon></a></li>
-        <li><a href="#" class="social-link"><ion-icon name="logo-twitch"></ion-icon></a></li>
-        <li><a href="#" class="social-link"><ion-icon name="logo-youtube"></ion-icon></a></li>
-        <li><a href="#" class="social-link"><ion-icon name="logo-instagram"></ion-icon></a></li>
-      </ul>
     </nav>
-    
+
+    <!-- Header Actions (Right Side) -->
     <div class="header-actions">
         <?php if(isset($_SESSION['user_id'])): ?>
           <!-- User is logged in - show ticket and notification only -->
@@ -221,8 +208,8 @@ if (isset($_SESSION['user_id'])) {
                 <ion-icon name="notifications-outline"></ion-icon>
                 <?php if ($notification_count > 0): ?>
                 <span class="notif-badge" id="notif-count"><?php echo $notification_count; ?></span>
-                <?php endif; ?>
-              </button>
+              <?php endif; ?>
+            </button>
 
               <!-- Notification Dropdown Content -->
               <div class="dropdown-content" id="notif-dropdown">
