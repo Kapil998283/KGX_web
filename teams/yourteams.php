@@ -1,6 +1,7 @@
 <?php
-require_once '../../includes/header.php';
-require_once '../../config/database.php';
+require_once '../includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/user-auth.php';
 
 // Make sure user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -66,7 +67,7 @@ if (!empty($teams)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Teams</title>
-    <link rel="stylesheet" href="/KGX/assets/css/yourteam.css">
+    <link rel="stylesheet" href="../assets/css/yourteam.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -890,7 +891,7 @@ if (!empty($teams)) {
   </article>
 </main>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>
 
 <style>
 /* Tournament Section Styles */

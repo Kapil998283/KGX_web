@@ -1,6 +1,6 @@
 <?php
-require_once '../../config/database.php';
-require_once '../../includes/user-auth.php';
+require_once '../config/database.php';
+require_once '../includes/user-auth.php';
 
 // Initialize response array
 $response = ['success' => false, 'message' => '', 'game_profile' => null];

@@ -1,5 +1,5 @@
 <?php
-require_once '../../config/database.php';
+require_once '../config/database.php';
 
 // Initialize database connection
 $database = new Database();

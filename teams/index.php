@@ -1,7 +1,7 @@
 <?php
-require_once '../../includes/header.php';
-require_once '../../config/database.php';
-require_once '../../includes/user-auth.php';
+require_once '../includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/user-auth.php';
 require_once 'check_team_status.php';
 
 // Initialize database connection
@@ -51,7 +51,7 @@ if (isset($_SESSION['success_message'])) {
 ?>
 
 <!-- Add Teams CSS -->
-<link rel="stylesheet" href="../../assets/css/teams.css">
+<link rel="stylesheet" href="../assets/css/teams.css">
 
 <main>
     <article>
@@ -153,4 +153,4 @@ if (isset($_SESSION['success_message'])) {
 <!-- Add Teams JS -->
 <script src="../assets/js/teams.js"></script>
 
-<?php require_once '../../includes/footer.php'; ?> 
+<?php require_once '../includes/footer.php'; ?> 

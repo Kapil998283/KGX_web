@@ -18,8 +18,9 @@ function redirect($url, $message = '', $type = 'error') {
     }
 }
 
-require_once '../../includes/header.php';
-require_once '../../config/database.php';
+require_once '../includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/user-auth.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -128,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<link rel="stylesheet" href="/KGX/assets/css/teams.css">
+<link rel="stylesheet" href="../assets/css/teams.css">
 
 <main>
     <article>
@@ -406,4 +407,6 @@ document.querySelectorAll('.banner-option').forEach(option => {
 });
 </script>
 
-<?php require_once '../../includes/footer.php'; ?> 
+<script src="../assets/js/teams.js"></script>
+
+<?php require_once '../includes/footer.php'; ?> 

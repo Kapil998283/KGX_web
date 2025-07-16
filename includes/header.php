@@ -15,7 +15,7 @@ $db = $database->connect();
 $ticket_count = 0;
 $notification_count = 0;
 $notifications = [];
-$teams_url = '/KGX/pages/teams/index.php'; // Default URL
+$teams_url = '/KGX/teams/index.php'; // Updated URL
 $header_profile_image = '/KGX/assets/images/guest-icon.png'; // Default profile image
 
 // Check if user is logged in
@@ -28,7 +28,7 @@ if (isset($_SESSION['user_id'])) {
     $result = $check_team->fetch(PDO::FETCH_ASSOC);
     
     if ($result['count'] > 0) {
-        $teams_url = '/KGX/pages/teams/yourteams.php';
+        $teams_url = '/KGX/teams/yourteams.php'; // Updated URL
     }
 
     // Get user's ticket count

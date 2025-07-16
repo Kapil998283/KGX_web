@@ -1,6 +1,6 @@
 <?php
-require_once '../../config/database.php';
-require_once '../../includes/user-auth.php';
+require_once '../config/database.php';
+require_once '../includes/user-auth.php';
 
 header('Content-Type: application/json');
 
