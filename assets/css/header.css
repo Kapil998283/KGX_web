@@ -273,8 +273,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  min-height: 18px;
+  padding: 0 5px;
 }
 
 /* Notification Dropdown */
@@ -398,57 +397,15 @@
   display: none;
 }
 
-.logo-mobile-only img {
-  width: auto;
-  height: 45px;
+/* Active state for nav items */
+.bottom-nav-item:hover,
+.bottom-nav-item.active {
+  color: var(--orange);
 }
 
 .bottom-nav-item.home-btn:hover {
   color: var(--white);
   transform: translateY(-28px);
-}
-
-/* Logo Section */
-.logo-section {
-  display: flex;
-  align-items: center;
-}
-
-.logo-main {
-  display: block;
-}
-
-.logo-main img {
-  height: 45px;
-  width: auto;
-}
-
-.logo-mobile-only {
-  display: none;
-}
-
-.logo-mobile-only img {
-  height: 40px;
-  width: auto;
-}
-
-/* Header Actions */
-.header-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-}
-
-.header-icons {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-/* Desktop Profile Section */
-.profile-section.desktop-only {
-  display: flex;
-  align-items: center;
 }
 
 /* Mobile Styles Update */
@@ -461,33 +418,34 @@
     padding: 0 15px;
   }
 
-  /* Logo adjustments for mobile */
   .logo-main {
     display: none;
   }
 
   .logo-mobile-only {
     display: block;
+    height: 40px;
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
-  /* Hide desktop profile on mobile */
-  .profile-section.desktop-only {
-    display: none !important;
+  .logo-mobile-only img {
+    height: 100%;
+    width: auto;
   }
 
-  /* Adjust header actions spacing */
+  .header-actions {
+    margin-left: auto;
+  }
+
   .header-icons {
     gap: 10px;
   }
 
-  /* Ticket container mobile adjustments */
   .ticket-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(255, 255, 255, 0.1);
     padding: 5px 10px;
-    border-radius: 20px;
   }
 
   #ticket-label {
@@ -500,7 +458,7 @@
     font-size: 18px;
   }
 
-  /* Hide desktop navigation elements */
+  /* Hide the navbar and menu button on mobile */
   .navbar,
   .nav-open-btn {
     display: none;
