@@ -62,7 +62,9 @@
   text-align: center;
 }
 
-.tournament-content { margin-bottom: 50px; }
+.tournament-content {
+  margin-bottom: 50px;
+}
 
 .tournament-subtitle {
   color: var(--orange);
@@ -77,6 +79,7 @@
   font-family: var(--ff-refault);
   font-weight: var(--fw-500);
   text-transform: uppercase;
+  margin-bottom: 10px;
 }
 
 .tournament-text {
@@ -86,7 +89,14 @@
   margin-bottom: 30px;
 }
 
-.tournament-prize { margin-bottom: 50px; }
+.tournament .btn-primary {
+  width: max-content;
+  margin-inline: auto;
+}
+
+.tournament-prize {
+  margin-bottom: 50px;
+}
 
 .tournament-prize-title {
   font-size: var(--fs-3);
@@ -102,8 +112,96 @@
   border-radius: 50px;
 }
 
+.tournament-prize img {
+  margin-inline: auto;
+}
+
+/* Tournament Winners Section */
+.tournament-winners {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 40px 30px;
+  border-radius: 8px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+}
+
+.tournament-winners:hover {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+.tournament-winners-title {
+  font-size: var(--fs-3);
+  margin-bottom: 25px;
+}
+
+.tournament-winners-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.winner-card {
+  text-align: center;
+  position: relative;
+  transition: transform 0.3s ease-in-out;
+}
+
+.winner-card:hover {
+  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+}
+
+.winner-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  z-index: -1;
+  transition: transform 0.3s ease-in-out;
+}
+
+.winner-card:hover::before {
+  transform: scale(1.05);
+}
+
+.winner-card .card-banner {
+  max-width: 90px;
+  margin-inline: auto;
+  margin-bottom: 15px;
+}
+
+.winner-card img {
+  width: 100%;
+}
+
+.winner-card .btn-secondary {
+  background: var(--orange);
+  color: var(--raisin-black-1);
+  font-family: var(--ff-oswald);
+  font-size: var(--fs-10);
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+.winner-card .btn-secondary:hover {
+  background: #0F0F14;
+  color: var(--white);
+}
+
 /* Games Section */
-.games { padding: var(--section-padding) 0; }
+.games {
+  padding: var(--section-padding) 0;
+}
 
 .games-list {
   display: grid;
@@ -122,12 +220,123 @@
   margin-bottom: 30px;
 }
 
+.games .card-banner a {
+  width: 100%;
+}
+
 .games .card-banner img {
   width: 45%;
   margin-inline: auto;
 }
 
+.share,
+.card-time-wrapper {
+  position: absolute;
+  color: var(--orange);
+}
+
+.share {
+  top: 25%;
+  right: 8%;
+  font-size: 20px;
+  border: 2px solid var(--onyx);
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  transition: var(--transition-1);
+}
+
+.share:is(:hover, :focus) {
+  border-color: var(--orange);
+}
+
+.card-time-wrapper {
+  top: 2%;
+  right: 5%;
+  font-family: var(--ff-oswald);
+  font-size: var(--fs-9);
+  font-weight: var(--fw-500);
+  text-transform: uppercase;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.card-time-wrapper ion-icon {
+  font-size: 16px;
+  --ionicon-stroke-width: 50px;
+}
+
+.games .card-content {
+  color: var(--white);
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: uppercase;
+}
+
+.games-card :is(.card-title, .card-prize) {
+  font-family: var(--ff-oswald);
+  font-size: var(--fs-5);
+  font-weight: var(--fw-700);
+}
+
+.games-card .card-title {
+  margin-bottom: 5px;
+}
+
+.games-card .card-subtitle {
+  color: var(--light-gray);
+  font-size: var(--fs-8);
+}
+
+.games .card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.games-card .btn {
+  padding: 18px 20px;
+}
+
+.games-card .btn-primary {
+  font-size: var(--fs-7);
+  padding-block: 15px;
+}
+
+.games-card .btn-primary ion-icon {
+  font-size: 20px;
+  --ionicon-stroke-width: 80px;
+}
+
+.games-card .card-btn {
+  --polygon-1: polygon(75% 0, 100% 25%, 100% 100%, 25% 100%, 0 75%, 0 0);
+  background: var(--raisin-black-1);
+  color: var(--orange);
+}
+
+.games-card .card-btn ion-icon {
+  --ionicon-stroke-width: 50px;
+}
+
+.games-card .card-btn:is(:hover, :focus) {
+  background: var(--orange);
+  color: var(--white);
+}
+
 /* About Section */
+.section-wrapper {
+  background: url("../images/section-wrapper-bg.png") no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
 .about {
   background: url("../images/about-img-shadow.png") no-repeat;
   background-size: 100%;
@@ -135,9 +344,17 @@
   padding: 120px 0 var(--section-padding);
 }
 
-.about-banner { margin-bottom: 40px; }
+.about-banner {
+  margin-bottom: 40px;
+}
 
-.about-img { width: 100%; }
+.about-img {
+  width: 100%;
+}
+
+.character {
+  display: none;
+}
 
 .about-content {
   background: var(--raisin-black-1);
@@ -177,10 +394,31 @@
   letter-spacing: 0.5px;
 }
 
+.about-text {
+  margin-bottom: 20px;
+}
+
+.about-bottom-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-bottom-text ion-icon {
+  color: var(--orange);
+  font-size: 25px;
+  --ionicon-stroke-width: 45px;
+}
+
 /* Responsive Styles */
-@media (min-width: 768px) {
-  .tournament-text {
-    max-width: 500px;
+@media (min-width: 575px) {
+  :root {
+    --fs-1: 90px;
+    --fs-2: 45px;
+  }
+
+  .container {
+    max-width: 540px;
     margin-inline: auto;
   }
 
@@ -190,9 +428,89 @@
     margin-inline: auto;
     z-index: 1;
   }
+
+  .character-2 {
+    display: block;
+    position: absolute;
+    top: 120px;
+    left: 160px;
+    max-width: 150px;
+    z-index: -1;
+  }
+
+  .about-content {
+    padding: 60px 40px;
+  }
+
+  .tournament-text {
+    max-width: 500px;
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --fs-1: 115px;
+    --fs-3: 36px;
+  }
+
+  .container {
+    max-width: 700px;
+  }
+
+  .hero-subtitle {
+    --fs-7: 25px;
+    letter-spacing: 30px;
+  }
+
+  .about-banner {
+    max-width: 430px;
+  }
+
+  .character {
+    display: block;
+    position: absolute;
+    z-index: -1;
+  }
+
+  .character-1 {
+    width: 130px;
+    top: 110px;
+    left: -120px;
+  }
+
+  .character-2 {
+    left: 200px;
+  }
+
+  .character-3 {
+    top: 0;
+    right: -112px;
+  }
+
+  .games-list {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (min-width: 1024px) {
+  :root {
+    --section-padding: 100px;
+  }
+
+  .container {
+    max-width: 1000px;
+  }
+
+  .about {
+    padding-top: 200px;
+  }
+
+  .about-content {
+    max-width: 700px;
+    margin-inline: auto;
+  }
+
   .tournament {
     --fs-2: 30px;
     --fs-3: 30px;
@@ -206,13 +524,50 @@
     align-items: center;
   }
 
-  .tournament-content { max-width: 310px; }
+  .tournament-content,
+  .tournament-prize {
+    margin-bottom: 0;
+  }
 
-  .games-list { grid-template-columns: 1fr 1fr; }
+  .tournament-content {
+    max-width: 310px;
+  }
+
+  .tournament .btn-primary {
+    margin-inline: 0;
+  }
+
+  .tournament-prize,
+  .Teams {
+    text-align: center;
+  }
+
+  .Teams {
+    padding: 45px 40px;
+  }
+
+  .games-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (min-width: 1200px) {
-  .games-list { grid-template-columns: repeat(3, 1fr); }
+  :root {
+    --fs-1: 150px;
+  }
+
+  .container {
+    max-width: 1200px;
+  }
+
+  .hero {
+    margin-top: 110px;
+  }
+
+  .about {
+    background-size: 55%;
+    background-position: 90% center;
+  }
 
   .about .container {
     display: flex;
@@ -222,8 +577,37 @@
     gap: 100px;
     padding-right: 110px;
   }
+
+  .about-banner {
+    margin-inline: 0;
+    margin-bottom: 0;
+  }
+
+  .character-2 {
+    left: 155px;
+    top: 70px;
+  }
+
+  .about-content {
+    max-width: 600px;
+    margin-inline: 0;
+  }
+
+  .games-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (min-width: 1440px) {
-  .games-list { grid-template-columns: repeat(4, 1fr); }
+  .container {
+    max-width: 1400px;
+  }
+
+  .games-list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .about {
+    padding-right: 150px;
+  }
 } 

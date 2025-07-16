@@ -4,7 +4,6 @@
 
 @import url('root.css');
 
-/* Header Styles */
 .header {
   position: fixed;
   top: 0;
@@ -22,7 +21,6 @@
   align-items: center;
 }
 
-/* Navigation */
 .nav-open-btn {
   color: var(--white);
   font-size: 40px;
@@ -83,6 +81,32 @@
 
 .navbar-link:is(:hover, :focus) { color: var(--orange); }
 
+.nav-social-list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.social-link {
+  color: var(--orange);
+  font-size: 18px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: var(--transition-2);
+}
+
+.overlay.active {
+  background: hsla(0, 0%, 0%, 0.7);
+  pointer-events: all;
+  transition: var(--transition-3);
+}
+
 /* Dropdown Styles */
 .dropdown {
   position: relative;
@@ -120,7 +144,23 @@
   z-index: 1000;
 }
 
-/* Header Actions */
+.dropdown-menu .dropdown-item {
+  display: block;
+  padding: 14px 18px;
+  color: var(--white);
+  text-decoration: none;
+  font-size: 15px;
+  transition: background 0.3s ease, color 0.3s ease;
+  white-space: nowrap;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background: var(--orange);
+  color: var(--raisin-black-1);
+  border-radius: 4px;
+}
+
+/* Header Icons and Notifications */
 .header-icons {
   display: flex;
   align-items: center;
@@ -128,20 +168,82 @@
 }
 
 .icon-button, .profile-button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 28px;
   color: white;
-  padding: 8px;
-  transition: transform 0.2s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+
+.icon-button:hover {
+  background: rgba(221, 230, 224, 0.248);
+  color: #00ff55;
+}
+
+/* Profile Button */
+.profile-button img {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  transition: transform 0.3s ease-in-out;
+}
+
+.profile-button:hover img {
+  transform: scale(1.1);
+}
+
+/* Notification Badge */
+.notification {
+  position: relative;
+  cursor: pointer;
+  color: var(--white);
+  font-size: 20px;
+}
+
+.notification .badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: var(--orange);
+  color: var(--raisin-black-1);
+  font-size: 12px;
+  padding: 2px 5px;
+  border-radius: 50%;
+}
+
+/* Mobile Logo */
+.logo-mobile-only {
+  display: none;
+}
+
+.logo-mobile-only img {
+  width: auto;
+  height: 45px;
 }
 
 /* Responsive Styles */
 @media (max-width: 768px) {
+  .logo-main {
+    display: none;
+  }
+
+  .logo-mobile-only {
+    display: block;
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    left: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
   .header .container {
     justify-content: space-between;
     position: relative;
@@ -172,13 +274,44 @@
     gap: 6px;
     border-radius: 6px;
   }
+
+  .dropdown {
+    width: 100%;
+  }
+
+  .dropdown-menu {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    display: none;
+    opacity: 1;
+    transform: scaleY(1);
+    padding: 5px 15px;
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .dropdown-menu .dropdown-item {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
 }
 
 @media (min-width: 1024px) {
-  .header { padding-block: 0; }
-  
-  .nav-open-btn { display: none; }
-  
+  .header {
+    padding-block: 0;
+  }
+
+  .header .logo {
+    margin-right: 25px;
+  }
+
+  .nav-open-btn {
+    display: none;
+  }
+
   .navbar {
     position: static;
     opacity: 1;
@@ -189,15 +322,48 @@
     height: auto;
     box-shadow: none;
   }
-  
+
+  .navbar-top,
+  .nav-social-list {
+    display: none;
+  }
+
   .navbar-list {
     margin-bottom: 0;
     display: flex;
     justify-content: flex-end;
     align-items: center;
   }
-  
+
   .navbar-link {
+    position: relative;
+    color: var(--platinum);
     padding-block: 34px;
+    border: none;
+    font-family: var(--ff-oswald);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 1;
+  }
+
+  .navbar-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: skew(-15deg);
+    border-bottom: 5px solid transparent;
+    z-index: -1;
+    transition: var(--transition-1);
+  }
+
+  .navbar-link:is(:hover, :focus)::after {
+    background: var(--raisin-black-2);
+    border-color: var(--orange);
+  }
+}
+
+@media (min-width: 1200px) {
+  .navbar-link {
+    padding-block: 45px;
   }
 } 
