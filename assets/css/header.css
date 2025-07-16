@@ -150,29 +150,64 @@
   justify-content: space-between;
 }
 
+/* Logo Styles */
+.logo-main {
+  display: block;
+  height: 45px;
+}
+
+.logo-main img {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
 .logo-mobile-only {
   display: none;
-  opacity: 0;
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  z-index: 1000;
 }
 
-.dropdown-menu .dropdown-item {
+.logo-mobile-only img {
+  height: 40px;
+  width: auto;
   display: block;
-  padding: 14px 18px;
-  color: var(--white);
-  text-decoration: none;
-  font-size: 15px;
-  transition: background 0.3s ease, color 0.3s ease;
-  white-space: nowrap;
 }
 
-.dropdown-menu .dropdown-item:hover {
-  background: var(--orange);
-  color: var(--raisin-black-1);
-  border-radius: 4px;
+/* Remove conflicting logo-mobile-only styles */
+.logo-mobile-only {
+  display: none;
+  position: relative; /* Changed from absolute */
+  z-index: 2;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 0;
+  }
+
+  .header .container {
+    padding: 0 15px;
+    position: relative;
+  }
+
+  /* Logo adjustments for mobile */
+  .logo-main {
+    display: none;
+  }
+
+  .logo-mobile-only {
+    display: block;
+    height: 40px;
+    margin-right: auto; /* Push other elements to the right */
+  }
+
+  .logo-mobile-only img {
+    height: 100%;
+    width: auto;
+    display: block;
+  }
+
+  /* Rest of mobile styles... */
 }
 
 /* Header Icons */
@@ -428,6 +463,9 @@
 
   .header .container {
     padding: 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .logo-main {
@@ -437,28 +475,25 @@
   .logo-mobile-only {
     display: block;
     height: 40px;
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
+    position: relative;
+    z-index: 2;
+    margin-right: auto;
   }
 
   .logo-mobile-only img {
     height: 100%;
     width: auto;
+    display: block;
   }
 
   .header-actions {
     margin-left: auto;
+    display: flex;
+    align-items: center;
   }
 
   .header-icons {
     gap: 10px;
-  }
-
-  /* Adjust spacing when profile is hidden */
-  .header-icons {
-    margin-right: 10px;
   }
 
   .ticket-container {
