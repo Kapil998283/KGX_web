@@ -300,8 +300,8 @@ if (isset($_SESSION['user_id'])) {
         <span>Teams</span>
       </a>
       <?php if(isset($_SESSION['user_id'])): ?>
-        <a href="/KGX/pages/dashboard/dashboard.php" class="bottom-nav-item">
-          <ion-icon name="person-outline"></ion-icon>
+        <a href="/KGX/pages/dashboard/dashboard.php" class="bottom-nav-item profile-nav-item">
+          <img src="<?php echo htmlspecialchars($header_profile_image); ?>" alt="Profile" class="profile-nav-image">
           <span>Profile</span>
         </a>
       <?php else: ?>

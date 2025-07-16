@@ -525,6 +525,26 @@
   opacity: 0.8;
 }
 
+/* Profile Image in Bottom Nav */
+.profile-nav-item {
+  padding: 0;
+}
+
+.profile-nav-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--white);
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+.profile-nav-item:hover .profile-nav-image {
+  transform: scale(1.1);
+  border-color: var(--orange);
+}
+
 /* Home button special styling */
 .bottom-nav-item.home-btn {
   transform: translateY(-25px);
@@ -579,22 +599,49 @@
 
   .header .container {
     padding: 0 15px;
+    justify-content: space-between;
   }
 
-  /* Adjust logo position */
-  .logo img {
+  /* Logo positioning */
+  .logo-main {
+    display: none;
+  }
+
+  .logo-mobile-only {
+    display: block;
     height: 40px;
   }
 
-  /* Adjust header actions for mobile */
+  .logo-mobile-only img {
+    height: 100%;
+    width: auto;
+  }
+
+  /* Header actions for mobile */
   .header-icons {
-    gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
   }
 
   .icon-button {
     width: 40px;
     height: 40px;
     font-size: 22px;
+  }
+
+  /* ticket container mobile adjustments */
+  .ticket-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 10px;
+    border-radius: 20px;
+  }
+
+  #ticket-label {
+    display: none; /* Hide "Tickets" text on mobile */
   }
 
   /* Add padding to main content to account for bottom nav */
