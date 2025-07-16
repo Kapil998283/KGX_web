@@ -47,47 +47,6 @@ document.querySelectorAll(".faq-question").forEach((btn) => {
   });
 });
 
-/**
- * Show Section Based on Footer Click
- */
-document.querySelectorAll(".quicklink-item").forEach((link) => {
-  link.addEventListener("click", function (e) {
-    e.preventDefault();
-
-    document.querySelectorAll(".content-section").forEach((section) => {
-      section.classList.remove("active");
-      section.style.display = "none";
-    });
-
-    const targetSection = this.innerText.toLowerCase().replace(/\s+/g, "");
-
-    const sectionMap = {
-      faq: "faq",
-      helpcenter: "help",
-      termsofuse: "terms",
-      privacy: "privacy",
-    };
-
-    const sectionId = sectionMap[targetSection];
-    const sectionToShow = document.querySelector(`#${sectionId}`);
-
-    if (sectionToShow) {
-      sectionToShow.style.display = "block";
-      sectionToShow.classList.add("active");
-      sectionToShow.scrollIntoView({ behavior: "smooth" });
-    }
-  });
-});
-
-/**
- * Close Section on Button Click
- */
-function closeSection() {
-  document.querySelectorAll(".content-section").forEach((section) => {
-    section.classList.remove("active");
-    section.style.display = "none";
-  });
-}
 
 /**
  * JavaScript to Detect Hover Direction on .winner-card
