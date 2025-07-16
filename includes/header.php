@@ -184,6 +184,7 @@ if (isset($_SESSION['user_id'])) {
     <!-- Header Actions (Right Side) -->
     <div class="header-actions">
         <?php if(isset($_SESSION['user_id'])): ?>
+          <!-- User is logged in - show ticket and notification only -->
           <div class="header-icons">
             <!-- ticket Section -->
             <div class="ticket-container">
@@ -236,16 +237,21 @@ if (isset($_SESSION['user_id'])) {
               </div>
             </div>
 
-            <!-- Profile (Desktop Only) -->
-            <div class="desktop-only-profile">
-              <div class="dropdown">
-                <button class="profile-button header-action-btn" id="profile-btn">
-                  <img src="<?php echo htmlspecialchars($header_profile_image); ?>" alt="Profile Pic">
-                </button>
-                <div class="dropdown-content" id="profile-dropdown">
-                  <a href="/KGX/pages/dashboard/dashboard.php">Dashboard</a>
-                  <a href="/KGX/pages/logout.php">Logout</a>
-                </div>
+            <!-- Profile -->
+            <div class="dropdown">
+              <button class="profile-button header-action-btn" id="profile-btn">
+                <img src="<?php echo htmlspecialchars($header_profile_image); ?>" alt="Profile Pic">
+              </button>
+              <div class="dropdown-content" id="profile-dropdown">
+                <?php if (isset($_SESSION['user_id'])):
+                ?>
+                    <a href="/KGX/pages/dashboard/dashboard.php">Dashboard</a>
+                    <a href="/KGX/pages/logout.php">Logout</a>
+                <?php else:
+                ?>
+                    <a href="/KGX/register/login.php">Login</a>
+                    <a href="/KGX/register/register.php">Register</a>
+                <?php endif; ?>
               </div>
             </div>
           </div>
@@ -281,9 +287,9 @@ if (isset($_SESSION['user_id'])) {
         <span>Teams</span>
       </a>
       <?php if(isset($_SESSION['user_id'])): ?>
-        <a href="/KGX/pages/dashboard/dashboard.php" class="bottom-nav-item profile-nav-item">
-          <img src="<?php echo htmlspecialchars($header_profile_image); ?>" alt="Profile" class="profile-nav-image">
-          <span>Profile</span>
+        <a href="/KGX/earn-coins/" class="bottom-nav-item earn-coins-nav-item">
+          <ion-icon name="wallet-outline"></ion-icon>
+          <span>Earn Coins</span>
         </a>
       <?php else: ?>
         <a href="/KGX/register/login.php" class="bottom-nav-item">

@@ -600,24 +600,14 @@
   opacity: 0.8;
 }
 
-/* Profile Image in Bottom Nav */
-.profile-nav-item {
-  padding: 0;
+/* Earn Coins Nav Item */
+.earn-coins-nav-item ion-icon {
+  color: var(--orange);
 }
 
-.profile-nav-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--white);
-  margin-bottom: 4px;
-  transition: all 0.3s ease;
-}
-
-.profile-nav-item:hover .profile-nav-image {
+.earn-coins-nav-item:hover ion-icon {
   transform: scale(1.1);
-  border-color: var(--orange);
+  color: #00ff55;
 }
 
 /* Home button special styling */
