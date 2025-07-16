@@ -160,14 +160,45 @@
   border-radius: 4px;
 }
 
-/* Header Icons and Notifications */
+/* Header Icons */
 .header-icons {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
+/* Common styles for dropdowns */
+.dropdown {
+  position: relative;
+}
+
 .icon-button, .profile-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  padding: 8px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.icon-button:hover, .profile-button:hover {
+  transform: scale(1.1);
+}
+
+/* Profile image button */
+.profile-button img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ticket & Bell Icon Styles */
+.icon-button {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   width: 45px;
@@ -180,12 +211,13 @@
   transition: all 0.3s ease-in-out;
 }
 
+/* Hover effect - Green */
 .icon-button:hover {
   background: rgba(221, 230, 224, 0.248);
   color: #00ff55;
 }
 
-/* Profile Button */
+/* Profile Icon */
 .profile-button img {
   width: 55px;
   height: 55px;
@@ -195,27 +227,90 @@
   transition: transform 0.3s ease-in-out;
 }
 
+/* Profile Hover Effect */
 .profile-button:hover img {
   transform: scale(1.1);
 }
 
-/* Notification Badge */
-.notification {
+/* Notification Container */
+.notification-container {
   position: relative;
-  cursor: pointer;
-  color: var(--white);
-  font-size: 20px;
 }
 
-.notification .badge {
+/* Notification Button */
+.icon-button {
+  position: relative;
+  font-size: 22px;
+  color: white;
+}
+
+/* Notification Badge (Red Circle) */
+.notif-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  background: var(--orange);
-  color: var(--raisin-black-1);
+  top: -3px;
+  right: -3px;
+  background: red;
+  color: white;
   font-size: 12px;
-  padding: 2px 5px;
+  font-weight: bold;
+  padding: 3px 6px;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  min-height: 18px;
+}
+
+/* Notification Dropdown */
+#notif-dropdown {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+#notif-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+#notif-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+}
+
+#notif-dropdown::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Hover & Click Effect - Change color to Green */
+.icon-button:hover,
+.icon-button:focus,
+.profile-button:hover,
+.profile-button:focus {
+  color: #28a745;
+}
+
+/* Make sure icons remain white initially */
+.icon-button,
+.profile-button {
+  color: var(--white);
+  transition: color 0.3s ease-in-out;
+}
+
+/* Force dropdown to align with the right side of the screen */
+.dropdown-content {
+  right: 0;
+  left: auto;
+  min-width: 220px;
+  max-width: 280px;
+}
+
+/* Ensure dropdown does not overflow screen on small screens */
+@media (max-width: 500px) {
+  .dropdown-content {
+    width: 180px;
+    right: 5px;
+  }
 }
 
 /* Mobile Logo */
