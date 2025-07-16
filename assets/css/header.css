@@ -620,8 +620,9 @@
   color: var(--white);
   text-decoration: none;
   padding: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  min-width: 60px;
 }
 
 .bottom-nav-item ion-icon {
@@ -633,6 +634,38 @@
 .bottom-nav-item span {
   font-size: 12px;
   opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+/* Active Tab Styling */
+.bottom-nav-item.active {
+  transform: translateY(-25px);
+  color: var(--white);
+}
+
+.bottom-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 40px;
+  background: var(--orange);
+  border-radius: 30px;
+  z-index: -1;
+  box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+/* Hover Effects */
+.bottom-nav-item:hover {
+  color: var(--orange);
+}
+
+.bottom-nav-item.active:hover {
+  color: var(--white);
+  transform: translateY(-28px);
 }
 
 /* Earn Coins Nav Item */
@@ -645,38 +678,83 @@
   color: #00ff55;
 }
 
-/* Home button special styling */
-.bottom-nav-item.home-btn {
-  transform: translateY(-25px);
-  background: var(--orange);
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-  box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+/* Mobile Styles (Phone) */
+@media (max-width: 480px) {
+  .bottom-nav {
+    padding: 8px 15px;
+  }
+
+  .bottom-nav-item {
+    padding: 6px;
+    min-width: 45px;
+  }
+
+  .bottom-nav-item ion-icon {
+    font-size: 22px;
+    margin-bottom: 2px;
+  }
+
+  .bottom-nav-item span {
+    display: none; /* Hide text on mobile phones */
+  }
+
+  .bottom-nav-item.active::after {
+    height: 35px;
+    bottom: -6px;
+  }
 }
 
-.bottom-nav-item.home-btn ion-icon {
-  font-size: 30px;
-  margin: 0;
+/* Tablet Styles */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .bottom-nav {
+    padding: 12px 25px;
+  }
+
+  .bottom-nav-item {
+    padding: 8px 12px;
+    min-width: 80px;
+  }
+
+  .bottom-nav-item ion-icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+
+  .bottom-nav-item span {
+    display: block; /* Show text on tablets */
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .bottom-nav-item.active::after {
+    height: 45px;
+    bottom: -10px;
+  }
 }
 
-.bottom-nav-item.home-btn span {
-  display: none;
+/* Animation for Tab Switching */
+.bottom-nav-item {
+  transform-origin: center bottom;
 }
 
-/* Active state for nav items */
-.bottom-nav-item:hover,
 .bottom-nav-item.active {
-  color: var(--orange);
+  animation: tabFloat 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.bottom-nav-item.home-btn:hover {
-  color: var(--white);
-  transform: translateY(-28px);
+@keyframes tabFloat {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-25px);
+  }
+}
+
+/* Add transition for smooth color changes */
+.bottom-nav-item,
+.bottom-nav-item ion-icon,
+.bottom-nav-item span {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Mobile Styles Update */

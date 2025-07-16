@@ -270,29 +270,29 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- Bottom Navigation Bar for Mobile -->
     <nav class="bottom-nav">
-      <a href="/KGX/pages/tournaments/index.php" class="bottom-nav-item">
+      <a href="/KGX/pages/tournaments/index.php" class="bottom-nav-item" data-page="tournaments">
         <ion-icon name="trophy-outline"></ion-icon>
         <span>Tournaments</span>
       </a>
-      <a href="/KGX/pages/matches/index.php" class="bottom-nav-item">
+      <a href="/KGX/pages/matches/index.php" class="bottom-nav-item" data-page="matches">
         <ion-icon name="game-controller-outline"></ion-icon>
         <span>Matches</span>
       </a>
-      <a href="/KGX/home.php" class="bottom-nav-item home-btn">
+      <a href="/KGX/home.php" class="bottom-nav-item" data-page="home">
         <ion-icon name="home"></ion-icon>
         <span>Home</span>
       </a>
-      <a href="<?php echo $teams_url; ?>" class="bottom-nav-item">
+      <a href="<?php echo $teams_url; ?>" class="bottom-nav-item" data-page="teams">
         <ion-icon name="people-outline"></ion-icon>
         <span>Teams</span>
       </a>
       <?php if(isset($_SESSION['user_id'])): ?>
-        <a href="/KGX/earn-coins/" class="bottom-nav-item earn-coins-nav-item">
+        <a href="/KGX/earn-coins/" class="bottom-nav-item earn-coins-nav-item" data-page="earn-coins">
           <ion-icon name="wallet-outline"></ion-icon>
           <span>Earn Coins</span>
         </a>
       <?php else: ?>
-        <a href="/KGX/register/login.php" class="bottom-nav-item">
+        <a href="/KGX/register/login.php" class="bottom-nav-item" data-page="login">
           <ion-icon name="log-in-outline"></ion-icon>
           <span>Login</span>
         </a>
@@ -300,6 +300,50 @@ if (isset($_SESSION['user_id'])) {
     </nav>
   </div>
 </header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Get current page path
+  const currentPath = window.location.pathname;
+  
+  // Get all nav items
+  const navItems = document.querySelectorAll('.bottom-nav-item');
+  
+  // Function to set active tab
+  function setActiveTab() {
+    navItems.forEach(item => {
+      const itemPath = item.getAttribute('href');
+      const pageName = item.getAttribute('data-page');
+      
+      // Remove active class from all items first
+      item.classList.remove('active');
+      
+      // Check if current path matches this nav item's path
+      if (currentPath.includes(pageName)) {
+        item.classList.add('active');
+      }
+      
+      // Special case for home page
+      if (currentPath.endsWith('home.php') && pageName === 'home') {
+        item.classList.add('active');
+      }
+    });
+  }
+  
+  // Set initial active tab
+  setActiveTab();
+  
+  // Add click handlers for smooth transitions
+  navItems.forEach(item => {
+    item.addEventListener('click', function(e) {
+      // Remove active class from all items
+      navItems.forEach(nav => nav.classList.remove('active'));
+      // Add active class to clicked item
+      this.classList.add('active');
+    });
+  });
+});
+</script>
 
 <!-- Replace the entire script tag -->
 <script>
