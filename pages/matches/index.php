@@ -113,7 +113,7 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!-- Link to external CSS file -->
-<link rel="stylesheet" href="../../assets/css/matches/matches.css">
+<link rel="stylesheet" href="../../assets/css/matches/index.css">
 
 <div class="matches-section">
     <div class="matches-container">

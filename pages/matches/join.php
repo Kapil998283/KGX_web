@@ -185,7 +185,7 @@ include '../../includes/header.php';
 ?>
 
 <!-- Link to external CSS file -->
-<link rel="stylesheet" href="../../assets/css/matches/matches.css">
+<link rel="stylesheet" href="../../assets/css/matches/join.css">
 
 <style>
 /* Add this at the end of your existing styles */
