@@ -10,6 +10,20 @@ $conn = $database->connect();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
+            case 'cancel':
+                try {
+                    if (cancelTournament($conn, $_POST['tournament_id'])) {
+                        $_SESSION['success'] = "Tournament cancelled successfully!";
+                    } else {
+                        $_SESSION['error'] = "Error cancelling tournament.";
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['error'] = "Error cancelling tournament: " . $e->getMessage();
+                }
+                header('Location: tournaments.php');
+                exit();
+                break;
+                
             case 'create':
                 try {
                     // Begin transaction
@@ -128,6 +142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Update status of all tournaments
+updateTournamentStatus($conn);
+
 // Fetch all tournaments
 $stmt = $conn->query("SELECT * FROM tournaments ORDER BY registration_open_date DESC");
 $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -179,6 +196,10 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .status-upcoming {
             background-color: #e3f2fd;
             color: #1976d2;
+        }
+        .status-registration {
+            background-color: #fff3e0;
+            color: #e65100;
         }
         .status-ongoing {
             background-color: #e8f5e9;
@@ -265,22 +286,11 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <td><?php echo $tournament['entry_fee']; ?> Tickets</td>
                                 <td><?php echo $tournament['current_teams'] . '/' . $tournament['max_teams']; ?></td>
                                 <td>
-                                    <div class="date-info">
-                                        <?php 
-                                        $now = new DateTime();
-                                        $regOpen = new DateTime($tournament['registration_open_date']);
-                                        $regClose = new DateTime($tournament['registration_close_date']);
-                                        ?>
-                                        <span class="date-label">Opens:</span>
-                                        <span><?php echo $regOpen->format('M d, Y'); ?></span>
-                                        <span class="date-label">Closes:</span>
-                                        <span><?php echo $regClose->format('M d, Y'); ?></span>
-                                    </div>
-                                </td>
-                                <td>
                                     <?php
                                     $playStart = new DateTime($tournament['playing_start_date']);
                                     $finishDate = new DateTime($tournament['finish_date']);
+                                    $regOpen = new DateTime($tournament['registration_open_date']);
+                                    $regClose = new DateTime($tournament['registration_close_date']);
                                     
                                     $status = '';
                                     $statusClass = '';
@@ -288,9 +298,12 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     if ($tournament['status'] === 'cancelled') {
                                         $status = 'Cancelled';
                                         $statusClass = 'cancelled';
-                                    } elseif ($now < $playStart) {
+                                    } elseif ($now < $regOpen) {
                                         $status = 'Upcoming';
                                         $statusClass = 'upcoming';
+                                    } elseif ($now >= $regOpen && $now <= $regClose) {
+                                        $status = 'Registration Open';
+                                        $statusClass = 'registration';
                                     } elseif ($now >= $playStart && $now <= $finishDate) {
                                         $status = 'Ongoing';
                                         $statusClass = 'ongoing';
@@ -302,6 +315,17 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <span class="status-badge status-<?php echo $statusClass; ?>">
                                         <?php echo $status; ?>
                                     </span>
+                                    <?php if ($statusClass !== 'cancelled' && $statusClass !== 'completed'): ?>
+                                    <div class="date-info mt-1">
+                                        <?php if ($statusClass === 'upcoming'): ?>
+                                            <small>Starts: <?php echo $regOpen->format('M d, Y'); ?></small>
+                                        <?php elseif ($statusClass === 'registration'): ?>
+                                            <small>Closes: <?php echo $regClose->format('M d, Y'); ?></small>
+                                        <?php elseif ($statusClass === 'ongoing'): ?>
+                                            <small>Ends: <?php echo $finishDate->format('M d, Y'); ?></small>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <div class="action-buttons">
@@ -320,6 +344,11 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <button class="btn btn-sm btn-info" onclick="viewRegistrations(<?php echo $tournament['id']; ?>)" title="Teams">
                                             <i class="bi bi-people"></i>
                                         </button>
+                                        <?php if ($tournament['status'] !== 'cancelled' && $tournament['status'] !== 'completed'): ?>
+                                        <button class="btn btn-sm btn-warning" onclick="cancelTournament(<?php echo $tournament['id']; ?>)" title="Cancel Tournament">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -633,6 +662,35 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
+    <!-- Cancel Tournament Modal -->
+    <div class="modal fade" id="cancelTournamentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Tournament</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger">Warning: Cancelling a tournament will:</p>
+                    <ul>
+                        <li>Stop new registrations</li>
+                        <li>Mark the tournament as cancelled</li>
+                        <li>This action cannot be undone</li>
+                    </ul>
+                    <p>Are you sure you want to cancel this tournament?</p>
+                </div>
+                <div class="modal-footer">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="cancel">
+                        <input type="hidden" name="tournament_id" id="cancel_tournament_id">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Active</button>
+                        <button type="submit" class="btn btn-warning">Yes, Cancel Tournament</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Preview banner image from URL
@@ -760,6 +818,12 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 messageDiv.textContent = error.message || 'Failed to update registration status';
                 messageDiv.style.display = 'block';
             });
+        }
+
+        // Cancel tournament
+        function cancelTournament(id) {
+            document.querySelector('#cancel_tournament_id').value = id;
+            new bootstrap.Modal(document.getElementById('cancelTournamentModal')).show();
         }
     </script>
 </body>
