@@ -3,8 +3,6 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/header.php';
 require_once '../../includes/team-auth.php';
-
-// Add CSS link for tournaments
 ?>
 <link rel="stylesheet" href="../../assets/css/tournament/index.css">
 <?php
@@ -13,19 +11,33 @@ require_once '../../includes/team-auth.php';
 $database = new Database();
 $db = $database->connect();
 
-// Fetch active and upcoming tournaments
+// Get active tab from URL parameter
+$active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'all';
+
+// Build the query based on active tab
+$where_clause = "";
+switch ($active_tab) {
+    case 'active':
+        $where_clause = "WHERE status = 'ongoing' AND registration_phase = 'playing'";
+        break;
+    case 'upcoming':
+        $where_clause = "WHERE status = 'upcoming' AND registration_phase = 'open'";
+        break;
+    case 'finished':
+        $where_clause = "WHERE status = 'completed'";
+        break;
+    default: // 'all'
+        $where_clause = "WHERE status IN ('upcoming', 'ongoing', 'completed')";
+}
+
+// Fetch tournaments based on filter
 $stmt = $db->prepare("
     SELECT * FROM tournaments 
-    WHERE status IN ('upcoming', 'ongoing')
-    AND (
-        (registration_phase = 'open' AND registration_close_date >= CURDATE())
-        OR (registration_phase = 'closed' AND playing_start_date >= CURDATE())
-        OR registration_phase = 'playing'
-    )
+    {$where_clause}
     ORDER BY 
         CASE 
-            WHEN registration_phase = 'open' THEN 1
-            WHEN registration_phase = 'playing' THEN 2
+            WHEN registration_phase = 'playing' THEN 1
+            WHEN registration_phase = 'open' THEN 2
             ELSE 3
         END,
         playing_start_date ASC
@@ -50,197 +62,86 @@ function getRegistrationUrl($tournament) {
 
 <section class="tournaments-section">
     <div class="container">
-        <div class="section-header">
-            <h2 class="section-title">Active Tournaments</h2>
+        <h1 class="tournaments-title">Tournaments</h1>
+        
+        <div class="tournament-tabs">
+            <div class="tabs-group">
+                <a href="?tab=all" class="tab-btn <?php echo $active_tab === 'all' ? 'active' : ''; ?>">All</a>
+                <a href="?tab=active" class="tab-btn <?php echo $active_tab === 'active' ? 'active' : ''; ?>">Active</a>
+                <a href="?tab=upcoming" class="tab-btn <?php echo $active_tab === 'upcoming' ? 'active' : ''; ?>">Upcoming</a>
+                <a href="?tab=finished" class="tab-btn <?php echo $active_tab === 'finished' ? 'active' : ''; ?>">Finished</a>
+            </div>
+            
             <?php if (isset($_SESSION['user_id'])): ?>
-                <a href="my-registrations.php" class="btn-primary">
+                <a href="my-registrations.php" class="register-btn">
                     <ion-icon name="trophy-outline"></ion-icon>
-                    My Registrations
+                    Registered
                 </a>
             <?php endif; ?>
         </div>
         
-        <div class="row">
+        <div class="tournaments-grid">
             <?php if (empty($tournaments)): ?>
-                <div class="col-12">
-                    <div class="no-tournaments">
-                        <ion-icon name="calendar-outline" class="large-icon"></ion-icon>
-                        <h3>No Active Tournaments</h3>
-                        <p>Check back later for upcoming tournaments!</p>
-                    </div>
+                <div class="no-tournaments">
+                    <ion-icon name="calendar-outline" class="large-icon"></ion-icon>
+                    <h3>No Tournaments Found</h3>
+                    <p>Check back later for upcoming tournaments!</p>
                 </div>
             <?php else: ?>
                 <?php foreach ($tournaments as $tournament): ?>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="tournament-card">
-                            <div class="card-banner">
-                                <img src="<?php echo htmlspecialchars($tournament['banner_image']); ?>" 
-                                     alt="<?php echo htmlspecialchars($tournament['name']); ?>" 
-                                     class="tournament-banner">
-                                
-                                <div class="tournament-meta">
-                                    <div class="prize-pool">
-                                        <ion-icon name="trophy-outline"></ion-icon>
-                                        <?php 
-                                            if (!empty($tournament['website_currency_type']) && $tournament['website_currency_amount'] > 0) {
-                                                echo number_format($tournament['website_currency_amount']) . ' ' . ucfirst($tournament['website_currency_type']);
-                                            } else {
-                                                echo $tournament['prize_currency'] === 'USD' ? '$' : '₹';
-                                                echo number_format($tournament['prize_pool']); 
-                                            }
-                                        ?>
-                                    </div>
-                                    <div class="entry-fee">
-                                        <ion-icon name="ticket-outline"></ion-icon>
-                                        <?php echo $tournament['entry_fee']; ?> Tickets
-                                    </div>
+                    <div class="tournament-card">
+                        <div class="card-banner">
+                            <img src="<?php echo htmlspecialchars($tournament['banner_image']); ?>" 
+                                 alt="<?php echo htmlspecialchars($tournament['name']); ?>" 
+                                 class="tournament-banner">
+                            
+                            <?php if ($tournament['registration_phase'] === 'playing'): ?>
+                                <div class="tournament-status status-playing">
+                                    <ion-icon name="play-circle-outline"></ion-icon>
+                                    Playing
+                                </div>
+                            <?php elseif ($tournament['registration_phase'] === 'open'): ?>
+                                <div class="tournament-status status-upcoming">
+                                    <ion-icon name="time-outline"></ion-icon>
+                                    Upcoming
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="card-content">
+                            <h3 class="game-name"><?php echo htmlspecialchars($tournament['game_name']); ?></h3>
+                            
+                            <div class="tournament-meta">
+                                <div class="meta-item prize-pool">
+                                    <ion-icon name="trophy-outline"></ion-icon>
+                                    <?php 
+                                        if (!empty($tournament['website_currency_type']) && $tournament['website_currency_amount'] > 0) {
+                                            echo number_format($tournament['website_currency_amount']) . ' ' . ucfirst($tournament['website_currency_type']);
+                                        } else {
+                                            echo $tournament['prize_currency'] === 'USD' ? '$' : '₹';
+                                            echo number_format($tournament['prize_pool']); 
+                                        }
+                                    ?>
+                                </div>
+                                <div class="meta-item entry-fee">
+                                    <ion-icon name="ticket-outline"></ion-icon>
+                                    <?php echo $tournament['entry_fee']; ?> Tickets
+                                </div>
+                                <div class="meta-item start-date">
+                                    <ion-icon name="calendar-outline"></ion-icon>
+                                    <?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?>
                                 </div>
                             </div>
 
-                            <div class="card-content">
-                                <h3 class="tournament-title"><?php echo htmlspecialchars($tournament['name']); ?></h3>
-                                <p class="game-name"><?php echo htmlspecialchars($tournament['game_name']); ?></p>
+                            <div class="tournament-info">
+                                <div class="team-count">
+                                    <ion-icon name="people-outline"></ion-icon>
+                                    <?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams
+                                </div>
                                 
-                                <div class="tournament-info">
-                                    <div class="info-item">
-                                        <ion-icon name="people-outline"></ion-icon>
-                                        <span><?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <ion-icon name="game-controller-outline"></ion-icon>
-                                        <span><?php echo htmlspecialchars($tournament['mode']); ?></span>
-                                    </div>
-                                </div>
-
-                                <div class="tournament-dates">
-                                    <?php if ($tournament['registration_phase'] === 'open'): ?>
-                                        <div class="registration-ends">
-                                            <ion-icon name="time-outline"></ion-icon>
-                                            Registration Closes: <?php echo date('M d, Y', strtotime($tournament['registration_close_date'])); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    <div class="tournament-starts">
-                                        <ion-icon name="calendar-outline"></ion-icon>
-                                        Starts: <?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?>
-                                    </div>
-                                </div>
-
-                                <div class="card-actions">
-                                    <a href="details.php?id=<?php echo $tournament['id']; ?>" class="btn btn-primary">
-                                        <ion-icon name="information-circle-outline"></ion-icon>
-                                        View Details
-                                    </a>
-                                    
-                                    <?php if ($tournament['registration_phase'] === 'open'): ?>
-                                        <?php if (isset($_SESSION['user_id'])): ?>
-                                            <?php
-                                            // Check if user has already registered
-                                            if ($tournament['mode'] === 'Solo') {
-                                                $stmt = $db->prepare("
-                                                    SELECT tr.* 
-                                                    FROM tournament_registrations tr
-                                                    INNER JOIN teams t ON tr.team_id = t.id
-                                                    INNER JOIN team_members tm ON t.id = tm.team_id
-                                                    WHERE tr.tournament_id = ? 
-                                                    AND tm.user_id = ?
-                                                    AND tr.status IN ('pending', 'approved')
-                                                ");
-                                            } else {
-                                                $stmt = $db->prepare("
-                                                    SELECT tr.* 
-                                                    FROM tournament_registrations tr
-                                                    INNER JOIN teams t ON tr.team_id = t.id
-                                                    INNER JOIN team_members tm ON t.id = tm.team_id
-                                                    WHERE tr.tournament_id = ? 
-                                                    AND tm.user_id = ?
-                                                    AND tm.status = 'active'
-                                                    AND tr.status IN ('pending', 'approved')
-                                                ");
-                                            }
-                                            $stmt->execute([$tournament['id'], $_SESSION['user_id']]);
-                                            $existing_registration = $stmt->fetch();
-
-                                            // Check if user has enough tickets
-                                            $stmt = $db->prepare("SELECT tickets FROM user_tickets WHERE user_id = ?");
-                                            $stmt->execute([$_SESSION['user_id']]);
-                                            $user_tickets = $stmt->fetch();
-                                            $has_enough_tickets = $user_tickets && $user_tickets['tickets'] >= $tournament['entry_fee'];
-
-                                            // Check if tournament is full
-                                            $spots_left = $tournament['max_teams'] - $tournament['current_teams'];
-
-                                            // Check if user is team captain (only for non-solo tournaments)
-                                            $can_register = true;
-                                            if ($tournament['mode'] !== 'Solo') {
-                                                $can_register = isTeamCaptain($db);
-                                            }
-                                            ?>
-
-                                            <?php if (!$existing_registration && $spots_left > 0 && $has_enough_tickets): ?>
-                                                <?php if ($tournament['mode'] === 'Solo'): ?>
-                                                    <a href="<?php echo getRegistrationUrl($tournament); ?>" class="btn btn-secondary">
-                                                        <ion-icon name="person-add-outline"></ion-icon>
-                                                        Register Now
-                                                    </a>
-                                                <?php elseif ($can_register): ?>
-                                                    <a href="<?php echo getRegistrationUrl($tournament); ?>" class="btn btn-secondary">
-                                                        <ion-icon name="people-outline"></ion-icon>
-                                                        Register Team
-                                                    </a>
-                                                <?php else: ?>
-                                                    <?php
-                                                    // Check if user is already a member of a team
-                                                    $stmt = $db->prepare("
-                                                        SELECT tm.role 
-                                                        FROM team_members tm 
-                                                        WHERE tm.user_id = ? 
-                                                        AND tm.status = 'active'
-                                                        LIMIT 1
-                                                    ");
-                                                    $stmt->execute([$_SESSION['user_id']]);
-                                                    $teamRole = $stmt->fetch(PDO::FETCH_ASSOC);
-                                                    
-                                                    if ($teamRole && $teamRole['role'] === 'member'): ?>
-                                                        <button class="btn btn-secondary" disabled>
-                                                            <ion-icon name="lock-closed-outline"></ion-icon>
-                                                            Only Team Captain Can Register
-                                                        </button>
-                                                    <?php else: ?>
-                                                        <a href="../../pages/teams/create_team.php?redirect=tournament&id=<?php echo $tournament['id']; ?>"
-                                                            class="btn btn-secondary">
-                                                            <ion-icon name="add-outline"></ion-icon>
-                                                            <?php if ($tournament['mode'] === 'Duo'): ?>
-                                                                Create Duo Team
-                                                            <?php else: ?>
-                                                                Create Squad Team
-                                                            <?php endif; ?>
-                                                        </a>
-                                                    <?php endif; ?>
-                                                <?php endif; ?>
-                                            <?php elseif (!$has_enough_tickets): ?>
-                                                <button class="btn btn-secondary" disabled>
-                                                    <ion-icon name="ticket-outline"></ion-icon>
-                                                    Need <?php echo $tournament['entry_fee']; ?> Tickets
-                                                </button>
-                                            <?php elseif ($existing_registration): ?>
-                                                <button class="btn btn-secondary" disabled>
-                                                    <ion-icon name="checkmark-circle-outline"></ion-icon>
-                                                    Already Registered
-                                                </button>
-                                            <?php elseif ($spots_left <= 0): ?>
-                                                <button class="btn btn-secondary" disabled>
-                                                    <ion-icon name="alert-circle-outline"></ion-icon>
-                                                    Tournament Full
-                                                </button>
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            <a href="../../register/login.php" class="btn btn-secondary">
-                                                <ion-icon name="log-in-outline"></ion-icon>
-                                                Login to Register
-                                            </a>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                </div>
+                                <a href="details.php?id=<?php echo $tournament['id']; ?>" class="details-btn">
+                                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                                </a>
                             </div>
                         </div>
                     </div>
