@@ -172,8 +172,8 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             flex: 1;
         }
         .tournament-table img {
-            width: 100px;
-            height: 60px;
+            width: 80px;
+            height: 50px;
             object-fit: cover;
             border-radius: 4px;
         }
@@ -183,15 +183,28 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .tournament-table th {
             background-color: #f8f9fa;
             font-weight: 600;
+            white-space: nowrap;
+            vertical-align: middle;
         }
         .tournament-table td {
             vertical-align: middle;
         }
+        .tournament-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tournament-name span {
+            font-weight: 500;
+        }
         .status-badge {
-            padding: 5px 10px;
-            border-radius: 15px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
+            display: inline-block;
+            text-align: center;
+            min-width: 100px;
         }
         .status-upcoming {
             background-color: #e3f2fd;
@@ -217,23 +230,47 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex;
             gap: 5px;
             flex-wrap: wrap;
+            justify-content: flex-end;
+            min-width: 200px;
         }
         .action-buttons .btn {
             padding: 4px 8px;
             font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
         }
         .date-info {
             display: flex;
             flex-direction: column;
             gap: 2px;
             font-size: 12px;
+            margin-top: 4px;
         }
-        .date-info span {
-            display: block;
-        }
-        .date-label {
+        .date-info small {
             color: #666;
-            font-weight: 500;
+        }
+        .status-column {
+            min-width: 140px;
+            text-align: center;
+        }
+        .tournament-table td.actions-column {
+            text-align: right;
+            padding-right: 20px;
+        }
+        .teams-column {
+            text-align: center;
+            white-space: nowrap;
+        }
+        .prize-column {
+            white-space: nowrap;
+            text-align: right;
+        }
+        .entry-column {
+            white-space: nowrap;
+            text-align: center;
         }
     </style>
 </head>
@@ -257,37 +294,36 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <table class="table table-striped table-hover tournament-table">
                         <thead>
                             <tr>
-                                <th>Tournament</th>
+                                <th style="min-width: 300px;">Tournament</th>
                                 <th>Game</th>
-                                <th>Prize Pool</th>
-                                <th>Entry Fee</th>
-                                <th>Teams</th>
-                                <th>Registration</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th class="prize-column">Prize Pool</th>
+                                <th class="entry-column">Entry Fee</th>
+                                <th class="teams-column">Teams</th>
+                                <th class="status-column">Status</th>
+                                <th class="actions-column">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($tournaments as $tournament): ?>
                             <tr>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
+                                    <div class="tournament-name">
                                         <img src="<?php echo htmlspecialchars($tournament['banner_image']); ?>" alt="Tournament banner" onerror="this.src='assets/images/default-tournament.jpg'">
                                         <span><?php echo htmlspecialchars($tournament['name']); ?></span>
                                     </div>
                                 </td>
                                 <td><?php echo htmlspecialchars($tournament['game_name']); ?></td>
-                                <td>
+                                <td class="prize-column">
                                     <?php 
                                         echo $tournament['prize_currency'] === 'USD' ? '$' : '₹';
                                         echo number_format($tournament['prize_pool'], 2); 
                                     ?>
                                 </td>
-                                <td><?php echo $tournament['entry_fee']; ?> Tickets</td>
-                                <td><?php echo $tournament['current_teams'] . '/' . $tournament['max_teams']; ?></td>
-                                <td>
+                                <td class="entry-column"><?php echo $tournament['entry_fee']; ?> Tickets</td>
+                                <td class="teams-column"><?php echo $tournament['current_teams'] . '/' . $tournament['max_teams']; ?></td>
+                                <td class="status-column">
                                     <?php
-                                    $now = new DateTime(); // Add this line to define $now
+                                    $now = new DateTime();
                                     $playStart = new DateTime($tournament['playing_start_date']);
                                     $finishDate = new DateTime($tournament['finish_date']);
                                     $regOpen = new DateTime($tournament['registration_open_date']);
@@ -317,7 +353,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <?php echo $status; ?>
                                     </span>
                                     <?php if ($statusClass !== 'cancelled' && $statusClass !== 'completed'): ?>
-                                    <div class="date-info mt-1">
+                                    <div class="date-info">
                                         <?php if ($statusClass === 'upcoming'): ?>
                                             <small>Starts: <?php echo $regOpen->format('M d, Y'); ?></small>
                                         <?php elseif ($statusClass === 'registration'): ?>
@@ -328,7 +364,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                     <?php endif; ?>
                                 </td>
-                                <td>
+                                <td class="actions-column">
                                     <div class="action-buttons">
                                         <button class="btn btn-sm btn-primary" onclick="editTournament(<?php echo $tournament['id']; ?>)" title="Edit">
                                             <i class="bi bi-pencil"></i>
