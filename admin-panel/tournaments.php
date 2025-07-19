@@ -31,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         name, game_name, banner_image, prize_pool, prize_currency, entry_fee, 
                         max_teams, mode, format, match_type, registration_open_date,
                         registration_close_date, playing_start_date, finish_date,
-                        description, rules, status, registration_phase, created_by
+                        description, rules, status, registration_phase, created_by, payment_date
                     ) VALUES (
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming', ?, ?
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming', ?, ?, ?
                     )");
                     
                     $stmt->execute([
@@ -54,7 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_POST['description'],
                         $_POST['rules'],
                         $registrationPhase,
-                        $_SESSION['admin_id'] // Add created_by field
+                        $_SESSION['admin_id'],
+                        !empty($_POST['payment_date']) ? date('Y-m-d', strtotime($_POST['payment_date'])) : null
                     ]);
                     
                     // Commit transaction
@@ -78,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         prize_currency = ?, entry_fee = ?, max_teams = ?, mode = ?, 
                         format = ?, match_type = ?, registration_open_date = ?, 
                         registration_close_date = ?, playing_start_date = ?, finish_date = ?,
-                        description = ?, rules = ?
+                        description = ?, rules = ?, payment_date = ?
                         WHERE id = ?");
                     
                     $stmt->execute([
@@ -98,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         date('Y-m-d', strtotime($_POST['finish_date'])),
                         $_POST['description'],
                         $_POST['rules'],
+                        !empty($_POST['payment_date']) ? date('Y-m-d', strtotime($_POST['payment_date'])) : null,
                         $_POST['tournament_id']
                     ]);
                     
@@ -152,6 +154,66 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .date-input-group input {
             flex: 1;
         }
+        .tournament-table img {
+            width: 100px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .tournament-table {
+            font-size: 14px;
+        }
+        .tournament-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .tournament-table td {
+            vertical-align: middle;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-upcoming {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        .status-ongoing {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-completed {
+            background-color: #f5f5f5;
+            color: #616161;
+        }
+        .status-cancelled {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .action-buttons .btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .date-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 12px;
+        }
+        .date-info span {
+            display: block;
+        }
+        .date-label {
+            color: #666;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -171,10 +233,10 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- Tournaments Table -->
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover tournament-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
+                                <th>Tournament</th>
                                 <th>Game</th>
                                 <th>Prize Pool</th>
                                 <th>Entry Fee</th>
@@ -187,7 +249,12 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <tbody>
                             <?php foreach ($tournaments as $tournament): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($tournament['name']); ?></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="<?php echo htmlspecialchars($tournament['banner_image']); ?>" alt="Tournament banner" onerror="this.src='assets/images/default-tournament.jpg'">
+                                        <span><?php echo htmlspecialchars($tournament['name']); ?></span>
+                                    </div>
+                                </td>
                                 <td><?php echo htmlspecialchars($tournament['game_name']); ?></td>
                                 <td>
                                     <?php 
@@ -198,50 +265,62 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <td><?php echo $tournament['entry_fee']; ?> Tickets</td>
                                 <td><?php echo $tournament['current_teams'] . '/' . $tournament['max_teams']; ?></td>
                                 <td>
-                                    <?php 
-                                    $now = new DateTime();
-                                    $regOpen = new DateTime($tournament['registration_open_date']);
-                                    $regClose = new DateTime($tournament['registration_close_date']);
-                                    
-                                    if ($now < $regOpen) {
-                                        echo 'Starts: ' . $regOpen->format('M d, Y');
-                                    } elseif ($now >= $regOpen && $now <= $regClose) {
-                                        echo 'Closes: ' . $regClose->format('M d, Y');
-                                    } else {
-                                        echo 'Closed';
-                                    }
-                                    ?>
+                                    <div class="date-info">
+                                        <?php 
+                                        $now = new DateTime();
+                                        $regOpen = new DateTime($tournament['registration_open_date']);
+                                        $regClose = new DateTime($tournament['registration_close_date']);
+                                        ?>
+                                        <span class="date-label">Opens:</span>
+                                        <span><?php echo $regOpen->format('M d, Y'); ?></span>
+                                        <span class="date-label">Closes:</span>
+                                        <span><?php echo $regClose->format('M d, Y'); ?></span>
+                                    </div>
                                 </td>
                                 <td>
                                     <?php
                                     $playStart = new DateTime($tournament['playing_start_date']);
                                     $finishDate = new DateTime($tournament['finish_date']);
                                     
-                                    if ($now < $playStart) {
-                                        echo 'Starts: ' . $playStart->format('M d, Y');
+                                    $status = '';
+                                    $statusClass = '';
+                                    
+                                    if ($tournament['status'] === 'cancelled') {
+                                        $status = 'Cancelled';
+                                        $statusClass = 'cancelled';
+                                    } elseif ($now < $playStart) {
+                                        $status = 'Upcoming';
+                                        $statusClass = 'upcoming';
                                     } elseif ($now >= $playStart && $now <= $finishDate) {
-                                        echo 'Ends: ' . $finishDate->format('M d, Y');
+                                        $status = 'Ongoing';
+                                        $statusClass = 'ongoing';
                                     } else {
-                                        echo 'Completed';
+                                        $status = 'Completed';
+                                        $statusClass = 'completed';
                                     }
                                     ?>
+                                    <span class="status-badge status-<?php echo $statusClass; ?>">
+                                        <?php echo $status; ?>
+                                    </span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-primary" onclick="editTournament(<?php echo $tournament['id']; ?>)">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteTournament(<?php echo $tournament['id']; ?>)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-primary" onclick="window.location.href='tournament-schedule.php?id=<?php echo $tournament['id']; ?>'">
-                                        <i class="bi bi-calendar"></i> Schedule
-                                    </button>
-                                    <button class="btn btn-sm btn-success" onclick="window.location.href='tournament-rounds.php?id=<?php echo $tournament['id']; ?>'">
-                                        <i class="bi bi-list-ol"></i> Rounds
-                                    </button>
-                                    <button class="btn btn-sm btn-info" onclick="viewRegistrations(<?php echo $tournament['id']; ?>)">
-                                        <i class="bi bi-people"></i> Teams
-                                    </button>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-primary" onclick="editTournament(<?php echo $tournament['id']; ?>)" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteTournament(<?php echo $tournament['id']; ?>)" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="window.location.href='tournament-schedule.php?id=<?php echo $tournament['id']; ?>'" title="Schedule">
+                                            <i class="bi bi-calendar"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-success" onclick="window.location.href='tournament-rounds.php?id=<?php echo $tournament['id']; ?>'" title="Rounds">
+                                            <i class="bi bi-list-ol"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-info" onclick="viewRegistrations(<?php echo $tournament['id']; ?>)" title="Teams">
+                                            <i class="bi bi-people"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -358,6 +437,12 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                                 <small class="text-muted">When the tournament matches will be played</small>
                             </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Prize Payment Date</label>
+                            <input type="date" class="form-control" name="payment_date">
+                            <small class="text-muted">When the prize money will be distributed to winners</small>
                         </div>
                         
                         <div class="mb-3">
@@ -486,6 +571,12 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                         
                         <div class="mb-3">
+                            <label class="form-label">Prize Payment Date</label>
+                            <input type="date" class="form-control" name="payment_date">
+                            <small class="text-muted">When the prize money will be distributed to winners</small>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label class="form-label">Description</label>
                             <textarea class="form-control" name="description" rows="3" required></textarea>
                         </div>
@@ -588,6 +679,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     form.querySelector('[name="registration_close_date"]').value = data.registration_close_date.split(' ')[0];
                     form.querySelector('[name="playing_start_date"]').value = data.playing_start_date.split(' ')[0];
                     form.querySelector('[name="finish_date"]').value = data.finish_date.split(' ')[0];
+                    form.querySelector('[name="payment_date"]').value = data.payment_date ? data.payment_date.split(' ')[0] : '';
                     form.querySelector('[name="description"]').value = data.description;
                     form.querySelector('[name="rules"]').value = data.rules;
 

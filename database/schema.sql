@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
     registration_close_date DATE NOT NULL,
     playing_start_date DATE NOT NULL,
     finish_date DATE NOT NULL,
+    payment_date DATE DEFAULT NULL,
     status ENUM('upcoming', 'ongoing', 'completed', 'cancelled') DEFAULT 'upcoming',
     registration_phase ENUM('open', 'closed', 'playing', 'finished') DEFAULT 'closed',
     rules TEXT,
