@@ -287,6 +287,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <td><?php echo $tournament['current_teams'] . '/' . $tournament['max_teams']; ?></td>
                                 <td>
                                     <?php
+                                    $now = new DateTime(); // Add this line to define $now
                                     $playStart = new DateTime($tournament['playing_start_date']);
                                     $finishDate = new DateTime($tournament['finish_date']);
                                     $regOpen = new DateTime($tournament['registration_open_date']);
