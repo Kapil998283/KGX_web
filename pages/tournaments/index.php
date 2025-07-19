@@ -6,8 +6,7 @@ require_once '../../includes/team-auth.php';
 
 // Add CSS link for tournaments
 ?>
-<link rel="stylesheet" href="../../assets/css/style.css">
-<link rel="stylesheet" href="./css/tournaments.css">
+<link rel="stylesheet" href="../../assets/css/tournament/index.css">
 <?php
 
 // Initialize database connection
@@ -49,20 +48,28 @@ function getRegistrationUrl($tournament) {
 }
 ?>
 
-<main>
-    <section class="tournaments-section" style="padding: 120px 0 60px;">
-        <div class="container">
-            <div class="section-header d-flex justify-content-between align-items-center mb-5">
-                <h2 class="section-title">Active Tournaments</h2>
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <a href="my-registrations.php" class="btn btn-primary">
-                        <ion-icon name="trophy-outline" class="me-2"></ion-icon>
-                        My Registrations
-                    </a>
-                <?php endif; ?>
-            </div>
-            
-            <div class="row g-4">
+<section class="tournaments-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Active Tournaments</h2>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="my-registrations.php" class="btn-primary">
+                    <ion-icon name="trophy-outline"></ion-icon>
+                    My Registrations
+                </a>
+            <?php endif; ?>
+        </div>
+        
+        <div class="row">
+            <?php if (empty($tournaments)): ?>
+                <div class="col-12">
+                    <div class="no-tournaments">
+                        <ion-icon name="calendar-outline" class="large-icon"></ion-icon>
+                        <h3>No Active Tournaments</h3>
+                        <p>Check back later for upcoming tournaments!</p>
+                    </div>
+                </div>
+            <?php else: ?>
                 <?php foreach ($tournaments as $tournament): ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="tournament-card">
@@ -74,14 +81,18 @@ function getRegistrationUrl($tournament) {
                                 <div class="tournament-meta">
                                     <div class="prize-pool">
                                         <ion-icon name="trophy-outline"></ion-icon>
-                                        <span><?php 
-                                            echo $tournament['prize_currency'] === 'USD' ? '$' : '₹';
-                                            echo number_format($tournament['prize_pool'], 2); 
-                                        ?></span>
+                                        <?php 
+                                            if (!empty($tournament['website_currency_type']) && $tournament['website_currency_amount'] > 0) {
+                                                echo number_format($tournament['website_currency_amount']) . ' ' . ucfirst($tournament['website_currency_type']);
+                                            } else {
+                                                echo $tournament['prize_currency'] === 'USD' ? '$' : '₹';
+                                                echo number_format($tournament['prize_pool']); 
+                                            }
+                                        ?>
                                     </div>
                                     <div class="entry-fee">
                                         <ion-icon name="ticket-outline"></ion-icon>
-                                        <span><?php echo $tournament['entry_fee']; ?> Tickets</span>
+                                        <?php echo $tournament['entry_fee']; ?> Tickets
                                     </div>
                                 </div>
                             </div>
@@ -104,23 +115,26 @@ function getRegistrationUrl($tournament) {
                                 <div class="tournament-dates">
                                     <?php if ($tournament['registration_phase'] === 'open'): ?>
                                         <div class="registration-ends">
+                                            <ion-icon name="time-outline"></ion-icon>
                                             Registration Closes: <?php echo date('M d, Y', strtotime($tournament['registration_close_date'])); ?>
                                         </div>
                                     <?php endif; ?>
                                     <div class="tournament-starts">
+                                        <ion-icon name="calendar-outline"></ion-icon>
                                         Starts: <?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?>
                                     </div>
                                 </div>
 
                                 <div class="card-actions">
                                     <a href="details.php?id=<?php echo $tournament['id']; ?>" class="btn btn-primary">
+                                        <ion-icon name="information-circle-outline"></ion-icon>
                                         View Details
                                     </a>
                                     
                                     <?php if ($tournament['registration_phase'] === 'open'): ?>
                                         <?php if (isset($_SESSION['user_id'])): ?>
                                             <?php
-                                            // Check if user has already registered - different check for Solo mode
+                                            // Check if user has already registered
                                             if ($tournament['mode'] === 'Solo') {
                                                 $stmt = $db->prepare("
                                                     SELECT tr.* 
@@ -165,11 +179,13 @@ function getRegistrationUrl($tournament) {
                                             <?php if (!$existing_registration && $spots_left > 0 && $has_enough_tickets): ?>
                                                 <?php if ($tournament['mode'] === 'Solo'): ?>
                                                     <a href="<?php echo getRegistrationUrl($tournament); ?>" class="btn btn-secondary">
+                                                        <ion-icon name="person-add-outline"></ion-icon>
                                                         Register Now
                                                     </a>
                                                 <?php elseif ($can_register): ?>
                                                     <a href="<?php echo getRegistrationUrl($tournament); ?>" class="btn btn-secondary">
-                                                        Register Now
+                                                        <ion-icon name="people-outline"></ion-icon>
+                                                        Register Team
                                                     </a>
                                                 <?php else: ?>
                                                     <?php
@@ -186,11 +202,13 @@ function getRegistrationUrl($tournament) {
                                                     
                                                     if ($teamRole && $teamRole['role'] === 'member'): ?>
                                                         <button class="btn btn-secondary" disabled>
+                                                            <ion-icon name="lock-closed-outline"></ion-icon>
                                                             Only Team Captain Can Register
                                                         </button>
                                                     <?php else: ?>
                                                         <a href="../../pages/teams/create_team.php?redirect=tournament&id=<?php echo $tournament['id']; ?>"
                                                             class="btn btn-secondary">
+                                                            <ion-icon name="add-outline"></ion-icon>
                                                             <?php if ($tournament['mode'] === 'Duo'): ?>
                                                                 Create Duo Team
                                                             <?php else: ?>
@@ -201,19 +219,23 @@ function getRegistrationUrl($tournament) {
                                                 <?php endif; ?>
                                             <?php elseif (!$has_enough_tickets): ?>
                                                 <button class="btn btn-secondary" disabled>
+                                                    <ion-icon name="ticket-outline"></ion-icon>
                                                     Need <?php echo $tournament['entry_fee']; ?> Tickets
                                                 </button>
                                             <?php elseif ($existing_registration): ?>
                                                 <button class="btn btn-secondary" disabled>
+                                                    <ion-icon name="checkmark-circle-outline"></ion-icon>
                                                     Already Registered
                                                 </button>
                                             <?php elseif ($spots_left <= 0): ?>
                                                 <button class="btn btn-secondary" disabled>
+                                                    <ion-icon name="alert-circle-outline"></ion-icon>
                                                     Tournament Full
                                                 </button>
                                             <?php endif; ?>
                                         <?php else: ?>
                                             <a href="../../register/login.php" class="btn btn-secondary">
+                                                <ion-icon name="log-in-outline"></ion-icon>
                                                 Login to Register
                                             </a>
                                         <?php endif; ?>
@@ -223,19 +245,9 @@ function getRegistrationUrl($tournament) {
                         </div>
                     </div>
                 <?php endforeach; ?>
-
-                <?php if (empty($tournaments)): ?>
-                    <div class="col-12 text-center">
-                        <div class="no-tournaments">
-                            <ion-icon name="calendar-outline" class="large-icon"></ion-icon>
-                            <h3>No Active Tournaments</h3>
-                            <p>Check back later for upcoming tournaments!</p>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
+            <?php endif; ?>
         </div>
-    </section>
-</main>
+    </div>
+</section>
 
-<?php require_once '../../includes/footer.php'; ?> 
+<?php require_once '../../includes/footer.php'; ?>
