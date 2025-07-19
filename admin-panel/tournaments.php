@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/admin-auth.php';
 require_once '../config/database.php';
+require_once 'includes/admin-utils.php';  // Add this line to include the utility functions
 
 // Initialize database connection
 $database = new Database();
