@@ -1,0 +1,299 @@
+/* Modern Tournament Registrations Styles */
+:root {
+  /* Tournament-specific variables */
+  --card-bg: var(--raisin-black-2);
+  --card-hover-bg: var(--raisin-black-3);
+  --card-border: 1px solid var(--orange, rgba(0, 255, 132, 0.1));
+  --card-radius: 24px;
+  --card-inner-radius: 16px;
+  --card-spacing: 1.5rem;
+  --card-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --neon-green: var(--orange);
+  --neon-green-glow: 0 0 20px var(--orange, rgba(0, 255, 132, 0.3));
+  --status-green: var(--orange);
+  --status-orange: #ff4d1c;
+}
+
+.registrations-section {
+  padding: 120px 0 80px;
+  background-color: var(--raisin-black-1);
+}
+
+/* Page Title */
+.section-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 2rem;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/* Registrations Grid */
+.registrations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Registration Card */
+.registration-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  transition: var(--card-transition);
+  position: relative;
+  height: 100%;
+}
+
+.registration-card:hover {
+  transform: translateY(-4px);
+  background: var(--card-hover-bg);
+  box-shadow: var(--neon-green-glow);
+}
+
+/* Card Banner */
+.card-banner {
+  position: relative;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  overflow: hidden;
+}
+
+.tournament-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.registration-card:hover .tournament-banner {
+  transform: scale(1.05);
+}
+
+/* Registration Status */
+.registration-status {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  color: var(--white);
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.registration-status.pending {
+  background: rgba(255, 77, 28, 0.2);
+  color: var(--status-orange);
+}
+
+.registration-status.approved {
+  background: rgba(0, 255, 132, 0.2);
+  color: var(--status-green);
+}
+
+.registration-status.rejected {
+  background: rgba(255, 59, 59, 0.2);
+  color: #ff3b3b;
+}
+
+/* Card Content */
+.card-content {
+  padding: 1.5rem;
+}
+
+.tournament-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 1rem;
+}
+
+.game-name {
+  color: var(--white);
+  opacity: 0.8;
+  margin-bottom: 1rem;
+}
+
+/* Registration Meta */
+.registration-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 100px;
+  font-size: 0.875rem;
+  color: var(--white);
+}
+
+.info-item ion-icon {
+  font-size: 1.1em;
+  color: var(--neon-green);
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.badge.bg-primary {
+  background: var(--neon-green);
+  color: var(--card-bg);
+}
+
+.badge.bg-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+
+/* Tournament Dates */
+.tournament-dates {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+}
+
+.registered-on,
+.tournament-starts {
+  color: var(--white);
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+}
+
+/* Card Actions */
+.card-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 100px;
+  font-weight: 500;
+  transition: var(--card-transition);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.btn-primary {
+  background: var(--neon-green);
+  color: var(--card-bg);
+}
+
+.btn-secondary {
+  background: var(--card-hover-bg);
+  color: var(--white);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neon-green-glow);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Empty State */
+.no-registrations {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  color: var(--white);
+}
+
+.large-icon {
+  font-size: 4rem;
+  color: var(--neon-green);
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
+}
+
+.no-registrations h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.no-registrations p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .registrations-section {
+    padding: 100px 1rem 60px;
+  }
+  
+  .registrations-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+  }
+
+  .registration-info {
+    flex-direction: column;
+  }
+
+  .info-item {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .registrations-section {
+    padding: 80px 1rem 40px;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  .tournament-title {
+    font-size: 1.125rem;
+  }
+
+  .registration-status {
+    font-size: 0.75rem;
+  }
+} 
