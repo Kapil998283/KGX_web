@@ -99,7 +99,7 @@ function getStatusClass($tournament) {
                     <?php endif; ?>
 
                     <div class="tournament-meta">
-                        <?php if ($tournament['registration_phase'] === 'open'): ?>
+                    <?php if ($tournament['registration_phase'] === 'open'): ?>
                             <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
                                 Register Now
                             </button>
