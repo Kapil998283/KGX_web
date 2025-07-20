@@ -110,6 +110,7 @@ function getRegistrationUrl($tournament) {
                         </div>
 
                         <div class="card-content">
+                            <h2 class="tournament-name"><?php echo htmlspecialchars($tournament['name']); ?></h2>
                             <h3 class="game-name"><?php echo htmlspecialchars($tournament['game_name']); ?></h3>
                             
                             <div class="tournament-meta">
