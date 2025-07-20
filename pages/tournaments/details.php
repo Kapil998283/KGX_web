@@ -1,5 +1,4 @@
 <?php
-ob_start(); // Start output buffering at the very beginning
 session_start();
 require_once '../../config/database.php';
 require_once '../../includes/header.php';
@@ -50,291 +49,327 @@ if ($team_count != $tournament['current_teams']) {
     $stmt->execute([$team_count, $tournament['id']]);
     $tournament['current_teams'] = $team_count;
 }
+
+// Function to get registration status class
+function getStatusClass($tournament) {
+    $now = new DateTime();
+    $regOpen = new DateTime($tournament['registration_open_date']);
+    $regClose = new DateTime($tournament['registration_close_date']);
+    $playStart = new DateTime($tournament['playing_start_date']);
+    $finishDate = new DateTime($tournament['finish_date']);
+    
+    if ($tournament['status'] === 'cancelled') {
+        return 'cancelled';
+    } elseif ($now >= $playStart && $now <= $finishDate) {
+        return 'playing';
+    } elseif ($now >= $regOpen && $now <= $regClose) {
+        return 'registration-open';
+    } elseif ($now < $regOpen) {
+        return 'upcoming';
+    } else {
+        return 'completed';
+    }
+}
 ?>
+
 <link rel="stylesheet" href="../../assets/css/tournament/details.css">
 
 <main>
-    <section class="tournament-details">
-        <div class="container">
-            <div class="tournament-header">
-                <div class="banner-container">
-                    <img src="<?php echo htmlspecialchars($tournament['banner_image']); ?>" 
-                         alt="<?php echo htmlspecialchars($tournament['name']); ?>" 
-                         class="tournament-banner">
+    <article>
+        <div class="tournament-container">
+            <div class="back-title">
+                <a href="index.php"><span>&larr;</span> <?php echo htmlspecialchars($tournament['name']); ?></a>
+            </div>
+
+            <div class="tournament-card">
+                <div class="image-section">
+                    <img src="<?php echo htmlspecialchars($tournament['banner_image']); ?>" alt="tournament" />
                 </div>
-                
-                <div class="tournament-info">
-                    <h1 class="tournament-title"><?php echo htmlspecialchars($tournament['name']); ?></h1>
-                    <div class="meta-info">
-                        <div class="meta-item">
-                            <ion-icon name="game-controller"></ion-icon>
-                            <span><?php echo htmlspecialchars($tournament['game_name']); ?></span>
-                        </div>
-                        <div class="meta-item">
-                            <ion-icon name="trophy"></ion-icon>
-                            <span>Prize Pool: <?php 
-                                echo $tournament['prize_currency'] === 'USD' ? '$' : '₹';
-                                echo number_format($tournament['prize_pool'], 2); 
-                            ?></span>
-                        </div>
-                        <div class="meta-item">
-                            <ion-icon name="ticket"></ion-icon>
-                            <span>Entry Fee: <?php echo $tournament['entry_fee']; ?> Tickets</span>
-                        </div>
+                <div class="info-section">
+                    <h2><?php echo htmlspecialchars($tournament['game_name']); ?></h2>
+                    <p class="subheading">Tournament <?php echo $tournament['status'] === 'completed' ? 'ended' : 'ending in'; ?></p>
+                    
+                    <?php if ($tournament['status'] !== 'completed'): ?>
+                    <div class="countdown-grid" data-end-date="<?php echo $tournament['finish_date']; ?>">
+                        <div class="hex-box"><span id="days">0</span><small>Days</small></div>
+                        <div class="hex-box"><span id="hours">0</span><small>Hours</small></div>
+                        <div class="hex-box"><span id="minutes">0</span><small>Minutes</small></div>
+                        <div class="hex-box"><span id="seconds">0</span><small>Seconds</small></div>
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="tournament-meta">
+                        <?php if ($tournament['registration_phase'] === 'open'): ?>
+                            <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
+                                Register Now
+                            </button>
+                        <?php endif; ?>
+                        <span class="tournament-time"><?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?></span>
+                        <span class="players-count">👥 <?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams</span>
                     </div>
                 </div>
             </div>
 
-            <div class="tournament-content">
-                <div class="row">
-                    <div class="col-lg-7 col-md-6">
-                        <div class="content-section">
-                            <h2>About the Tournament</h2>
-                            <p><?php echo nl2br(htmlspecialchars($tournament['description'])); ?></p>
-                        </div>
+            <div class="tournament-details">
+                <div class="info-box">
+                    <i class="icon">₿</i>
+                    <div>
+                        <p>Prize Pool</p>
+                        <strong><?php 
+                            echo $tournament['prize_currency'] === 'USD' ? '$' : '₹';
+                            echo number_format($tournament['prize_pool'], 2); 
+                        ?></strong>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <i class="icon">💰</i>
+                    <div>
+                        <p>Entry Fee</p>
+                        <strong><?php echo $tournament['entry_fee']; ?> Tickets</strong>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <i class="icon">👤</i>
+                    <div>
+                        <p>Mode</p>
+                        <strong><?php echo htmlspecialchars($tournament['mode']); ?></strong>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <i class="icon">🎮</i>
+                    <div>
+                        <p>Format</p>
+                        <strong><?php echo htmlspecialchars($tournament['format']); ?></strong>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <i class="icon">🏆</i>
+                    <div>
+                        <p>Match Type</p>
+                        <strong><?php echo htmlspecialchars($tournament['match_type']); ?></strong>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="content-section">
-                            <h2>Tournament Rules</h2>
-                            <div class="rules-content">
-                                <?php echo nl2br(htmlspecialchars($tournament['rules'])); ?>
-                            </div>
+            <div class="tournament-progress">
+                <?php
+                $steps = [
+                    ['label' => 'Registration Open', 'date' => $tournament['registration_open_date'], 'desc' => 'Register now to play in the tournament.'],
+                    ['label' => 'Registration Closed', 'date' => $tournament['registration_close_date'], 'desc' => 'Creating the brackets we\'ll start soon'],
+                    ['label' => 'Playing', 'date' => $tournament['playing_start_date'], 'desc' => 'Tournament matches in progress'],
+                    ['label' => 'Finished', 'date' => $tournament['finish_date'], 'desc' => 'Tournament finished. Prizes are on their way.'],
+                    ['label' => 'Paid', 'date' => $tournament['payment_date'], 'desc' => 'Payments sent to the winners. Congrats!']
+                ];
+
+                $now = new DateTime();
+                $currentStep = 1;
+                foreach ($steps as $index => $step) {
+                    $stepDate = new DateTime($step['date']);
+                    if ($now >= $stepDate) {
+                        $currentStep = $index + 1;
+                    }
+                    ?>
+                    <div class="progress-step <?php echo $now >= $stepDate ? 'completed' : ''; ?>">
+                        <div class="step-icon"><?php echo $now >= $stepDate ? '✔' : ($index + 1); ?></div>
+                        <div class="progress-step-content">
+                            <h4><?php echo $step['label']; ?></h4>
+                            <p><?php echo $step['desc']; ?></p>
+                            <small><?php echo date('M d, Y', strtotime($step['date'])); ?></small>
                         </div>
                     </div>
+                <?php } ?>
+            </div>
 
-                    <div class="col-lg-5 col-md-6">
-                        <div class="tournament-sidebar">
-                            <div class="sidebar-flex-container">
-                                <div class="sidebar-section tournament-stats">
-                                    <div class="stat-card">
-                                        <div class="stat-icon">
-                                            <ion-icon name="people-outline"></ion-icon>
-                                        </div>
-                                        <div class="stat-info">
-                                            <span class="stat-value"><?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?></span>
-                                            <span class="stat-label">Teams Registered</span>
-                                        </div>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon">
-                                            <ion-icon name="trophy-outline"></ion-icon>
-                                        </div>
-                                        <div class="stat-info">
-                                            <span class="stat-value"><?php echo htmlspecialchars($tournament['format']); ?></span>
-                                            <span class="stat-label">Tournament Format</span>
-                                        </div>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon">
-                                            <ion-icon name="game-controller-outline"></ion-icon>
-                                        </div>
-                                        <div class="stat-info">
-                                            <span class="stat-value"><?php echo htmlspecialchars($tournament['mode']); ?></span>
-                                            <span class="stat-label">Game Mode</span>
-                                        </div>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon">
-                                            <ion-icon name="medal-outline"></ion-icon>
-                                        </div>
-                                        <div class="stat-info">
-                                            <span class="stat-value"><?php echo htmlspecialchars($tournament['match_type']); ?></span>
-                                            <span class="stat-label">Match Type</span>
-                                        </div>
-                                    </div>
-                                </div>
+            <div class="tournament-tabs">
+                <button class="tab-btn active" data-tab="brackets-section">Brackets</button>
+                <button class="tab-btn" data-tab="players-section">Players</button>
+                <button class="tab-btn" data-tab="winners-section">Winners</button>
+                <button class="tab-btn" data-tab="rules-section">Rules</button>
+            </div>
 
-                                <div class="sidebar-flex-row">
-                                    <div class="sidebar-section timeline-section">
-                                        <h3>Tournament Timeline</h3>
-                                        <div class="timeline">
-                                            <?php
-                                            $current_time = time();
-                                            $dates = [
-                                                ['date' => $tournament['registration_open_date'], 'label' => 'Registration Opens', 'icon' => 'calendar-outline'],
-                                                ['date' => $tournament['registration_close_date'], 'label' => 'Registration Closes', 'icon' => 'time-outline'],
-                                                ['date' => $tournament['playing_start_date'], 'label' => 'Tournament Starts', 'icon' => 'flag-outline'],
-                                                ['date' => $tournament['finish_date'], 'label' => 'Tournament Ends', 'icon' => 'trophy-outline']
-                                            ];
+            <!-- Brackets Section -->
+            <div id="brackets-section" class="tab-content active">
+                <div class="rounds">
+                    <div class="rounds-grid">
+                        <?php
+                        // Fetch tournament rounds
+                        $stmt = $db->prepare("SELECT * FROM tournament_rounds WHERE tournament_id = ? ORDER BY round_number");
+                        $stmt->execute([$tournament['id']]);
+                        $rounds = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                                            foreach ($dates as $index => $date_info):
-                                                $date_timestamp = strtotime($date_info['date']);
-                                                $is_past = $current_time > $date_timestamp;
-                                                $is_current = $current_time >= $date_timestamp && 
-                                                            ($index == count($dates) - 1 || $current_time < strtotime($dates[$index + 1]['date']));
-                                            ?>
-                                            <div class="timeline-item <?php echo $is_past ? 'completed' : ($is_current ? 'current' : ''); ?>">
-                                                <div class="timeline-icon">
-                                                    <ion-icon name="<?php echo $date_info['icon']; ?>"></ion-icon>
-                                                    <?php if ($is_past): ?>
-                                                    <div class="check-icon">
-                                                        <ion-icon name="checkmark-outline"></ion-icon>
-                                                    </div>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="timeline-content">
-                                                    <h4><?php echo $date_info['label']; ?></h4>
-                                                    <p><?php echo date('M d, Y', $date_timestamp); ?></p>
-                                                </div>
-                                            </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
+                        foreach ($rounds as $round): ?>
+                            <div class="round-card">
+                                <h4>Round <?php echo $round['round_number']; ?> ></h4>
+                                <p><?php echo date('M d, g:i A', strtotime($round['start_time'])); ?></p>
+                                <small><?php echo $round['total_teams']; ?> Teams</small>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
 
-                                    <div class="sidebar-section rules-section">
-                                        <h3>Rules & Guidelines</h3>
-                                        <div class="tournament-rules">
-                                            <?php if (!empty($tournament['rules'])): ?>
-                                                <div class="rules-list">
-                                                    <?php 
-                                                    $rules = explode("\n", $tournament['rules']);
-                                                    foreach ($rules as $index => $rule): 
-                                                        if (trim($rule)):
-                                                    ?>
-                                                        <div class="rule-item">
-                                                            <span class="rule-number"><?php echo $index + 1; ?></span>
-                                                            <span class="rule-text"><?php echo htmlspecialchars(trim($rule)); ?></span>
-                                                        </div>
-                                                    <?php 
-                                                        endif;
-                                                    endforeach; 
-                                                    ?>
-                                                </div>
-                                            <?php else: ?>
-                                                <p class="no-rules">No specific rules have been set for this tournament.</p>
+            <!-- Players Section -->
+            <div id="players-section" class="tab-content">
+                <div class="players-section">
+                    <div class="players-branches">
+                        <?php
+                        // Fetch registered teams and their members
+                        $stmt = $db->prepare("
+                            SELECT t.*, tr.status as registration_status, tm.user_id, tm.role, u.username
+                            FROM tournament_registrations tr
+                            INNER JOIN teams t ON tr.team_id = t.id
+                            INNER JOIN team_members tm ON t.id = tm.team_id
+                            INNER JOIN users u ON tm.user_id = u.id
+                            WHERE tr.tournament_id = ? AND tr.status = 'approved'
+                            ORDER BY t.name, tm.role DESC
+                        ");
+                        $stmt->execute([$tournament['id']]);
+                        $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        $teams = [];
+                        foreach ($players as $player) {
+                            if (!isset($teams[$player['team_id']])) {
+                                $teams[$player['team_id']] = [
+                                    'name' => $player['name'],
+                                    'members' => []
+                                ];
+                            }
+                            $teams[$player['team_id']]['members'][] = [
+                                'username' => $player['username'],
+                                'role' => $player['role']
+                            ];
+                        }
+
+                        foreach ($teams as $teamId => $team): ?>
+                            <div class="branch">
+                                <h3><?php echo htmlspecialchars($team['name']); ?></h3>
+                                <?php foreach ($team['members'] as $member): ?>
+                                    <div class="player-card">
+                                        <img src="/assets/images/team-member-1.png" alt="Player">
+                                        <span>
+                                            <?php echo htmlspecialchars($member['username']); ?>
+                                            <?php if ($member['role'] === 'captain'): ?>
+                                                <i class="fas fa-crown" style="color: gold;"></i>
                                             <?php endif; ?>
-                                        </div>
+                                        </span>
                                     </div>
-                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
 
-                                <div class="sidebar-section">
-                                    <h3>Description</h3>
-                                    <div class="tournament-description">
-                                        <?php echo nl2br(htmlspecialchars($tournament['description'] ?? 'No description available.')); ?>
-                                    </div>
+            <!-- Winners Section -->
+            <div id="winners-section" class="tab-content">
+                <div class="winners-section">
+                    <?php if ($tournament['status'] === 'completed'): ?>
+                        <!-- Add winner display logic here -->
+                        <img src="/assets/images/winner-trophy.png" alt="Winner Trophy" class="winner-trophy" />
+                        <div class="winner-details">
+                            <!-- Add winner details here -->
+                        </div>
+                    <?php else: ?>
+                        <img src="/assets/images/winner-trophy.png" alt="Winner Trophy" class="winner-trophy" />
+                        <p class="winner-msg">Once the tournament is over, the data takes<br>a few minutes to appear.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Rules Section -->
+            <div id="rules-section" class="tab-content">
+                <div class="ruler">
+                    <div class="rules-container">
+                        <?php
+                        $rules = explode("\n", $tournament['rules']);
+                        foreach ($rules as $index => $rule):
+                            if (trim($rule)):
+                        ?>
+                            <div class="rule-item">
+                                <button class="rule-header" onclick="toggleAccordion('rule<?php echo $index; ?>')">
+                                    <span class="icon">❯</span> Rule <?php echo $index + 1; ?>
+                                </button>
+                                <div id="rule<?php echo $index; ?>" class="rule-body">
+                                    <?php echo htmlspecialchars($rule); ?>
                                 </div>
                             </div>
-
-                            <?php if ($tournament['registration_phase'] === 'open' && strtotime($tournament['registration_close_date']) >= time()): ?>
-                                <div class="registration-section">
-                                    <?php if (isset($_SESSION['user_id'])): ?>
-                                        <?php
-                                        // Check if user has already registered
-                                        $stmt = $db->prepare("
-                                            SELECT tr.* 
-                                            FROM tournament_registrations tr
-                                            INNER JOIN teams t ON tr.team_id = t.id
-                                            INNER JOIN team_members tm ON t.id = tm.team_id
-                                            WHERE tr.tournament_id = ? 
-                                            AND tm.user_id = ?
-                                            AND tm.status = 'active'
-                                            AND tr.status IN ('pending', 'approved')
-                                        ");
-                                        $stmt->execute([$tournament['id'], $_SESSION['user_id']]);
-                                        $existing_registration = $stmt->fetch();
-
-                                        // Get rejected registration if exists
-                                        $stmt = $db->prepare("
-                                            SELECT tr.* 
-                                            FROM tournament_registrations tr
-                                            INNER JOIN teams t ON tr.team_id = t.id
-                                            INNER JOIN team_members tm ON t.id = tm.team_id
-                                            WHERE tr.tournament_id = ? 
-                                            AND tm.user_id = ?
-                                            AND tm.status = 'active'
-                                            AND tr.status = 'rejected'
-                                            ORDER BY tr.registration_date DESC
-                                            LIMIT 1
-                                        ");
-                                        $stmt->execute([$tournament['id'], $_SESSION['user_id']]);
-                                        $rejected_registration = $stmt->fetch();
-
-                                        // Check if user has enough tickets
-                                        $stmt = $db->prepare("SELECT tickets FROM user_tickets WHERE user_id = ?");
-                                        $stmt->execute([$_SESSION['user_id']]);
-                                        $user_tickets = $stmt->fetch();
-                                        $has_enough_tickets = $user_tickets && $user_tickets['tickets'] >= $tournament['entry_fee'];
-
-                                        // Check if tournament is full
-                                        $spots_left = $tournament['max_teams'] - $tournament['current_teams'];
-                                        ?>
-
-                                        <?php if ($existing_registration): ?>
-                                            <div class="alert alert-info">
-                                                <h4 class="alert-heading">Already Registered!</h4>
-                                                <p>You are already registered for this tournament.</p>
-                                                <a href="my-registrations.php" class="btn btn-primary btn-lg w-100">View My Registrations</a>
-                                            </div>
-                                        <?php elseif ($rejected_registration): ?>
-                                            <div class="alert alert-warning">
-                                                <h4 class="alert-heading">Previous Registration Rejected</h4>
-                                                <p>Your previous registration was rejected. You can try registering again.</p>
-                                                <?php if ($has_enough_tickets && $spots_left > 0): ?>
-                                                    <a href="<?php echo getRegistrationUrl($tournament); ?>" class="btn btn-primary btn-lg w-100">
-                                                        Register Again
-                                                    </a>
-                                                <?php endif; ?>
-                                            </div>
-                                        <?php elseif ($spots_left <= 0): ?>
-                                            <div class="alert alert-warning">
-                                                <h4 class="alert-heading">Tournament Full</h4>
-                                                <p>This tournament has reached its maximum capacity.</p>
-                                            </div>
-                                        <?php elseif (!$has_enough_tickets): ?>
-                                            <div class="alert alert-warning">
-                                                <h4 class="alert-heading">Insufficient Tickets</h4>
-                                                <p>You need <?php echo $tournament['entry_fee']; ?> tickets to register.</p>
-                                                <a href="../shop/tickets.php" class="btn btn-primary btn-lg w-100">Get Tickets</a>
-                                            </div>
-                                        <?php else: ?>
-                                            <div class="registration-box">
-                                                <h4>Ready to Join?</h4>
-                                                <div class="registration-info mb-3">
-                                                    <div class="info-row">
-                                                        <span class="info-label">Mode:</span>
-                                                        <span class="info-value"><?php echo htmlspecialchars($tournament['mode']); ?></span>
-                                                    </div>
-                                                    <div class="info-row">
-                                                        <span class="info-label">Entry Fee:</span>
-                                                        <span class="info-value"><?php echo $tournament['entry_fee']; ?> Tickets</span>
-                                                    </div>
-                                                    <div class="info-row">
-                                                        <span class="info-label">Your Tickets:</span>
-                                                        <span class="info-value"><?php echo $user_tickets['tickets']; ?> Available</span>
-                                                    </div>
-                                                    <div class="info-row">
-                                                        <span class="info-label">Spots Left:</span>
-                                                        <span class="info-value"><?php echo $spots_left; ?></span>
-                                                    </div>
-                                                </div>
-                                                <a href="<?php echo getRegistrationUrl($tournament); ?>" class="btn btn-primary btn-lg w-100">
-                                                    Register Now
-                                                </a>
-                                            </div>
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <div class="alert alert-info">
-                                            <h4 class="alert-heading">Login Required</h4>
-                                            <p>Please login to register for this tournament.</p>
-                                            <a href="../auth/login.php" class="btn btn-primary btn-lg w-100">Login to Register</a>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php elseif ($tournament['registration_phase'] === 'closed' && strtotime($tournament['registration_open_date']) > time()): ?>
-                                <div class="registration-section">
-                                    <div class="alert alert-info">
-                                        <h4 class="alert-heading">Coming Soon</h4>
-                                        <p>Registration opens on <?php echo date('M d, Y', strtotime($tournament['registration_open_date'])); ?></p>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-                        </div>
+                        <?php 
+                            endif;
+                        endforeach; 
+                        ?>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </article>
 </main>
 
-<?php require_once '../../includes/footer.php'; ?>
+<script>
+// Countdown Timer
+function updateCountdown() {
+    const countdownElement = document.querySelector('.countdown-grid');
+    if (!countdownElement) return;
 
-<?php ob_end_flush(); // End output buffering and send output ?> 
+    const endDate = new Date(countdownElement.dataset.endDate).getTime();
+    
+    function update() {
+        const now = new Date().getTime();
+        const distance = endDate - now;
+
+        if (distance < 0) {
+            document.getElementById('days').textContent = '0';
+            document.getElementById('hours').textContent = '0';
+            document.getElementById('minutes').textContent = '0';
+            document.getElementById('seconds').textContent = '0';
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById('days').textContent = days;
+        document.getElementById('hours').textContent = hours;
+        document.getElementById('minutes').textContent = minutes;
+        document.getElementById('seconds').textContent = seconds;
+    }
+
+    update();
+    setInterval(update, 1000);
+}
+
+// Tab Switching
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(tab => tab.classList.remove('active'));
+
+        button.classList.add('active');
+        const tabId = button.getAttribute('data-tab');
+        document.getElementById(tabId).classList.add('active');
+    });
+});
+
+// Rules Accordion
+function toggleAccordion(id) {
+    const body = document.getElementById(id);
+    const item = body.parentElement;
+
+    if (body.style.display === "block") {
+        body.style.display = "none";
+        item.classList.remove("open");
+    } else {
+        body.style.display = "block";
+        item.classList.add("open");
+    }
+}
+
+// Initialize countdown
+document.addEventListener('DOMContentLoaded', updateCountdown);
+</script>
+
+<?php require_once '../../includes/footer.php'; ?> 
