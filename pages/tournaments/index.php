@@ -16,35 +16,68 @@ $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'all';
 
 // Build the query based on active tab
 $where_clause = "";
+$current_date = date('Y-m-d');
+
 switch ($active_tab) {
     case 'active':
-        $where_clause = "WHERE status = 'ongoing'";
+        $where_clause = "WHERE status != 'cancelled' 
+            AND playing_start_date <= '$current_date' 
+            AND finish_date >= '$current_date'";
         break;
     case 'upcoming':
-        $where_clause = "WHERE status = 'upcoming'";
+        $where_clause = "WHERE status != 'cancelled' 
+            AND (
+                (registration_open_date <= '$current_date' AND registration_close_date >= '$current_date')
+                OR
+                (registration_open_date > '$current_date')
+            )
+            AND playing_start_date > '$current_date'";
         break;
     case 'finished':
-        $where_clause = "WHERE status = 'completed'";
+        $where_clause = "WHERE (status = 'completed' OR finish_date < '$current_date')";
         break;
     default: // 'all'
-        $where_clause = "WHERE status IN ('upcoming', 'ongoing', 'completed')";
+        $where_clause = "WHERE status != 'cancelled'";
 }
 
 // Fetch tournaments based on filter
 $stmt = $db->prepare("
-    SELECT * FROM tournaments 
+    SELECT *, 
+    CASE 
+        WHEN status = 'cancelled' THEN 4
+        WHEN playing_start_date <= '$current_date' AND finish_date >= '$current_date' THEN 1
+        WHEN registration_open_date <= '$current_date' AND registration_close_date >= '$current_date' THEN 2
+        WHEN playing_start_date > '$current_date' THEN 2
+        ELSE 3
+    END as sort_order
+    FROM tournaments 
     {$where_clause}
-    ORDER BY 
-        CASE 
-            WHEN status = 'ongoing' THEN 1
-            WHEN status = 'upcoming' THEN 2
-            WHEN status = 'completed' THEN 3
-            ELSE 4
-        END,
-        playing_start_date ASC
+    ORDER BY sort_order ASC, playing_start_date ASC
 ");
+
 $stmt->execute();
 $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Function to determine tournament status for display
+function getTournamentStatus($tournament) {
+    $now = new DateTime();
+    $playStart = new DateTime($tournament['playing_start_date']);
+    $finishDate = new DateTime($tournament['finish_date']);
+    $regOpen = new DateTime($tournament['registration_open_date']);
+    $regClose = new DateTime($tournament['registration_close_date']);
+    
+    if ($tournament['status'] === 'cancelled') {
+        return ['status' => 'Cancelled', 'class' => 'status-cancelled'];
+    } elseif ($now >= $playStart && $now <= $finishDate) {
+        return ['status' => 'Playing', 'class' => 'status-playing'];
+    } elseif ($now >= $regOpen && $now <= $regClose) {
+        return ['status' => 'Registration Open', 'class' => 'status-upcoming'];
+    } elseif ($now < $regOpen) {
+        return ['status' => 'Upcoming', 'class' => 'status-upcoming'];
+    } else {
+        return ['status' => 'Completed', 'class' => 'status-completed'];
+    }
+}
 
 // Function to get the correct registration URL based on tournament mode
 function getRegistrationUrl($tournament) {
@@ -96,17 +129,30 @@ function getRegistrationUrl($tournament) {
                                  alt="<?php echo htmlspecialchars($tournament['name']); ?>" 
                                  class="tournament-banner">
                             
-                            <?php if ($tournament['registration_phase'] === 'playing'): ?>
-                                <div class="tournament-status status-playing">
-                                    <ion-icon name="play-circle-outline"></ion-icon>
-                                    Playing
-                                </div>
-                            <?php elseif ($tournament['registration_phase'] === 'open'): ?>
-                                <div class="tournament-status status-upcoming">
-                                    <ion-icon name="time-outline"></ion-icon>
-                                    Upcoming
-                                </div>
-                            <?php endif; ?>
+                            <?php 
+                                $status_info = getTournamentStatus($tournament);
+                                if ($status_info['class'] === 'status-playing') {
+                                    echo '<div class="tournament-status ' . $status_info['class'] . '">';
+                                    echo '<ion-icon name="play-circle-outline"></ion-icon>';
+                                    echo $status_info['status'];
+                                    echo '</div>';
+                                } elseif ($status_info['class'] === 'status-upcoming') {
+                                    echo '<div class="tournament-status ' . $status_info['class'] . '">';
+                                    echo '<ion-icon name="time-outline"></ion-icon>';
+                                    echo $status_info['status'];
+                                    echo '</div>';
+                                } elseif ($status_info['class'] === 'status-cancelled') {
+                                    echo '<div class="tournament-status ' . $status_info['class'] . '">';
+                                    echo '<ion-icon name="close-circle-outline"></ion-icon>';
+                                    echo $status_info['status'];
+                                    echo '</div>';
+                                } else { // status-completed
+                                    echo '<div class="tournament-status ' . $status_info['class'] . '">';
+                                    echo '<ion-icon name="checkmark-circle-outline"></ion-icon>';
+                                    echo $status_info['status'];
+                                    echo '</div>';
+                                }
+                            ?>
                         </div>
 
                         <div class="card-content">
