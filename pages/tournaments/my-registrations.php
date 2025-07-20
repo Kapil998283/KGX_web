@@ -44,269 +44,173 @@ $stmt->execute([$_SESSION['user_id']]);
 $registrations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
+<link rel="stylesheet" href="../../assets/css/tournament/registrations.css">
+
 <main>
-    <section class="registrations-section" style="padding: 120px 0 60px;">
+    <section class="registrations-section">
         <div class="container">
-            <h2 class="section-title text-center mb-5">My Tournament Registrations</h2>
+            <h1 class="section-title">My Tournament Registrations</h1>
+            <div class="title-underline"></div>
             
-            <div class="row g-4">
-                <?php if (empty($registrations)): ?>
-                    <div class="col-12 text-center">
-                        <div class="no-registrations">
-                            <ion-icon name="trophy-outline" class="large-icon"></ion-icon>
-                            <h3>No Tournament Registrations</h3>
-                            <p>You haven't registered for any tournaments yet.</p>
-                            <a href="index.php" class="btn btn-primary mt-3">Browse Tournaments</a>
-                        </div>
+            <?php if (empty($registrations)): ?>
+                <div class="no-registrations">
+                    <div class="no-registrations-content">
+                        <ion-icon name="trophy-outline" class="large-icon"></ion-icon>
+                        <h3>No Tournament Registrations</h3>
+                        <p>You haven't registered for any tournaments yet.</p>
+                        <a href="index.php" class="browse-btn">
+                            BROWSE TOURNAMENTS
+                        </a>
                     </div>
-                <?php else: ?>
+                </div>
+            <?php else: ?>
+                <div class="registrations-grid">
                     <?php foreach ($registrations as $reg): ?>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="registration-card">
-                                <div class="card-banner">
-                                    <img src="<?php echo htmlspecialchars($reg['banner_image']); ?>" 
-                                         alt="<?php echo htmlspecialchars($reg['tournament_name']); ?>" 
-                                         class="tournament-banner">
-                                    
-                                    <div class="tournament-meta">
-                                        <div class="prize-pool">
-                                            <ion-icon name="trophy-outline"></ion-icon>
-                                            <span><?php 
-                                                echo $reg['prize_currency'] === 'USD' ? '$' : '₹';
-                                                echo number_format($reg['prize_pool'], 2); 
-                                            ?></span>
-                                        </div>
-                                        <div class="registration-status <?php echo strtolower($reg['registration_status']); ?>">
-                                            <?php echo ucfirst($reg['registration_status']); ?>
-                                        </div>
+                        <div class="registration-card">
+                            <div class="card-banner">
+                                <img src="<?php echo htmlspecialchars($reg['banner_image']); ?>" 
+                                     alt="<?php echo htmlspecialchars($reg['tournament_name']); ?>" 
+                                     class="tournament-banner">
+                                
+                                <div class="registration-status <?php echo strtolower($reg['registration_status']); ?>">
+                                    <ion-icon name="<?php 
+                                        echo $reg['registration_status'] === 'approved' ? 'checkmark-circle-outline' : 
+                                            ($reg['registration_status'] === 'pending' ? 'time-outline' : 'close-circle-outline'); 
+                                    ?>"></ion-icon>
+                                    <?php echo ucfirst($reg['registration_status']); ?>
+                                </div>
+                            </div>
+
+                            <div class="card-content">
+                                <h3 class="tournament-title">
+                                    <?php echo htmlspecialchars($reg['tournament_name']); ?>
+                                </h3>
+                                <p class="game-name"><?php echo htmlspecialchars($reg['game_name']); ?></p>
+                                
+                                <div class="registration-info">
+                                    <div class="info-item">
+                                        <ion-icon name="people-outline"></ion-icon>
+                                        <span><?php echo htmlspecialchars($reg['team_name']); ?></span>
+                                        <?php if ($reg['is_captain']): ?>
+                                            <span class="badge bg-primary">Captain</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary">Member</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="info-item">
+                                        <ion-icon name="game-controller-outline"></ion-icon>
+                                        <span><?php echo htmlspecialchars($reg['mode']); ?></span>
                                     </div>
                                 </div>
 
-                                <div class="card-content">
-                                    <h3 class="tournament-title">
-                                        <?php echo htmlspecialchars($reg['tournament_name']); ?>
-                                    </h3>
-                                    <p class="game-name"><?php echo htmlspecialchars($reg['game_name']); ?></p>
-                                    
-                                    <div class="registration-info">
-                                        <div class="info-item">
-                                            <ion-icon name="people-outline"></ion-icon>
-                                            <span><?php echo htmlspecialchars($reg['team_name']); ?></span>
-                                            <?php if ($reg['is_captain']): ?>
-                                                <span class="badge bg-primary">Captain</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-secondary">Member</span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="info-item">
-                                            <ion-icon name="game-controller-outline"></ion-icon>
-                                            <span><?php echo htmlspecialchars($reg['mode']); ?></span>
-                                        </div>
+                                <div class="tournament-dates">
+                                    <div class="registered-on">
+                                        <ion-icon name="calendar-outline"></ion-icon>
+                                        Registered: <?php echo date('M d, Y', strtotime($reg['registration_date'])); ?>
                                     </div>
-
-                                    <div class="tournament-dates">
-                                        <div class="registered-on">
-                                            Registered: <?php echo date('M d, Y', strtotime($reg['registration_date'])); ?>
-                                        </div>
-                                        <div class="tournament-starts">
-                                            Starts: <?php echo date('M d, Y', strtotime($reg['playing_start_date'])); ?>
-                                        </div>
+                                    <div class="tournament-starts">
+                                        <ion-icon name="time-outline"></ion-icon>
+                                        Starts: <?php echo date('M d, Y', strtotime($reg['playing_start_date'])); ?>
                                     </div>
+                                </div>
 
-                                    <div class="card-actions">
-                                        <?php if ($reg['registration_status'] === 'approved'): ?>
-                                            <a href="/KGX/pages/tournaments/match-schedule.php?tournament_id=<?php echo $reg['tournament_id']; ?>&team_id=<?php echo $reg['team_id']; ?>" class="btn btn-primary">
-                                                Match Schedule
+                                <div class="card-actions">
+                                    <?php if ($reg['registration_status'] === 'approved'): ?>
+                                        <a href="match-schedule.php?tournament_id=<?php echo $reg['tournament_id']; ?>&team_id=<?php echo $reg['team_id']; ?>" class="btn btn-primary">
+                                            <ion-icon name="calendar-outline"></ion-icon>
+                                            Match Schedule
+                                        </a>
+                                        <?php if ($reg['is_captain']): ?>
+                                            <a href="../teams/yourteams.php?tab=tournament&team_id=<?php echo $reg['team_id']; ?>" 
+                                               class="btn btn-secondary">
+                                                <ion-icon name="settings-outline"></ion-icon>
+                                                Manage Team
                                             </a>
-                                            <?php if ($reg['is_captain']): ?>
-                                                <a href="../teams/yourteams.php?tab=tournament&team_id=<?php echo $reg['team_id']; ?>" 
-                                                   class="btn btn-secondary">
-                                                    Manage Team
-                                                </a>
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            <a href="/KGX/pages/tournaments/details.php?id=<?php echo $reg['tournament_id']; ?>" class="btn btn-primary">
-                                                View Details
-                                            </a>
-                                            <?php if ($reg['registration_status'] === 'pending'): ?>
-                                                <button class="btn btn-secondary" disabled>
-                                                    Waiting for Approval
-                                                </button>
-                                            <?php elseif ($reg['registration_status'] === 'rejected'): ?>
-                                                <a href="/KGX/pages/tournaments/register_<?php echo strtolower($reg['mode']); ?>.php?id=<?php echo $reg['tournament_id']; ?>" class="btn btn-secondary">
-                                                    Register Again
-                                                </a>
-                                            <?php endif; ?>
                                         <?php endif; ?>
-                                    </div>
+                                    <?php else: ?>
+                                        <a href="details.php?id=<?php echo $reg['tournament_id']; ?>" class="btn btn-primary">
+                                            <ion-icon name="information-circle-outline"></ion-icon>
+                                            View Details
+                                        </a>
+                                        <?php if ($reg['registration_status'] === 'pending'): ?>
+                                            <button class="btn btn-secondary" disabled>
+                                                <ion-icon name="hourglass-outline"></ion-icon>
+                                                Waiting for Approval
+                                            </button>
+                                        <?php elseif ($reg['registration_status'] === 'rejected'): ?>
+                                            <a href="register_<?php echo strtolower($reg['mode']); ?>.php?id=<?php echo $reg['tournament_id']; ?>" class="btn btn-secondary">
+                                                <ion-icon name="refresh-outline"></ion-icon>
+                                                Register Again
+                                            </a>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php endif; ?>
         </div>
     </section>
 </main>
 
 <style>
-.registrations-section {
-    background: var(--raisin-black-1);
-    color: var(--white);
-}
-
-.registration-card {
-    background: var(--raisin-black-2);
-    border-radius: 15px;
-    overflow: hidden;
-    transition: transform 0.3s ease;
-    height: 100%;
-}
-
-.registration-card:hover {
-    transform: translateY(-5px);
-}
-
-.card-banner {
-    position: relative;
-    height: 200px;
-    overflow: hidden;
-}
-
-.tournament-banner {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.tournament-meta {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    color: var(--white);
-}
-
-.prize-pool {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.registration-status {
-    padding: 3px 8px;
-    border-radius: 5px;
-    font-size: 0.9rem;
-}
-
-.registration-status.pending {
-    background: var(--orange);
-}
-
-.registration-status.approved {
-    background: var(--green);
-}
-
-.registration-status.rejected {
-    background: var(--red);
-}
-
-.card-content {
-    padding: 20px;
-}
-
-.tournament-title {
-    font-size: 1.25rem;
-    margin-bottom: 5px;
-    color: var(--white);
-}
-
-.game-name {
-    color: var(--quick-silver);
-    margin-bottom: 15px;
-}
-
-.registration-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: var(--quick-silver);
-}
-
-.tournament-dates {
-    font-size: 0.9rem;
-    color: var(--quick-silver);
-    margin-bottom: 20px;
-}
-
-.registered-on {
-    color: var(--orange);
-    margin-bottom: 5px;
-}
-
-.card-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.card-actions .btn {
-    flex: 1;
-    text-align: center;
-    padding: 8px 16px;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.btn-primary {
-    background: var(--orange);
-    color: var(--white);
-}
-
-.btn-secondary {
-    background: var(--raisin-black-3);
-    color: var(--white);
-}
-
-.btn:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
+/* Additional styles specific to this page */
+.title-underline {
+    width: 60px;
+    height: 4px;
+    background: var(--neon-green);
+    margin: -1rem auto 3rem;
+    border-radius: 2px;
 }
 
 .no-registrations {
-    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.no-registrations-content {
     text-align: center;
+    max-width: 400px;
+    padding: 3rem;
 }
 
-.no-registrations .large-icon {
-    font-size: 48px;
-    color: var(--quick-silver);
-    margin-bottom: 20px;
+.browse-btn {
+    display: inline-block;
+    background: var(--neon-green);
+    color: var(--raisin-black-1);
+    padding: 1rem 2rem;
+    border-radius: 100px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 2rem;
+    transition: var(--card-transition);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.no-registrations h3 {
-    color: var(--white);
-    margin-bottom: 10px;
+.browse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--neon-green-glow);
 }
 
-.no-registrations p {
-    color: var(--quick-silver);
+.large-icon {
+    font-size: 4rem;
+    color: var(--neon-green);
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
 }
 
-.badge {
-    font-size: 0.8rem;
-    padding: 3px 8px;
-    margin-left: 5px;
+@media (max-width: 768px) {
+    .no-registrations {
+        min-height: 300px;
+    }
+
+    .no-registrations-content {
+        padding: 2rem 1rem;
+    }
 }
 </style>
 
