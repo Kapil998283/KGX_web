@@ -18,7 +18,7 @@ $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'all';
 $where_clause = "";
 switch ($active_tab) {
     case 'active':
-        $where_clause = "WHERE status = 'ongoing' AND registration_phase = 'playing'";
+        $where_clause = "WHERE status = 'ongoing' OR (status = 'upcoming' AND registration_phase = 'playing')";
         break;
     case 'upcoming':
         $where_clause = "WHERE status = 'upcoming' AND registration_phase = 'open'";
@@ -27,18 +27,19 @@ switch ($active_tab) {
         $where_clause = "WHERE status = 'completed'";
         break;
     default: // 'all'
-        $where_clause = "WHERE status IN ('upcoming', 'ongoing', 'completed')";
+        $where_clause = "";
 }
 
 // Fetch tournaments based on filter
 $stmt = $db->prepare("
     SELECT * FROM tournaments 
-    {$where_clause}
+    " . ($where_clause ? $where_clause : "") . "
     ORDER BY 
         CASE 
-            WHEN registration_phase = 'playing' THEN 1
-            WHEN registration_phase = 'open' THEN 2
-            ELSE 3
+            WHEN status = 'ongoing' THEN 1
+            WHEN status = 'upcoming' AND registration_phase = 'playing' THEN 2
+            WHEN status = 'upcoming' AND registration_phase = 'open' THEN 3
+            WHEN status = 'completed' THEN 4
         END,
         playing_start_date ASC
 ");
