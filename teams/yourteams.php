@@ -714,8 +714,21 @@ if (!empty($teams)) {
                 <?php if ($team['role'] === 'captain'): ?>
                     <div class="tab-content <?php echo $active_tab === 'requests' ? 'active' : ''; ?>" id="requestsContent">
                         <div class="requests-list">
-                            <?php foreach ($pending_requests as $request): ?>
-                                <?php if ($request['team_id'] == $team['id']): ?>
+                            <?php
+                            // Get pending requests for this team with user details
+                            $pending_requests_sql = "SELECT tjr.*, u.username, u.profile_image, tjr.created_at
+                                   FROM team_join_requests tjr
+                                   JOIN users u ON tjr.user_id = u.id
+                                   WHERE tjr.team_id = :team_id 
+                                   AND tjr.status = 'pending'
+                                   ORDER BY tjr.created_at DESC";
+                            $stmt = $conn->prepare($pending_requests_sql);
+                            $stmt->execute(['team_id' => $team['id']]);
+                            $team_pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            ?>
+
+                            <?php if (!empty($team_pending_requests)): ?>
+                                <?php foreach ($team_pending_requests as $request): ?>
                                     <?php
                                     // Handle profile image
                                     $profile_image = $request['profile_image'];
@@ -742,34 +755,32 @@ if (!empty($teams)) {
                                         <img src="<?php echo htmlspecialchars($profile_image); ?>" 
                                              alt="<?php echo htmlspecialchars($request['username']); ?>" 
                                              class="request-avatar"
-                                             onerror="this.src='/KGX/ui/assets/images/guest-icon.png'">
+                                             onerror="this.src='/KGX/assets/images/guest-icon.png'">
                                         <div class="request-info">
                                             <h3><?php echo htmlspecialchars($request['username']); ?></h3>
                                             <p class="request-date">Requested: <?php echo date('M d, Y', strtotime($request['created_at'])); ?></p>
                                         </div>
                                         <div class="request-actions">
-                                            <form action="handle_request.php" method="POST" style="display: inline;">
+                                            <form action="handle_request.php" method="POST">
                                                 <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
                                                 <input type="hidden" name="action" value="approve">
                                                 <input type="hidden" name="team_id" value="<?php echo $team['id']; ?>">
-                                                <button type="submit" name="submit" class="accept-btn">
+                                                <button type="submit" class="accept-btn">
                                                     <i class="fas fa-check"></i> Accept
                                                 </button>
                                             </form>
-                                            <form action="handle_request.php" method="POST" style="display: inline;">
+                                            <form action="handle_request.php" method="POST">
                                                 <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
                                                 <input type="hidden" name="action" value="reject">
                                                 <input type="hidden" name="team_id" value="<?php echo $team['id']; ?>">
-                                                <button type="submit" name="submit" class="reject-btn">
+                                                <button type="submit" class="reject-btn">
                                                     <i class="fas fa-times"></i> Reject
                                                 </button>
                                             </form>
                                         </div>
                                     </div>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-
-                            <?php if (empty($pending_requests)): ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
                                 <div class="no-requests">
                                     <i class="fas fa-user-plus"></i>
                                     <h3>No Pending Requests</h3>
