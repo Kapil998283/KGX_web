@@ -1,0 +1,217 @@
+/* Tournament Registration Styles */
+.registration-section {
+    background: var(--raisin-black-1);
+    color: var(--white);
+    padding: 120px 20px 60px;
+}
+
+.card {
+    background: var(--raisin-black-2);
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 0 10px;
+}
+
+.card-header {
+    background: var(--raisin-black-3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+}
+
+.card-body {
+    padding: 20px 15px;
+}
+
+/* Tournament Info */
+.tournament-info {
+    background: var(--raisin-black-3);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.tournament-info h4 {
+    color: var(--white);
+    margin-bottom: 5px;
+}
+
+.entry-fee, .prize-pool {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--quick-silver);
+}
+
+/* Team Info */
+.team-info {
+    background: var(--raisin-black-3);
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.team-info h4 {
+    margin: 0;
+    color: var(--white);
+}
+
+/* Team Members Grid */
+.team-members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.member-card {
+    position: relative;
+    background: var(--raisin-black-3);
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 160px;
+}
+
+.member-card:not(.unavailable):hover {
+    background: var(--raisin-black-4);
+}
+
+.member-card.unavailable {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.member-checkbox {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1;
+}
+
+.member-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-bottom: 8px;
+    object-fit: cover;
+    border: 2px solid var(--raisin-black-4);
+}
+
+.member-name {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--white);
+    margin-bottom: 5px;
+    word-break: break-word;
+    max-width: 100%;
+    padding: 0 5px;
+}
+
+.member-card.selected {
+    border: 2px solid var(--orange);
+    transform: translateY(-2px);
+}
+
+/* Solo Registration */
+.confirmation-message {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.user-info {
+    background: var(--raisin-black-3);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* Badges */
+.badge {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+}
+
+/* Buttons */
+.btn-primary {
+    background: var(--orange);
+    border: none;
+    padding: 12px;
+}
+
+.btn-secondary {
+    background: var(--raisin-black-4);
+    border: none;
+    padding: 12px;
+}
+
+/* Create Team Link */
+.create-team-link {
+    color: var(--orange);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.create-team-link:hover {
+    text-decoration: underline;
+    color: var(--orange);
+}
+
+/* Alert Customization */
+.alert {
+    background: var(--raisin-black-3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--white);
+}
+
+.alert ul {
+    margin-bottom: 0;
+    padding-left: 20px;
+}
+
+.alert-warning {
+    border-left: 4px solid var(--orange);
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+    .team-members-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+
+    .member-card {
+        padding: 8px 5px;
+        min-height: 140px;
+    }
+
+    .member-avatar {
+        width: 50px;
+        height: 50px;
+    }
+
+    .member-name {
+        font-size: 0.8rem;
+    }
+
+    .badge {
+        font-size: 0.7rem;
+        padding: 3px 6px;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 15px 10px;
+    }
+} 

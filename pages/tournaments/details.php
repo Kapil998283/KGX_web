@@ -3,18 +3,9 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/header.php';
 
-// Function to get the correct registration URL based on tournament mode
+// Function to get registration URL
 function getRegistrationUrl($tournament) {
-    switch ($tournament['mode']) {
-        case 'Solo':
-            return "/KGX/pages/tournaments/register_solo.php?id=" . $tournament['id'];
-        case 'Duo':
-            return "/KGX/pages/tournaments/register_duo.php?id=" . $tournament['id'];
-        case 'Squad':
-            return "/KGX/pages/tournaments/register_squad.php?id=" . $tournament['id'];
-        default:
-            return "/KGX/pages/tournaments/details.php?id=" . $tournament['id'];
-    }
+    return "/KGX/pages/tournaments/register.php?id=" . $tournament['id'];
 }
 
 // Check if tournament ID is provided
