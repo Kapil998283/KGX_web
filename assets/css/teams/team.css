@@ -50,7 +50,7 @@ article {
   justify-content: center;
 }
 
-/* Update the team banner section styles */
+/* Team Banner Section */
 .team-banner {
   margin-bottom: 40px;
   position: relative;
@@ -85,56 +85,59 @@ article {
   gap: 30px;
 }
 
-/* Team Logo Section */
-.team-logo {
-  width: 120px;
-  height: 120px;
+/* Team Avatar */
+.team-avatar {
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   overflow: hidden;
   border: 4px solid var(--orange);
   background: var(--raisin-black-2);
   flex-shrink: 0;
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  margin-right: 20px;
 }
 
-.team-logo img {
+.team-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* Team Info Section */
-.team-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+/* Team Details */
+.team-details {
   flex: 1;
 }
 
-.team-name {
-  font-size: 2rem;
+.team-details h2 {
   color: var(--white);
-  margin-bottom: 10px;
+  font-size: 32px;
   font-weight: 700;
+  margin: 0 0 15px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.team-stats {
+.team-meta {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 20px;
-  color: var(--white);
-  font-size: 0.9rem;
+  align-items: center;
 }
 
-.team-stat {
+.team-meta span {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--white);
+  font-size: 15px;
+  padding: 5px 12px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
 }
 
-.team-stat i {
+.team-meta i {
   color: var(--orange);
+  font-size: 16px;
 }
 
 /* Tabs Section */
@@ -623,19 +626,24 @@ article {
   margin-bottom: 20px;
 }
 
-/* Update responsive design */
+/* Update responsive design for team banner */
 @media (max-width: 1024px) {
   .team-content {
     padding: 25px;
   }
 
-  .team-logo {
-    width: 100px;
-    height: 100px;
+  .team-avatar {
+    width: 120px;
+    height: 120px;
   }
 
-  .team-name {
-    font-size: 1.8rem;
+  .team-details h2 {
+    font-size: 28px;
+  }
+
+  .team-meta span {
+    font-size: 14px;
+    padding: 4px 10px;
   }
 }
 
@@ -651,22 +659,31 @@ article {
   .team-content {
     padding: 20px;
     flex-direction: row; /* Keep horizontal layout */
+    align-items: center;
   }
 
-  .team-logo {
-    width: 80px;
-    height: 80px;
-    margin-right: 15px;
+  .team-avatar {
+    width: 90px;
+    height: 90px;
+    border-width: 3px;
   }
 
-  .team-name {
-    font-size: 1.5rem;
+  .team-details h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
   }
 
-  .team-stats {
-    flex-wrap: wrap;
+  .team-meta {
     gap: 10px;
-    font-size: 0.85rem;
+  }
+
+  .team-meta span {
+    font-size: 13px;
+    padding: 3px 8px;
+  }
+
+  .team-meta i {
+    font-size: 14px;
   }
 
   .tabs {
@@ -715,49 +732,43 @@ article {
 
 @media (max-width: 480px) {
   .banner-bg {
-    height: 180px;
+    height: 200px;
   }
 
   .team-content {
     padding: 15px;
+    gap: 15px;
   }
 
-  .team-logo {
-    width: 60px;
-    height: 60px;
-    border-width: 3px;
-    margin-right: 10px;
+  .team-avatar {
+    width: 70px;
+    height: 70px;
+    border-width: 2px;
   }
 
-  .team-name {
-    font-size: 1.2rem;
+  .team-details h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
   }
 
-  .team-stats {
-    font-size: 0.8rem;
+  .team-meta {
+    gap: 8px;
   }
 
-  .tabs {
-    gap: 5px;
-    padding: 5px;
+  .team-meta span {
+    font-size: 12px;
+    padding: 2px 6px;
+    gap: 4px;
   }
 
-  .tab {
-    padding: 8px 12px;
-    font-size: 0.8rem;
-  }
-
-  .tab i {
+  .team-meta i {
     font-size: 12px;
   }
 
-  .player-list {
-    grid-template-columns: 1fr;
-  }
-
-  .modal-content {
-    margin: 20% auto;
-    width: 95%;
-    padding: 20px;
+  .edit-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    top: 10px;
+    right: 10px;
   }
 }
