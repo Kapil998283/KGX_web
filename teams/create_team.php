@@ -253,6 +253,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewImg = document.getElementById('selectedBannerPreview');
     const placeholder = document.getElementById('bannerPlaceholder');
     
+    // Auto-select first banner on page load
+    const firstBanner = document.querySelector('.banner-option');
+    if (firstBanner) {
+        selectBanner(firstBanner);
+    }
+    
     // Initialize banner selection container click
     bannerContainer.addEventListener('click', function() {
         openBannerModal();
@@ -295,6 +301,8 @@ function closeBannerModal() {
 }
 
 function selectBanner(element) {
+    if (!element) return;
+    
     // Get banner data
     const bannerId = element.dataset.bannerId;
     const imagePath = element.dataset.imagePath;
@@ -309,22 +317,31 @@ function selectBanner(element) {
     const previewImg = document.getElementById('selectedBannerPreview');
     const placeholder = document.getElementById('bannerPlaceholder');
     
-    previewImg.src = imagePath;
-    previewImg.classList.add('active');
-    placeholder.style.display = 'none';
+    if (previewImg && placeholder) {
+        previewImg.src = imagePath;
+        previewImg.classList.add('active');
+        placeholder.style.display = 'none';
+    }
     
     // Update hidden input
     const hiddenInput = document.getElementById('selectedBannerId');
-    hiddenInput.value = bannerId;
-    selectedBannerId = bannerId;
+    if (hiddenInput) {
+        hiddenInput.value = bannerId;
+        selectedBannerId = bannerId;
+    }
     
     // Clear any error message
     const bannerError = document.getElementById('bannerError');
-    bannerError.textContent = '';
-    bannerError.classList.remove('error');
+    if (bannerError) {
+        bannerError.textContent = '';
+        bannerError.classList.remove('error');
+    }
     
-    // Close modal with a slight delay to show selection effect
-    setTimeout(closeBannerModal, 300);
+    // Only close modal if it's open (prevents unwanted behavior during initial auto-selection)
+    const modal = document.getElementById('bannerModal');
+    if (modal && modal.classList.contains('active')) {
+        setTimeout(closeBannerModal, 300);
+    }
 }
 
 function checkTeamName(name) {
