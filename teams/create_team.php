@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-group">
                         <label>Team Banner</label>
-                        <div class="banner-select-container" onclick="openBannerModal()">
+                        <div class="banner-select-container" id="bannerSelectContainer">
                             <img src="" alt="Selected banner" class="banner-preview" id="selectedBannerPreview">
                             <div class="banner-placeholder" id="bannerPlaceholder">
                                 <i class="bi bi-plus-circle"></i>
@@ -246,6 +246,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 let checkTimeout;
 let isValidName = false;
 
+// Add click event to the banner container
+document.getElementById('bannerSelectContainer').addEventListener('click', function() {
+    openBannerModal();
+});
+
 function openBannerModal() {
     document.getElementById('bannerModal').classList.add('active');
 }
@@ -269,7 +274,8 @@ function selectBanner(element, bannerId, imagePath) {
     previewImg.classList.add('active');
     
     // Hide the placeholder
-    document.getElementById('bannerPlaceholder').classList.add('hidden');
+    const placeholder = document.getElementById('bannerPlaceholder');
+    placeholder.style.display = 'none';
     
     // Update the hidden input
     document.getElementById('selectedBannerId').value = bannerId;
