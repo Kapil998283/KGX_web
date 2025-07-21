@@ -80,15 +80,88 @@
     transform: translateY(-2px);
 }
 
+.banner-option {
+    position: relative;
+    cursor: pointer;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.banner-option:hover {
+    transform: translateY(-2px);
+    border-color: var(--orange);
+}
+
+.banner-option.selected {
+    border-color: var(--orange);
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.2);
+}
+
+.banner-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.banner-option:hover img {
+    transform: scale(1.05);
+}
+
+.banner-select-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.banner-option:hover .banner-select-overlay {
+    opacity: 1;
+}
+
+.banner-option.selected .banner-select-overlay {
+    opacity: 1;
+    background: rgba(255, 140, 0, 0.2);
+}
+
+.banner-select-overlay i {
+    color: var(--white);
+    font-size: 2rem;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.banner-option:hover .banner-select-overlay i,
+.banner-option.selected .banner-select-overlay i {
+    transform: scale(1);
+    color: var(--orange);
+}
+
+/* Preview styles */
 .banner-preview {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: none;
+    transition: transform 0.3s ease;
 }
 
 .banner-preview.active {
     display: block;
+}
+
+.banner-select-container:hover .banner-preview.active {
+    transform: scale(1.02);
 }
 
 .banner-placeholder {

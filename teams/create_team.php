@@ -224,13 +224,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="banner-modal-content">
         <div class="banner-modal-header">
             <h3 class="banner-modal-title">Select Team Banner</h3>
-            <button class="banner-modal-close" onclick="closeBannerModal()">
+            <button type="button" class="banner-modal-close" onclick="closeBannerModal()">
                 <i class="bi bi-x"></i>
             </button>
         </div>
         <div class="banner-grid">
             <?php foreach ($banners as $banner): ?>
-                <div class="banner-option" onclick="selectBanner(this, <?php echo $banner['id']; ?>, '<?php echo htmlspecialchars($banner['image_path']); ?>')">
+                <div class="banner-option" data-banner-id="<?php echo $banner['id']; ?>" data-image-path="<?php echo htmlspecialchars($banner['image_path']); ?>">
                     <img src="<?php echo htmlspecialchars($banner['image_path']); ?>" 
                          alt="<?php echo htmlspecialchars($banner['name']); ?>" />
                     <div class="banner-select-overlay">
@@ -246,17 +246,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 let checkTimeout;
 let isValidName = false;
 
-// Add click event to the banner container
-document.getElementById('bannerSelectContainer').addEventListener('click', function() {
-    openBannerModal();
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click event to the banner container
+    const bannerContainer = document.getElementById('bannerSelectContainer');
+    bannerContainer.addEventListener('click', openBannerModal);
+
+    // Add click events to all banner options
+    const bannerOptions = document.querySelectorAll('.banner-option');
+    bannerOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const bannerId = this.dataset.bannerId;
+            const imagePath = this.dataset.imagePath;
+            selectBanner(this, bannerId, imagePath);
+        });
+    });
+
+    // Close modal when clicking outside
+    const modal = document.getElementById('bannerModal');
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeBannerModal();
+        }
+    });
 });
 
 function openBannerModal() {
-    document.getElementById('bannerModal').classList.add('active');
+    const modal = document.getElementById('bannerModal');
+    modal.classList.add('active');
 }
 
 function closeBannerModal() {
-    document.getElementById('bannerModal').classList.remove('active');
+    const modal = document.getElementById('bannerModal');
+    modal.classList.remove('active');
 }
 
 function selectBanner(element, bannerId, imagePath) {
@@ -285,8 +307,8 @@ function selectBanner(element, bannerId, imagePath) {
     bannerError.textContent = '';
     bannerError.classList.remove('error');
     
-    // Close the modal
-    closeBannerModal();
+    // Close the modal after a short delay to show the selection effect
+    setTimeout(closeBannerModal, 200);
 }
 
 function checkTeamName(name) {
@@ -367,13 +389,6 @@ function validateForm() {
 
     return true;
 }
-
-// Close modal when clicking outside
-document.getElementById('bannerModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeBannerModal();
-    }
-});
 </script>
 
 <script src="../assets/js/teams.js"></script>
