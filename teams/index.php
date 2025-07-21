@@ -104,11 +104,27 @@ if (isset($_SESSION['success_message'])) {
                                     <?php elseif ($user_status['is_member']): ?>
                                         <button class="rc-btn disabled" disabled>Already in a Team</button>
                                     <?php elseif (in_array($team['id'], $pending_requests)): ?>
-                                        <button class="rc-btn disabled" disabled>Request Pending</button>
+                                        <form action="cancel_request.php" method="POST" style="width: 100%;">
+                                            <?php
+                                            // Get the request ID for this team
+                                            $request_sql = "SELECT id FROM team_join_requests 
+                                                          WHERE user_id = :user_id 
+                                                          AND team_id = :team_id 
+                                                          AND status = 'pending'";
+                                            $request_stmt = $conn->prepare($request_sql);
+                                            $request_stmt->execute([
+                                                'user_id' => $_SESSION['user_id'],
+                                                'team_id' => $team['id']
+                                            ]);
+                                            $request = $request_stmt->fetch(PDO::FETCH_ASSOC);
+                                            ?>
+                                            <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
+                                            <button type="submit" class="rc-btn cancel-btn">Cancel Request</button>
+                                        </form>
                                     <?php elseif ($team['current_members'] >= $team['max_members']): ?>
                                         <button class="rc-btn disabled" disabled>Team Full</button>
                                     <?php else: ?>
-                                        <form action="send_join_request.php" method="POST" style="display: inline;">
+                                        <form action="send_join_request.php" method="POST" style="width: 100%;">
                                             <input type="hidden" name="team_id" value="<?php echo $team['id']; ?>">
                                             <button type="submit" class="rc-btn">Request to Join</button>
                                         </form>

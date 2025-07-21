@@ -27,7 +27,7 @@ try {
     $database = new Database();
     $conn = $database->connect();
 
-    // Check if user is already in a team or has pending requests
+    // Check if user is already in a team or has a pending request for this team
     $check_sql = "SELECT 
                     CASE 
                         WHEN EXISTS (
@@ -40,8 +40,8 @@ try {
                         ) THEN 'in_other_team'
                         WHEN EXISTS (
                             SELECT 1 FROM team_join_requests 
-                            WHERE user_id = :user_id AND status = 'pending'
-                        ) THEN 'has_pending'
+                            WHERE user_id = :user_id AND team_id = :team_id AND status = 'pending'
+                        ) THEN 'already_requested'
                         ELSE 'can_join'
                     END as status";
     
@@ -64,8 +64,8 @@ try {
             header("Location: index.php");
             exit;
             
-        case 'has_pending':
-            $_SESSION['error_message'] = 'You already have a pending join request';
+        case 'already_requested':
+            $_SESSION['error_message'] = 'You already have a pending request for this team';
             header("Location: index.php");
             exit;
     }

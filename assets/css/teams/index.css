@@ -191,6 +191,17 @@ article {
     cursor: not-allowed;
 }
 
+.rc-btn.cancel-btn {
+    background-color: var(--raisin-black-3);
+    color: var(--orange);
+    border: 2px solid var(--orange);
+}
+
+.rc-btn.cancel-btn:hover {
+    background-color: var(--orange);
+    color: var(--raisin-black-1);
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .team-cards-container {
