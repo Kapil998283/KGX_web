@@ -41,6 +41,37 @@ if ($team_count != $tournament['current_teams']) {
     $tournament['current_teams'] = $team_count;
 }
 
+// Check user's team status if logged in
+$user_team_info = null;
+if (isset($_SESSION['user_id'])) {
+    $stmt = $db->prepare("
+        SELECT t.*, tm.role, tm.status as member_status
+        FROM teams t
+        INNER JOIN team_members tm ON t.id = tm.team_id
+        WHERE tm.user_id = ? AND tm.status = 'active'
+        LIMIT 1
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user_team_info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // If user has a team, check if already registered
+    if ($user_team_info) {
+        $stmt = $db->prepare("
+            SELECT status 
+            FROM tournament_registrations 
+            WHERE tournament_id = ? AND 
+            (team_id = ? OR (user_id = ? AND team_id IS NULL))
+            AND status IN ('pending', 'approved')
+            LIMIT 1
+        ");
+        $stmt->execute([$tournament['id'], $user_team_info['id'], $_SESSION['user_id']]);
+        $registration = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($registration) {
+            $user_team_info['registration_status'] = $registration['status'];
+        }
+    }
+}
+
 // Function to get registration status class
 function getStatusClass($tournament) {
     $now = new DateTime();
@@ -91,12 +122,30 @@ function getStatusClass($tournament) {
 
                     <div class="tournament-meta">
                     <?php if ($tournament['registration_phase'] === 'open'): ?>
+                        <?php if (!isset($_SESSION['user_id'])): ?>
+                            <button class="view-more" onclick="window.location.href='../../register/login.php'">
+                                Login to Register
+                            </button>
+                        <?php elseif ($tournament['mode'] === 'Solo'): ?>
+                            <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
+                                Register Now
+                            </button>
+                        <?php elseif (!$user_team_info): ?>
+                            <button class="view-more" onclick="window.location.href='../../pages/teams/create_team.php?redirect=tournament&id=<?php echo $tournament['id']; ?>'">
+                                Create/Join Team
+                            </button>
+                        <?php elseif (isset($user_team_info['registration_status'])): ?>
+                            <button class="view-more" disabled>
+                                <?php echo $user_team_info['registration_status'] === 'approved' ? 'Already Registered' : 'Registration Pending'; ?>
+                            </button>
+                        <?php else: ?>
                             <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
                                 Register Now
                             </button>
                         <?php endif; ?>
                         <span class="tournament-time"><?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?></span>
                         <span class="players-count">👥 <?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams</span>
+                    <?php endif; ?>
                     </div>
                 </div>
             </div>
