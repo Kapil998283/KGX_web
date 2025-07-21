@@ -5,25 +5,18 @@
 @import url('../root.css');
 
 article {
-    background-color: var(--eerie-black-1);
-    padding-top: 90px;
-    padding-bottom: 90px;
+    background-color: var(--raisin-black-1);
     min-height: 100vh;
+    padding: 90px 0;
+    position: relative;
 }
 
-.teams-section {
-    padding: 2rem;
-    background-color: var(--eerie-black-1);
-    color: var(--white);
-    min-height: calc(100vh - 180px);
-}
-
+/* Title */
 .section-title {
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
+    font-size: 3rem;
     text-align: center;
-    font-weight: bold;
-    color: var(--krypton);
+    color: var(--white);
+    margin-bottom: 4rem;
     text-transform: uppercase;
     letter-spacing: 2px;
     position: relative;
@@ -32,33 +25,28 @@ article {
 .section-title::after {
     content: '';
     position: absolute;
-    bottom: -10px;
+    bottom: -15px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60px;
+    width: 100px;
     height: 4px;
-    background: var(--krypton);
+    background: var(--orange);
     border-radius: 2px;
 }
 
 /* Search Bar */
 .search-bar {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 2rem auto;
     max-width: 600px;
-    background: var(--raisin-black-1);
-    border-radius: 12px;
-    padding: 0.5rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    margin: 0 auto 3rem;
+    position: relative;
 }
 
 .search-bar input {
-    flex: 1;
-    padding: 1rem 1.5rem;
+    width: 100%;
+    padding: 1.2rem 1.5rem;
+    background-color: var(--raisin-black-2);
     border: none;
-    background: transparent;
+    border-radius: 12px;
     color: var(--white);
     font-size: 1rem;
     outline: none;
@@ -66,238 +54,173 @@ article {
 
 .search-bar input::placeholder {
     color: var(--light-gray);
+    opacity: 0.7;
 }
 
 .search-btn {
-    padding: 0.75rem 1.5rem;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--orange);
+    color: var(--raisin-black-1);
     border: none;
-    background-color: var(--krypton);
-    color: var(--eerie-black-1);
+    width: 45px;
+    height: 45px;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
 }
 
 .search-btn:hover {
     opacity: 0.9;
-    transform: translateY(-2px);
-}
-
-.search-btn i {
-    font-size: 1.1rem;
+    transform: translateY(-50%) scale(1.05);
 }
 
 /* Team Cards Container */
 .team-cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
-    padding: 1rem;
-    margin-top: 2rem;
+    padding: 0 2rem;
 }
 
 /* Team Card */
 .team-card {
-    background-color: var(--raisin-black-1);
+    background-color: var(--raisin-black-2);
     border-radius: 20px;
-    padding: 2rem;
+    padding: 2.5rem;
     text-align: center;
-    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    gap: 1.5rem;
+    transition: transform 0.3s ease;
 }
 
 .team-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-    border-color: var(--krypton);
+    transform: translateY(-5px);
 }
 
+/* Create Team Card */
+.create-box {
+    background-color: var(--raisin-black-2);
+}
+
+.create-image {
+    width: 80px;
+    height: 80px;
+    background-color: var(--raisin-black-3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.create-image i {
+    font-size: 2rem;
+    color: var(--orange);
+}
+
+.create-box h3 {
+    color: var(--white);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 1rem 0;
+}
+
+/* Team Info */
 .team-logo {
-    width: 120px;
-    height: 120px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     overflow: hidden;
-    margin-bottom: 1.5rem;
-    border: 3px solid var(--krypton);
-    padding: 3px;
-    background-color: var(--eerie-black-1);
-    transition: all 0.3s ease;
 }
 
 .team-logo img {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
     object-fit: cover;
-    object-position: center;
-}
-
-.team-card:hover .team-logo {
-    transform: scale(1.1);
-    box-shadow: 0 0 20px rgba(0, 255, 132, 0.2);
 }
 
 .team-card h3 {
-    font-size: 1.4rem;
-    margin: 0.75rem 0;
     color: var(--white);
+    font-size: 1.8rem;
     font-weight: 600;
+    margin: 0;
 }
 
 .team-card p {
+    color: var(--light-gray);
     font-size: 1rem;
-    margin: 0.5rem 0;
-    color: var(--light-gray);
-}
-
-/* Create Team Card */
-.create-box {
-    background-color: var(--raisin-black-1);
-    color: var(--light-gray);
-    cursor: pointer;
-}
-
-.create-box:hover {
-    border-color: var(--krypton);
-}
-
-.create-image {
-    width: 120px;
-    height: 120px;
-    background-color: var(--raisin-black-2);
-    border-radius: 50%;
+    margin: 0.3rem 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem auto;
-    transition: all 0.3s ease;
-    border: 3px solid var(--krypton);
-}
-
-.create-box:hover .create-image {
-    background-color: var(--krypton);
-}
-
-.create-image i {
-    font-size: 2.5rem;
-    color: var(--krypton);
-    transition: all 0.3s ease;
-}
-
-.create-box:hover .create-image i {
-    color: var(--eerie-black-1);
+    gap: 0.5rem;
 }
 
 /* Buttons */
 .rc-btn {
-    margin-top: 1.5rem;
-    padding: 0.8rem 2rem;
-    background-color: var(--krypton);
-    color: var(--eerie-black-1);
+    background-color: var(--orange);
+    color: var(--raisin-black-1);
     border: none;
-    border-radius: 12px;
-    cursor: pointer;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
     font-weight: 600;
-    transition: all 0.3s ease;
+    cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 1px;
+    transition: all 0.3s ease;
+    width: 100%;
 }
 
 .rc-btn:hover {
     opacity: 0.9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 255, 132, 0.2);
+    transform: scale(1.02);
 }
 
 .rc-btn.disabled {
-    background-color: var(--raisin-black-2);
+    background-color: var(--raisin-black-3);
     color: var(--light-gray);
     cursor: not-allowed;
 }
 
-/* No Teams Message */
-.no-teams {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 2rem;
-    color: var(--light-gray);
-    background: var(--raisin-black-1);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .teams-section {
-        padding: 1.5rem;
-    }
-
     .team-cards-container {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
+        padding: 0 1.5rem;
     }
 }
 
 @media (max-width: 768px) {
-    article {
-        padding-top: 80px;
-        padding-bottom: 80px;
-    }
-
     .section-title {
-        font-size: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .search-bar {
-        margin: 1.5rem auto;
-        padding: 0.4rem;
+        font-size: 2.5rem;
+        margin-bottom: 3rem;
     }
 
     .search-bar input {
-        padding: 0.8rem 1rem;
-    }
-
-    .search-btn {
-        padding: 0.6rem 1.2rem;
+        padding: 1rem 1.2rem;
     }
 
     .team-card {
-        padding: 1.5rem;
-    }
-
-    .team-logo, .create-image {
-        width: 100px;
-        height: 100px;
-    }
-
-    .team-card h3 {
-        font-size: 1.2rem;
-    }
-
-    .team-card p {
-        font-size: 0.9rem;
-    }
-
-    .rc-btn {
-        padding: 0.6rem 1.5rem;
-        font-size: 0.9rem;
+        padding: 2rem;
     }
 }
 
 @media (max-width: 480px) {
-    .teams-section {
-        padding: 1rem;
-    }
-
     .team-cards-container {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        padding: 0 1rem;
+    }
+
+    .section-title {
+        font-size: 2rem;
     }
 } 
