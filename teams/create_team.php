@@ -245,27 +245,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 let checkTimeout;
 let isValidName = false;
+let selectedBannerId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Add click event to the banner container
     const bannerContainer = document.getElementById('bannerSelectContainer');
-    bannerContainer.addEventListener('click', openBannerModal);
+    const modal = document.getElementById('bannerModal');
+    const previewImg = document.getElementById('selectedBannerPreview');
+    const placeholder = document.getElementById('bannerPlaceholder');
+    
+    // Initialize banner selection container click
+    bannerContainer.addEventListener('click', function() {
+        openBannerModal();
+    });
 
-    // Add click events to all banner options
-    const bannerOptions = document.querySelectorAll('.banner-option');
-    bannerOptions.forEach(option => {
+    // Initialize all banner options
+    document.querySelectorAll('.banner-option').forEach(option => {
         option.addEventListener('click', function(e) {
             e.preventDefault();
-            const bannerId = this.dataset.bannerId;
-            const imagePath = this.dataset.imagePath;
-            selectBanner(this, bannerId, imagePath);
+            e.stopPropagation();
+            selectBanner(this);
         });
     });
 
     // Close modal when clicking outside
-    const modal = document.getElementById('bannerModal');
     modal.addEventListener('click', function(e) {
-        if (e.target === this) {
+        if (e.target === modal) {
+            closeBannerModal();
+        }
+    });
+
+    // Close modal with escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
             closeBannerModal();
         }
     });
@@ -274,41 +285,46 @@ document.addEventListener('DOMContentLoaded', function() {
 function openBannerModal() {
     const modal = document.getElementById('bannerModal');
     modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
 }
 
 function closeBannerModal() {
     const modal = document.getElementById('bannerModal');
     modal.classList.remove('active');
+    document.body.style.overflow = ''; // Restore scrolling
 }
 
-function selectBanner(element, bannerId, imagePath) {
-    // Remove selected class from all options
+function selectBanner(element) {
+    // Get banner data
+    const bannerId = element.dataset.bannerId;
+    const imagePath = element.dataset.imagePath;
+    
+    // Update selected state
     document.querySelectorAll('.banner-option').forEach(option => {
         option.classList.remove('selected');
     });
-    
-    // Add selected class to clicked option
     element.classList.add('selected');
     
-    // Update the preview image
+    // Update preview
     const previewImg = document.getElementById('selectedBannerPreview');
+    const placeholder = document.getElementById('bannerPlaceholder');
+    
     previewImg.src = imagePath;
     previewImg.classList.add('active');
-    
-    // Hide the placeholder
-    const placeholder = document.getElementById('bannerPlaceholder');
     placeholder.style.display = 'none';
     
-    // Update the hidden input
-    document.getElementById('selectedBannerId').value = bannerId;
+    // Update hidden input
+    const hiddenInput = document.getElementById('selectedBannerId');
+    hiddenInput.value = bannerId;
+    selectedBannerId = bannerId;
     
-    // Clear any banner error
+    // Clear any error message
     const bannerError = document.getElementById('bannerError');
     bannerError.textContent = '';
     bannerError.classList.remove('error');
     
-    // Close the modal after a short delay to show the selection effect
-    setTimeout(closeBannerModal, 200);
+    // Close modal with a slight delay to show selection effect
+    setTimeout(closeBannerModal, 300);
 }
 
 function checkTeamName(name) {
