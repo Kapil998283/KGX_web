@@ -1,0 +1,508 @@
+/* No Teams Section */
+.no-teams-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 2rem;
+}
+
+.no-teams-content {
+    text-align: center;
+    background: var(--raisin-black-2);
+    padding: 3rem;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.no-teams-icon {
+    font-size: 4rem;
+    color: var(--orange);
+    margin-bottom: 1.5rem;
+}
+
+.no-teams-content h2 {
+    color: var(--white);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.no-teams-content p {
+    color: var(--quick-silver);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.no-teams-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.join-btn {
+    background-color: var(--orange);
+    color: var(--white);
+}
+
+.create-btn {
+    background-color: var(--raisin-black-1);
+    color: var(--white);
+    border: 2px solid var(--orange);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.join-btn:hover {
+    background-color: var(--orange-dark);
+}
+
+.create-btn:hover {
+    background-color: var(--orange);
+}
+
+/* Player List Section */
+.player-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.player-card {
+    position: relative;
+    background: #1a1a1a;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+}
+
+.player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.captain-card {
+    background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+    border: 1px solid #ff4655;
+    order: -1;
+}
+
+.member-number {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff4655;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.player-avatar-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.player-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #333;
+}
+
+.captain-card .player-avatar {
+    border-color: #ff4655;
+}
+
+.captain-badge {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: #ff4655;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8em;
+}
+
+.player-info {
+    flex-grow: 1;
+}
+
+.player-name {
+    margin: 0;
+    font-size: 1.2em;
+    color: #fff;
+}
+
+.role {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: #888;
+}
+
+.role.captain {
+    color: #ff4655;
+    font-weight: bold;
+}
+
+.join-date {
+    margin: 5px 0;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.remove-member-btn {
+    background: transparent;
+    border: none;
+    color: #ff4655;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2em;
+    transition: all 0.3s ease;
+}
+
+.remove-member-btn:hover {
+    color: #ff6b76;
+    transform: scale(1.1);
+}
+
+.details-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: #25d366;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.details-btn:hover {
+    background: #1a9248;
+    transform: translateY(-2px);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: #1a1a1a;
+    margin: 15% auto;
+    padding: 25px;
+    border: 1px solid #25d366;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    position: relative;
+    color: white;
+    box-shadow: 0 0 20px rgba(37, 211, 102, 0.2);
+}
+
+.close-modal {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    color: #25d366;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+    color: #1a9248;
+}
+
+#gameProfileContent {
+    margin-top: 10px;
+}
+
+/* Requests Section */
+.requests-list {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.request-card {
+    background: var(--raisin-black-2);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.3s ease;
+}
+
+.request-card:hover {
+    transform: translateY(-2px);
+}
+
+.request-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--orange);
+}
+
+.request-info {
+    flex-grow: 1;
+}
+
+.request-info h3 {
+    color: var(--white);
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.request-date {
+    color: var(--quick-silver);
+    font-size: 0.9rem;
+    margin: 5px 0 0 0;
+}
+
+.request-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.accept-btn, .reject-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.accept-btn {
+    background-color: var(--orange);
+    color: var(--white);
+}
+
+.reject-btn {
+    background-color: var(--raisin-black-1);
+    color: var(--quick-silver);
+    border: 1px solid var(--quick-silver);
+}
+
+.accept-btn:hover {
+    background-color: var(--orange-dark);
+}
+
+.reject-btn:hover {
+    background-color: #ff4655;
+    color: var(--white);
+    border-color: #ff4655;
+}
+
+.no-requests {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--quick-silver);
+}
+
+.no-requests i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: var(--orange);
+}
+
+.no-requests h3 {
+    color: var(--white);
+    margin-bottom: 10px;
+}
+
+.no-requests p {
+    color: var(--quick-silver);
+}
+
+/* Tournament Section Styles */
+.tournaments-section {
+    padding: 20px 0;
+}
+
+.tournament-card {
+    background: var(--raisin-black-2);
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.tournament-card:hover {
+    transform: translateY(-5px);
+}
+
+.card-banner {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.tournament-banner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.tournament-meta {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--white);
+}
+
+.prize-pool, .registration-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.tournament-title {
+    font-size: 1.25rem;
+    margin-bottom: 5px;
+    color: var(--white);
+}
+
+.game-name {
+    color: var(--quick-silver);
+    margin-bottom: 15px;
+}
+
+.tournament-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--quick-silver);
+}
+
+.tournament-dates {
+    font-size: 0.9rem;
+    color: var(--quick-silver);
+    margin-bottom: 15px;
+}
+
+.registration-date {
+    color: var(--orange);
+    margin-bottom: 5px;
+}
+
+.tournament-phase {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.card-actions .btn {
+    flex: 1;
+    text-align: center;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--orange);
+    color: var(--white);
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.no-tournaments {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.no-tournaments .large-icon {
+    font-size: 48px;
+    color: var(--quick-silver);
+    margin-bottom: 20px;
+}
+
+.no-tournaments h3 {
+    color: var(--white);
+    margin-bottom: 10px;
+}
+
+.no-tournaments p {
+    color: var(--quick-silver);
+    margin-bottom: 20px;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    #gameProfileModal .modal-content {
+        margin: 20% auto;
+        width: 95%;
+        padding: 20px;
+    }
+} 
