@@ -115,41 +115,40 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <!-- Link to external CSS file -->
 <link rel="stylesheet" href="../../assets/css/matches/index.css">
 
-<div class="matches-section">
-    <div class="matches-container">
-        <div class="section-header">
-            <h2 class="section-title">Available Matches</h2>
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <div class="user-balance">
-                    <span class="balance-item">
-                        <i class="bi bi-coin"></i> <?= number_format($user_balance) ?> Coins
-                    </span>
-                    <span class="balance-item">
-                        <i class="bi bi-ticket-perforated"></i> <?= number_format($user_tickets) ?> Tickets
-                    </span>
-                    <a href="my-matches.php" class="my-matches-link">
-                        <i class="bi bi-trophy"></i> My Matches
-                    </a>
-                </div>
-            <?php endif; ?>
-        </div>
+<article class="matches">
+    <div class="section-header">
+        <h2 class="section-title">Available Matches</h2>
+        <?php if (isset($_SESSION['user_id'])): ?>
+            <div class="user-balance">
+                <span class="balance-item">
+                    <i class="bi bi-coin"></i> <?= number_format($user_balance) ?> Coins
+                </span>
+                <span class="balance-item">
+                    <i class="bi bi-ticket-perforated"></i> <?= number_format($user_tickets) ?> Tickets
+                </span>
+                <a href="my-matches.php" class="my-matches-link">
+                    <i class="bi bi-trophy"></i> My Matches
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
 
-        <!-- Games Filter -->
-        <div class="games-filter">
-            <a href="?game=" class="game-filter-btn <?= empty($game) ? 'active' : '' ?>">
-                <i class="bi bi-grid-3x3-gap"></i> All Games
-            </a>
-            <?php foreach ($games as $game_item): ?>
-            <a href="?game=<?= urlencode($game_item['name']) ?>" 
-               class="game-filter-btn <?= strtoupper($game) === strtoupper($game_item['name']) ? 'active' : '' ?>">
-                <img src="<?= htmlspecialchars($game_item['image_url']) ?>" alt="<?= htmlspecialchars($game_item['name']) ?>">
-                <?= htmlspecialchars($game_item['name']) ?>
-            </a>
-            <?php endforeach; ?>
-        </div>
+    <!-- Games Filter -->
+    <div class="games-filter">
+        <a href="?game=" class="game-filter-btn <?= empty($game) ? 'active' : '' ?>">
+            <i class="bi bi-grid-3x3-gap"></i> All Games
+        </a>
+        <?php foreach ($games as $game_item): ?>
+        <a href="?game=<?= urlencode($game_item['name']) ?>" 
+           class="game-filter-btn <?= strtoupper($game) === strtoupper($game_item['name']) ? 'active' : '' ?>">
+            <img src="<?= htmlspecialchars($game_item['image_url']) ?>" alt="<?= htmlspecialchars($game_item['name']) ?>">
+            <?= htmlspecialchars($game_item['name']) ?>
+        </a>
+        <?php endforeach; ?>
+    </div>
 
-        <!-- Matches Grid -->
-        <div class="matches-grid">
+    <!-- Matches Grid -->
+    <div class="matches-grid">
             <?php if (empty($matches)): ?>
             <div class="no-matches">
                 <i class="bi bi-controller"></i>
@@ -329,9 +328,8 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <?php endforeach; ?>
             <?php endif; ?>
-        </div>
     </div>
-</div>
+</article>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
