@@ -51,58 +51,35 @@ if (isset($_SESSION['success_message'])) {
 ?>
 
 <!-- Add Teams CSS -->
-<link rel="stylesheet" href="../assets/css/teams.css">
+<link rel="stylesheet" href="../assets/css/teams/index.css">
 
 <main>
     <article>
         <!-- Team Section -->
         <section class="teams-section">
             <div class="container">
-                <?php if (isset($_SESSION['success_message'])): ?>
-                    <div class="alert alert-success">
-                        <?php 
-                        echo htmlspecialchars($_SESSION['success_message']); 
-                        unset($_SESSION['success_message']);
-                        ?>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (isset($_SESSION['error_message'])): ?>
-                    <div class="alert alert-danger">
-                        <?php 
-                        echo htmlspecialchars($_SESSION['error_message']); 
-                        unset($_SESSION['error_message']);
-                        ?>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (isset($_SESSION['info_message'])): ?>
-                    <div class="alert alert-info">
-                        <?php 
-                        echo htmlspecialchars($_SESSION['info_message']); 
-                        unset($_SESSION['info_message']);
-                        ?>
-                    </div>
-                <?php endif; ?>
-
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="section-title">Find Teams</h2>
-                    <?php if (isset($_SESSION['user_id']) && !$user_status['is_member']): ?>
-                        <a href="create_team.php" class="rc-btn">
-                            <i class="fas fa-plus"></i> Create Team
-                        </a>
-                    <?php endif; ?>
-                </div>
+                <h2 class="section-title">Find Teams</h2>
 
                 <!-- Search Bar -->
-                <div class="search-bar mb-4">
+                <div class="search-bar">
                     <input type="text" id="team-search" placeholder="Search for a team...">
                     <button class="search-btn"><i class="fas fa-search"></i></button>
                 </div>
 
                 <div class="team-cards-container">
+                    <?php if (isset($_SESSION['user_id']) && !$user_status['is_member']): ?>
+                        <!-- Create Team Box -->
+                        <div class="team-card create-box" onclick="window.location.href='create_team.php'">
+                            <div class="create-image">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <h3>Create your team and become the captain</h3>
+                            <button class="rc-btn">Create Now</button>
+                        </div>
+                    <?php endif; ?>
+
                     <?php if (empty($teams)): ?>
-                        <div class="alert alert-info">
+                        <div class="no-teams">
                             No teams found. Be the first to create one!
                         </div>
                     <?php else: ?>
@@ -118,10 +95,8 @@ if (isset($_SESSION['success_message'])) {
                                     <?php endif; ?>
                                 </div>
                                 <h3><?php echo htmlspecialchars($team['name']); ?></h3>
-                                <p class="team-description"><?php echo htmlspecialchars($team['description']); ?></p>
                                 <p><i class="fas fa-users"></i> <?php echo $team['current_members']; ?>/<?php echo $team['max_members']; ?> players</p>
                                 <p><i class="fas fa-globe"></i> <?php echo htmlspecialchars($team['language']); ?></p>
-                                <p><i class="fas fa-user-shield"></i> Captain: <?php echo htmlspecialchars($team['captain_name']); ?></p>
                                 
                                 <?php if (isset($_SESSION['user_id'])): ?>
                                     <?php if ($team['captain_id'] == $_SESSION['user_id']): ?>
@@ -135,7 +110,7 @@ if (isset($_SESSION['success_message'])) {
                                     <?php else: ?>
                                         <form action="send_join_request.php" method="POST" style="display: inline;">
                                             <input type="hidden" name="team_id" value="<?php echo $team['id']; ?>">
-                                            <button type="submit" class="rc-btn">Join Team</button>
+                                            <button type="submit" class="rc-btn">Request to Join</button>
                                         </form>
                                     <?php endif; ?>
                                 <?php else: ?>
@@ -150,8 +125,26 @@ if (isset($_SESSION['success_message'])) {
     </article>
 </main>
 
-<!-- Add Teams JS -->
-<script src="../assets/js/teams.js"></script>
+<script>
+// Add search functionality
+document.getElementById('team-search').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const teamCards = document.querySelectorAll('.team-card:not(.create-box)');
+    
+    teamCards.forEach(card => {
+        const teamName = card.querySelector('h3').textContent.toLowerCase();
+        const teamLang = card.querySelector('.fa-globe').parentNode.textContent.toLowerCase();
+        
+        if (teamName.includes(searchTerm) || teamLang.includes(searchTerm)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+</script>
+
+<?php require_once '../includes/footer.php'; ?>
 
 </body>
 </html> 
