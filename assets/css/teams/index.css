@@ -5,27 +5,40 @@
 @import url('../root.css');
 
 article {
-    background-color: black;
-    padding-top: 100px;
-    padding-bottom: 100px;
+    background-color: var(--eerie-black-1);
+    padding-top: 90px;
+    padding-bottom: 90px;
     min-height: 100vh;
 }
 
 .teams-section {
     padding: 2rem;
-    background-color: #0f0f1b;
-    color: #fff;
-    min-height: calc(100vh - 200px);
+    background-color: var(--eerie-black-1);
+    color: var(--white);
+    min-height: calc(100vh - 180px);
 }
 
 .section-title {
     font-size: 2.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
     text-align: center;
     font-weight: bold;
-    color: #00ff84;
+    color: var(--krypton);
     text-transform: uppercase;
     letter-spacing: 2px;
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: var(--krypton);
+    border-radius: 2px;
 }
 
 /* Search Bar */
@@ -35,7 +48,7 @@ article {
     align-items: center;
     margin: 2rem auto;
     max-width: 600px;
-    background: #1a1a2e;
+    background: var(--raisin-black-1);
     border-radius: 12px;
     padding: 0.5rem;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -46,20 +59,20 @@ article {
     padding: 1rem 1.5rem;
     border: none;
     background: transparent;
-    color: #fff;
+    color: var(--white);
     font-size: 1rem;
     outline: none;
 }
 
 .search-bar input::placeholder {
-    color: #666;
+    color: var(--light-gray);
 }
 
 .search-btn {
     padding: 0.75rem 1.5rem;
     border: none;
-    background-color: #00ff84;
-    color: #000;
+    background-color: var(--krypton);
+    color: var(--eerie-black-1);
     border-radius: 8px;
     cursor: pointer;
     font-weight: 500;
@@ -67,7 +80,7 @@ article {
 }
 
 .search-btn:hover {
-    background-color: #00cc69;
+    opacity: 0.9;
     transform: translateY(-2px);
 }
 
@@ -86,8 +99,8 @@ article {
 
 /* Team Card */
 .team-card {
-    background-color: #1a1a2e;
-    border-radius: 16px;
+    background-color: var(--raisin-black-1);
+    border-radius: 20px;
     padding: 2rem;
     text-align: center;
     transition: all 0.3s ease;
@@ -102,82 +115,91 @@ article {
 .team-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-    border-color: #00ff84;
+    border-color: var(--krypton);
 }
 
 .team-logo {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: 3px solid var(--krypton);
+    padding: 3px;
+    background-color: var(--eerie-black-1);
+    transition: all 0.3s ease;
+}
+
+.team-logo img {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    margin-bottom: 1.5rem;
-    border: 3px solid #00ff84;
-    padding: 3px;
-    background-color: #0f0f1b;
-    transition: all 0.3s ease;
+    object-position: center;
 }
 
 .team-card:hover .team-logo {
     transform: scale(1.1);
-    box-shadow: 0 0 20px rgba(0, 255, 132, 0.3);
+    box-shadow: 0 0 20px rgba(0, 255, 132, 0.2);
 }
 
 .team-card h3 {
     font-size: 1.4rem;
     margin: 0.75rem 0;
-    color: #fff;
+    color: var(--white);
     font-weight: 600;
 }
 
 .team-card p {
     font-size: 1rem;
     margin: 0.5rem 0;
-    color: #aaa;
+    color: var(--light-gray);
 }
 
 /* Create Team Card */
 .create-box {
-    background-color: #23233b;
-    color: #aaa;
+    background-color: var(--raisin-black-1);
+    color: var(--light-gray);
     cursor: pointer;
 }
 
 .create-box:hover {
-    border-color: #00ff84;
+    border-color: var(--krypton);
 }
 
 .create-image {
-    width: 80px;
-    height: 80px;
-    background-color: #333;
+    width: 120px;
+    height: 120px;
+    background-color: var(--raisin-black-2);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1rem auto;
     transition: all 0.3s ease;
+    border: 3px solid var(--krypton);
 }
 
 .create-box:hover .create-image {
-    background-color: #00ff84;
+    background-color: var(--krypton);
 }
 
 .create-image i {
-    font-size: 1.5rem;
-    color: #00ff84;
+    font-size: 2.5rem;
+    color: var(--krypton);
     transition: all 0.3s ease;
 }
 
 .create-box:hover .create-image i {
-    color: #000;
+    color: var(--eerie-black-1);
 }
 
 /* Buttons */
 .rc-btn {
     margin-top: 1.5rem;
     padding: 0.8rem 2rem;
-    background-color: #00ff84;
-    color: #000;
+    background-color: var(--krypton);
+    color: var(--eerie-black-1);
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -188,15 +210,26 @@ article {
 }
 
 .rc-btn:hover {
-    background-color: #00cc69;
+    opacity: 0.9;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0, 255, 132, 0.2);
 }
 
 .rc-btn.disabled {
-    background-color: #333;
-    color: #666;
+    background-color: var(--raisin-black-2);
+    color: var(--light-gray);
     cursor: not-allowed;
+}
+
+/* No Teams Message */
+.no-teams {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: var(--light-gray);
+    background: var(--raisin-black-1);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Responsive Design */
@@ -219,7 +252,7 @@ article {
 
     .section-title {
         font-size: 2rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
     }
 
     .search-bar {
@@ -239,9 +272,9 @@ article {
         padding: 1.5rem;
     }
 
-    .team-logo {
-        width: 80px;
-        height: 80px;
+    .team-logo, .create-image {
+        width: 100px;
+        height: 100px;
     }
 
     .team-card h3 {
