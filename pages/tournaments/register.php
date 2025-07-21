@@ -72,7 +72,7 @@ try {
         } elseif ($team_info['role'] !== 'captain') {
             // Check if the team is already registered
             $stmt = $db->prepare("
-                SELECT tr.status, tr.registration_date
+                SELECT tr.status
                 FROM tournament_registrations tr
                 WHERE tr.tournament_id = ? AND tr.team_id = ?
                 AND tr.status IN ('pending', 'approved')
@@ -83,19 +83,11 @@ try {
 
             if ($registration) {
                 $status = $registration['status'] === 'approved' ? 'registered' : 'pending approval';
-                $error_message = "Your team is already {$status} for this tournament.<br><br>";
-                $error_message .= "Registration Details:<br>";
-                $error_message .= "• Team: " . htmlspecialchars($team_info['name']) . "<br>";
-                $error_message .= "• Captain: " . htmlspecialchars($team_info['captain_name']) . "<br>";
-                $error_message .= "• Registration Date: " . date('M d, Y h:i A', strtotime($registration['registration_date'])) . "<br>";
-                $error_message .= "• Status: " . ucfirst($status);
+                $error_message = "Your team is already {$status} for this tournament.";
             } else {
-                $error_message = "Only team captains can register for {$tournament['mode']} tournaments.<br><br>";
-                $error_message .= "Your Team Details:<br>";
-                $error_message .= "• Team: " . htmlspecialchars($team_info['name']) . "<br>";
-                $error_message .= "• Your Role: Team Member<br>";
-                $error_message .= "• Team Captain: " . htmlspecialchars($team_info['captain_name']) . "<br><br>";
-                $error_message .= "Please ask your team captain to register the team.";
+                $error_message = "Sorry, only team captains can register for {$tournament['mode']} tournaments.<br><br>";
+                $error_message .= "Please contact your team captain <strong>" . htmlspecialchars($team_info['captain_name']) . "</strong> to register the team.";
+                $error_message .= "<br><br><a href='details.php?id=" . $tournament['id'] . "' class='btn btn-secondary'>Go Back</a>";
             }
         } else {
             $team = $team_info; // For existing code compatibility

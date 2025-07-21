@@ -184,6 +184,22 @@
     border-left: 4px solid var(--orange);
 }
 
+.alert .btn-secondary {
+    display: inline-block;
+    padding: 8px 16px;
+    margin-top: 10px;
+    background: var(--raisin-black-4);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.alert .btn-secondary:hover {
+    background: var(--raisin-black-3);
+    transform: translateY(-2px);
+}
+
 /* Responsive Design */
 @media (max-width: 576px) {
     .team-members-grid {
