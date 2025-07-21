@@ -22,7 +22,7 @@ $stmt->execute();
 $team = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$team) {
-    header('Location: /KGX/pages/teams/yourteams.php');
+    header('Location: /KGX/teams/yourteams.php');
     exit();
 }
 
@@ -156,14 +156,14 @@ $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
         const formData = new FormData();
         formData.append('team_id', <?php echo $team_id; ?>);
         
-        fetch('/KGX/pages/teams/delete_team.php', {
+        fetch('/KGX/teams/delete_team.php', {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.href = '/KGX/pages/teams/yourteams.php';
+                window.location.href = '/KGX/teams/yourteams.php';
             } else {
                 const errorDiv = document.getElementById('errorMessage');
                 errorDiv.textContent = data.message || 'Error deleting team';
@@ -181,14 +181,14 @@ $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
         e.preventDefault();
         const formData = new FormData(this);
         
-        fetch('/KGX/pages/teams/update_team.php', {
+        fetch('/KGX/teams/update_team.php', {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.href = '/KGX/pages/teams/yourteams.php';
+                window.location.href = '/KGX/teams/yourteams.php';
             } else {
                 const errorDiv = document.getElementById('errorMessage');
                 errorDiv.textContent = data.message || 'Error updating team';

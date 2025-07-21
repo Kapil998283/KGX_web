@@ -24,7 +24,7 @@ require_once '../includes/user-auth.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    redirect('/KGX/pages/auth/login.php', 'Please login first', 'error_message');
+    redirect('/KGX/register/login.php', 'Please login first', 'error_message');
 }
 
 // Initialize database connection
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $conn->commit();
-            redirect('/KGX/pages/teams/yourteams.php?team_id=' . $team_id, 'Team created successfully!', 'success_message');
+            redirect('/KGX/teams/yourteams.php?team_id=' . $team_id, 'Team created successfully!', 'success_message');
 
         } catch (Exception $e) {
             $conn->rollBack();

@@ -5,7 +5,7 @@ require_once '../includes/user-auth.php';
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['error_message'] = 'Please login first';
-    header("Location: /KGX/pages/auth/login.php");
+    header("Location: /KGX/register/login.php");
     exit;
 }
 

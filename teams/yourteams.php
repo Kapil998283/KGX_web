@@ -5,7 +5,7 @@ require_once '../includes/user-auth.php';
 
 // Make sure user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header("Location: /KGX/pages/auth/login.php");
+    header("Location: /KGX/register/login.php");
     exit();
 }
 
@@ -212,7 +212,7 @@ if (!empty($teams)) {
                     </div>
                 
                     <?php if ($team['role'] === 'captain'): ?>
-                        <a href="/KGX/pages/teams/captain.php?id=<?php echo $team['id']; ?>" class="edit-btn">
+                        <a href="/KGX/teams/captain.php?id=<?php echo $team['id']; ?>" class="edit-btn">
                             <i class="fas fa-edit"></i> Edit Team
                         </a>
                     <?php endif; ?>
