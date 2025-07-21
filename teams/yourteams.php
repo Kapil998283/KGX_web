@@ -67,10 +67,7 @@ if (!empty($teams)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Teams</title>
-    <link rel="stylesheet" href="../assets/css/teams.css">
-    <link rel="stylesheet" href="../assets/css/teams/team-list.css">
-    <link rel="stylesheet" href="../assets/css/teams/tournaments.css">
-    <link rel="stylesheet" href="../assets/css/teams/requests.css">
+    <link rel="stylesheet" href="../assets/css/yourteam.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
