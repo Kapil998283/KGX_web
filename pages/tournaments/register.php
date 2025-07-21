@@ -163,13 +163,30 @@ try {
             }
 
             if ($tournament['mode'] === 'Solo') {
-                // For solo tournaments, directly create the registration
+                // For solo tournaments, directly create the registration with user_id
                 $stmt = $db->prepare("
                     INSERT INTO tournament_registrations 
                     (tournament_id, user_id, status, registration_date) 
                     VALUES (?, ?, 'approved', NOW())
                 ");
                 $stmt->execute([$tournament['id'], $_SESSION['user_id']]);
+
+                // Check if user has a team and award points
+                $stmt = $db->prepare("
+                    SELECT t.id 
+                    FROM teams t 
+                    JOIN team_members tm ON t.id = tm.team_id 
+                    WHERE tm.user_id = ? AND tm.status = 'active'
+                    LIMIT 1
+                ");
+                $stmt->execute([$_SESSION['user_id']]);
+                $user_team = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($user_team) {
+                    // Award 5 points to the team
+                    $stmt = $db->prepare("UPDATE teams SET total_score = total_score + 5 WHERE id = ?");
+                    $stmt->execute([$user_team['id']]);
+                }
             } else {
                 // Validate selected teammates
                 if (!isset($_POST['teammates']) || !is_array($_POST['teammates'])) {
@@ -202,6 +219,14 @@ try {
                 $stmt = $db->prepare("UPDATE teams SET total_score = total_score + 5 WHERE id = ?");
                 $stmt->execute([$team['id']]);
             }
+
+            // Update tournament count
+            $stmt = $db->prepare("
+                UPDATE tournaments 
+                SET current_teams = current_teams + 1 
+                WHERE id = ?
+            ");
+            $stmt->execute([$tournament['id']]);
 
             $db->commit();
             redirect('my-registrations.php', 'Registration submitted successfully!', 'success');

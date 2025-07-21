@@ -224,13 +224,20 @@ CREATE TABLE IF NOT EXISTS round_teams (
 CREATE TABLE IF NOT EXISTS tournament_registrations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tournament_id INT NOT NULL,
-    team_id INT NOT NULL,
+    team_id INT NULL,
+    user_id INT NULL,
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
     FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_tournament_team (tournament_id, team_id),
-    INDEX idx_status (status)
+    INDEX idx_tournament_user (tournament_id, user_id),
+    INDEX idx_status (status),
+    CONSTRAINT chk_registration_type CHECK (
+        (team_id IS NOT NULL AND user_id IS NULL) OR 
+        (team_id IS NULL AND user_id IS NOT NULL)
+    )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Tournament winners table
