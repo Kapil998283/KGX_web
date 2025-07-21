@@ -130,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <link rel="stylesheet" href="../assets/css/teams.css">
+<link rel="stylesheet" href="../assets/css/teams/create-team.css">
 
 <main>
     <article>
@@ -169,21 +170,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="form-group">
-                        <label>Select Team Banner</label>
-                        <div class="banner-grid">
-                            <?php foreach ($banners as $banner): ?>
-                                <div class="banner-option" onclick="selectBanner(this, <?php echo $banner['id']; ?>)">
-                                    <img src="<?php echo htmlspecialchars($banner['image_path']); ?>" 
-                                         alt="<?php echo htmlspecialchars($banner['name']); ?>"
-                                         class="banner-preview" />
-                                    <input type="radio" name="banner_id" value="<?php echo $banner['id']; ?>" 
-                                           class="banner-radio" required>
-                                    <div class="banner-select-overlay">
-                                        <i class="bi bi-check-circle-fill"></i>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
+                        <label>Team Banner</label>
+                        <div class="banner-select-container" onclick="openBannerModal()">
+                            <img src="" alt="Selected banner" class="banner-preview" id="selectedBannerPreview">
+                            <div class="banner-placeholder" id="bannerPlaceholder">
+                                <i class="bi bi-plus-circle"></i>
+                                <span>Click to select banner</span>
+                            </div>
                         </div>
+                        <input type="hidden" name="banner_id" id="selectedBannerId" required>
                         <div id="bannerError" class="validation-message"></div>
                     </div>
 
@@ -224,92 +219,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </article>
 </main>
 
-<style>
-.banner-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin: 1rem 0;
-}
-
-.banner-option {
-    position: relative;
-    cursor: pointer;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.banner-option:hover {
-    border-color: #00ff84;
-    transform: scale(1.02);
-}
-
-.banner-option.selected {
-    border-color: #00ff84;
-    box-shadow: 0 0 10px rgba(0, 255, 132, 0.3);
-}
-
-.banner-preview {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-
-.banner-radio {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.banner-select-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 255, 132, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.banner-option.selected .banner-select-overlay {
-    opacity: 1;
-}
-
-.banner-select-overlay i {
-    color: #00ff84;
-    font-size: 2rem;
-}
-
-.validation-message {
-    margin-top: 5px;
-    font-size: 14px;
-    min-height: 20px;
-}
-.validation-message.error {
-    color: #ff4444;
-}
-.validation-message.success {
-    color: #00ff84;
-}
-.form-group {
-    position: relative;
-    margin-bottom: 1rem;
-}
-</style>
+<!-- Banner Selection Modal -->
+<div class="banner-modal" id="bannerModal">
+    <div class="banner-modal-content">
+        <div class="banner-modal-header">
+            <h3 class="banner-modal-title">Select Team Banner</h3>
+            <button class="banner-modal-close" onclick="closeBannerModal()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="banner-grid">
+            <?php foreach ($banners as $banner): ?>
+                <div class="banner-option" onclick="selectBanner(this, <?php echo $banner['id']; ?>, '<?php echo htmlspecialchars($banner['image_path']); ?>')">
+                    <img src="<?php echo htmlspecialchars($banner['image_path']); ?>" 
+                         alt="<?php echo htmlspecialchars($banner['name']); ?>" />
+                    <div class="banner-select-overlay">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
 
 <script>
 let checkTimeout;
 let isValidName = false;
 
-function selectBanner(element, bannerId) {
+function openBannerModal() {
+    document.getElementById('bannerModal').classList.add('active');
+}
+
+function closeBannerModal() {
+    document.getElementById('bannerModal').classList.remove('active');
+}
+
+function selectBanner(element, bannerId, imagePath) {
     // Remove selected class from all options
     document.querySelectorAll('.banner-option').forEach(option => {
         option.classList.remove('selected');
@@ -318,14 +263,24 @@ function selectBanner(element, bannerId) {
     // Add selected class to clicked option
     element.classList.add('selected');
     
-    // Check the radio button
-    const radio = element.querySelector('input[type="radio"]');
-    radio.checked = true;
+    // Update the preview image
+    const previewImg = document.getElementById('selectedBannerPreview');
+    previewImg.src = imagePath;
+    previewImg.classList.add('active');
+    
+    // Hide the placeholder
+    document.getElementById('bannerPlaceholder').classList.add('hidden');
+    
+    // Update the hidden input
+    document.getElementById('selectedBannerId').value = bannerId;
     
     // Clear any banner error
     const bannerError = document.getElementById('bannerError');
     bannerError.textContent = '';
     bannerError.classList.remove('error');
+    
+    // Close the modal
+    closeBannerModal();
 }
 
 function checkTeamName(name) {
@@ -386,7 +341,7 @@ function validateForm() {
     }
 
     // Check banner selection
-    const selectedBanner = document.querySelector('input[name="banner_id"]:checked');
+    const selectedBanner = document.getElementById('selectedBannerId').value;
     if (!selectedBanner) {
         bannerError.textContent = 'Please select a team banner';
         bannerError.classList.add('error');
@@ -407,21 +362,11 @@ function validateForm() {
     return true;
 }
 
-// Initialize: Select first banner by default
-document.addEventListener('DOMContentLoaded', function() {
-    const firstBanner = document.querySelector('.banner-option');
-    if (firstBanner) {
-        const bannerId = firstBanner.querySelector('input[type="radio"]').value;
-        selectBanner(firstBanner, bannerId);
+// Close modal when clicking outside
+document.getElementById('bannerModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBannerModal();
     }
-});
-
-// Add click handler to banner options
-document.querySelectorAll('.banner-option').forEach(option => {
-    option.addEventListener('click', function() {
-        const bannerId = this.querySelector('input[type="radio"]').value;
-        selectBanner(this, bannerId);
-    });
 });
 </script>
 

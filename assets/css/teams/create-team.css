@@ -1,0 +1,292 @@
+/* Team Creation Form Styles */
+.team-form {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem;
+    background: linear-gradient(145deg, var(--raisin-black-2), var(--raisin-black-3));
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.team-form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to right, var(--orange), var(--xiketic));
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--light-gray);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background-color: var(--raisin-black-1);
+    border: 2px solid var(--raisin-black-3);
+    border-radius: 12px;
+    color: var(--white);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Banner Selection Styles */
+.banner-select-container {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: var(--raisin-black-1);
+    border: 2px dashed var(--orange);
+    transition: all 0.3s ease;
+}
+
+.banner-select-container:hover {
+    border-color: var(--white);
+    transform: translateY(-2px);
+}
+
+.banner-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.banner-preview.active {
+    display: block;
+}
+
+.banner-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--orange);
+    transition: all 0.3s ease;
+}
+
+.banner-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.banner-placeholder span {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.banner-placeholder.hidden {
+    display: none;
+}
+
+/* Banner Modal Styles */
+.banner-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.banner-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.banner-modal-content {
+    background: var(--raisin-black-2);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+}
+
+.banner-modal.active .banner-modal-content {
+    transform: translateY(0);
+}
+
+.banner-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--raisin-black-3);
+}
+
+.banner-modal-title {
+    font-size: 1.5rem;
+    color: var(--white);
+    font-weight: 600;
+}
+
+.banner-modal-close {
+    background: none;
+    border: none;
+    color: var(--light-gray);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.banner-modal-close:hover {
+    color: var(--orange);
+    transform: rotate(90deg);
+}
+
+.banner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.banner-option {
+    position: relative;
+    cursor: pointer;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.banner-option:hover {
+    transform: translateY(-2px);
+    border-color: var(--orange);
+}
+
+.banner-option.selected {
+    border-color: var(--orange);
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.2);
+}
+
+.banner-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.banner-select-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.banner-option:hover .banner-select-overlay,
+.banner-option.selected .banner-select-overlay {
+    opacity: 1;
+}
+
+.banner-select-overlay i {
+    color: var(--white);
+    font-size: 2rem;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.banner-option:hover .banner-select-overlay i,
+.banner-option.selected .banner-select-overlay i {
+    transform: scale(1);
+}
+
+/* Validation Messages */
+.validation-message {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    min-height: 20px;
+    transition: all 0.3s ease;
+}
+
+.validation-message.error {
+    color: #ff4444;
+}
+
+.validation-message.success {
+    color: #4CAF50;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .team-form {
+        padding: 1.5rem;
+    }
+
+    .banner-modal-content {
+        padding: 1rem;
+    }
+
+    .banner-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .banner-placeholder i {
+        font-size: 2rem;
+    }
+
+    .banner-placeholder span {
+        font-size: 1rem;
+    }
+} 
