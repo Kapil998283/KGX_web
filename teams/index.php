@@ -128,8 +128,16 @@ if (isset($_SESSION['success_message'])) {
 <script>
 // Add search functionality
 document.getElementById('team-search').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
+    const searchTerm = e.target.value.toLowerCase().trim();
     const teamCards = document.querySelectorAll('.team-card:not(.create-box)');
+    const createTeamCard = document.querySelector('.create-box');
+    
+    // Hide/show create team card based on search
+    if (createTeamCard) {
+        createTeamCard.style.display = searchTerm === '' ? '' : 'none';
+    }
+
+    let hasResults = false;
     
     teamCards.forEach(card => {
         const teamName = card.querySelector('h3').textContent.toLowerCase();
@@ -137,10 +145,33 @@ document.getElementById('team-search').addEventListener('input', function(e) {
         
         if (teamName.includes(searchTerm) || teamLang.includes(searchTerm)) {
             card.style.display = '';
+            hasResults = true;
         } else {
             card.style.display = 'none';
         }
     });
+
+    // Show/hide no results message
+    let noResultsMsg = document.querySelector('.no-results-message');
+    if (!noResultsMsg) {
+        noResultsMsg = document.createElement('div');
+        noResultsMsg.className = 'no-results-message';
+        noResultsMsg.style.cssText = `
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+            color: var(--light-gray);
+            font-size: 1.1rem;
+        `;
+        document.querySelector('.team-cards-container').appendChild(noResultsMsg);
+    }
+    
+    if (!hasResults && searchTerm !== '') {
+        noResultsMsg.textContent = 'No teams found matching your search.';
+        noResultsMsg.style.display = '';
+    } else {
+        noResultsMsg.style.display = 'none';
+    }
 });
 </script>
 
