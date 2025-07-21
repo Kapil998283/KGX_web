@@ -38,69 +38,86 @@ $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Team - <?php echo htmlspecialchars($team['name']); ?></title>
-    <link rel="stylesheet" href="../assets/css/yourteam.css">
+    <link rel="stylesheet" href="../assets/css/teams/captain.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <?php include '../../includes/header.php'; ?>
-
     <div class="edit-container">
-        <h2>Edit Team</h2>
+        <h2>Edit Team Settings</h2>
         <div id="errorMessage" class="error-message"></div>
         
         <form id="editTeamForm">
             <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
             
             <div class="form-group">
-                <label for="teamName">Team Name</label>
-                <input type="text" id="teamName" name="name" value="<?php echo htmlspecialchars($team['name']); ?>" required>
+                <label for="teamName">
+                    <i class="fas fa-users"></i> Team Name
+                </label>
+                <input type="text" 
+                       id="teamName" 
+                       name="name" 
+                       value="<?php echo htmlspecialchars($team['name']); ?>" 
+                       placeholder="Enter team name"
+                       required>
             </div>
 
             <div class="form-group">
-                <label for="teamLogo">Team Avatar URL</label>
+                <label for="teamLogo">
+                    <i class="fas fa-image"></i> Team Avatar
+                </label>
                 <div class="logo-preview-container">
                     <img src="<?php echo htmlspecialchars($team['logo']); ?>" 
                          alt="Current Team Logo" 
-                         class="current-logo">
+                         class="current-logo"
+                         onerror="this.src='/KGX/assets/images/default-avatar.png'">
                     <input type="url" 
                            id="teamLogo" 
                            name="logo" 
                            value="<?php echo htmlspecialchars($team['logo']); ?>" 
-                           placeholder="Enter new team avatar URL"
+                           placeholder="Enter team avatar URL"
                            required>
                 </div>
                 <div id="logoPreview" class="logo-preview"></div>
             </div>
 
             <div class="form-group">
-                <label>Select Team Banner</label>
+                <label>
+                    <i class="fas fa-image"></i> Team Banner
+                </label>
                 <div class="banner-grid">
                     <?php foreach ($banners as $banner): ?>
-                    <div class="banner-option" onclick="selectBanner(this)">
+                    <div class="banner-option <?php echo ($team['banner_id'] == $banner['id']) ? 'selected' : ''; ?>" 
+                         onclick="selectBanner(this)">
                         <img src="<?php echo htmlspecialchars($banner['image_path']); ?>" 
                              alt="<?php echo htmlspecialchars($banner['name']); ?>">
-                        <input type="radio" name="banner_id" value="<?php echo $banner['id']; ?>" 
-                               <?php echo ($team['banner_id'] == $banner['id']) ? 'checked' : ''; ?> required>
+                        <input type="radio" 
+                               name="banner_id" 
+                               value="<?php echo $banner['id']; ?>" 
+                               <?php echo ($team['banner_id'] == $banner['id']) ? 'checked' : ''; ?> 
+                               required>
                     </div>
                     <?php endforeach; ?>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="teamLanguage">Team Language</label>
+                <label for="teamLanguage">
+                    <i class="fas fa-language"></i> Team Language
+                </label>
                 <select id="teamLanguage" name="language" required>
                     <option value="English" <?php echo ($team['language'] == 'English') ? 'selected' : ''; ?>>English</option>
+                    <option value="Hindi" <?php echo ($team['language'] == 'Hindi') ? 'selected' : ''; ?>>Hindi</option>
                     <option value="Spanish" <?php echo ($team['language'] == 'Spanish') ? 'selected' : ''; ?>>Spanish</option>
                     <option value="French" <?php echo ($team['language'] == 'French') ? 'selected' : ''; ?>>French</option>
                     <option value="German" <?php echo ($team['language'] == 'German') ? 'selected' : ''; ?>>German</option>
-                    <option value="Hindi" <?php echo ($team['language'] == 'Hindi') ? 'selected' : ''; ?>>Hindi</option>
                     <option value="Urdu" <?php echo ($team['language'] == 'Urdu') ? 'selected' : ''; ?>>Urdu</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="maxMembers">Maximum Team Members</label>
+                <label for="maxMembers">
+                    <i class="fas fa-users-cog"></i> Maximum Team Members
+                </label>
                 <input type="number" 
                        id="maxMembers" 
                        name="max_members" 
@@ -108,32 +125,29 @@ $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
                        min="2" 
                        max="7" 
                        required>
-                <small class="form-text text-muted">Minimum 2 members (including captain), maximum 7 members</small>
+                <small class="form-text">Team size must be between 2 and 7 members (including captain)</small>
             </div>
 
             <div class="form-actions">
-                <button type="button" class="delete-btn" onclick="confirmDelete()">Delete Team</button>
-                <button type="submit" class="save-btn">Save Changes</button>
+                <button type="button" class="delete-btn" onclick="confirmDelete()">
+                    <i class="fas fa-trash-alt"></i> Delete Team
+                </button>
+                <button type="submit" class="save-btn">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
             </div>
         </form>
     </div>
 
-   
     <script>
     function selectBanner(element) {
-        // Remove selected class from all options
         document.querySelectorAll('.banner-option').forEach(option => {
             option.classList.remove('selected');
         });
-        
-        // Add selected class to clicked option
         element.classList.add('selected');
-        
-        // Check the radio input
         element.querySelector('input[type="radio"]').checked = true;
     }
 
-    // Preview new logo URL
     document.getElementById('teamLogo').addEventListener('input', function() {
         const preview = document.getElementById('logoPreview');
         const url = this.value.trim();
@@ -165,16 +179,24 @@ $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
             if (data.success) {
                 window.location.href = '/KGX/teams/yourteams.php';
             } else {
-                const errorDiv = document.getElementById('errorMessage');
-                errorDiv.textContent = data.message || 'Error deleting team';
-                errorDiv.style.display = 'block';
+                showError(data.message || 'Error deleting team');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            document.getElementById('errorMessage').textContent = 'An error occurred while deleting the team';
-            document.getElementById('errorMessage').style.display = 'block';
+            showError('An error occurred while deleting the team');
         });
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
     }
 
     document.getElementById('editTeamForm').addEventListener('submit', function(e) {
@@ -190,15 +212,12 @@ $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
             if (data.success) {
                 window.location.href = '/KGX/teams/yourteams.php';
             } else {
-                const errorDiv = document.getElementById('errorMessage');
-                errorDiv.textContent = data.message || 'Error updating team';
-                errorDiv.style.display = 'block';
+                showError(data.message || 'Error updating team');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            document.getElementById('errorMessage').textContent = 'An error occurred while updating the team';
-            document.getElementById('errorMessage').style.display = 'block';
+            showError('An error occurred while updating the team');
         });
     });
     </script>
