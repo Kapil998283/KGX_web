@@ -49,23 +49,58 @@ try {
     $available_members = [];
     $required_members = ($tournament['mode'] === 'Squad') ? 3 : ($tournament['mode'] === 'Duo' ? 1 : 0);
 
-    // For team modes (Duo and Squad), check if user is a team captain
+    // For team modes (Duo and Squad), check if user is a team captain or member
     if ($tournament['mode'] !== 'Solo') {
-        // Get user's team (must be captain)
+        // First check if user is a member of any team
         $stmt = $db->prepare("
-            SELECT t.* 
+            SELECT t.*, tm.role, tm.status as member_status
             FROM teams t
             INNER JOIN team_members tm ON t.id = tm.team_id
-            WHERE tm.user_id = ? AND tm.role = 'captain' AND tm.status = 'active'
+            WHERE tm.user_id = ? AND tm.status = 'active'
             LIMIT 1
         ");
         $stmt->execute([$_SESSION['user_id']]);
-        $team = $stmt->fetch(PDO::FETCH_ASSOC);
+        $team_info = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$team) {
-            $error_message = "You must be a team captain to register for {$tournament['mode']} tournaments. ";
-            $error_message .= "<a href='../../pages/teams/create_team.php?redirect=tournament&id={$tournament['id']}' class='create-team-link'>Create a Team</a>";
+        if (!$team_info) {
+            $error_message = "You need to be part of a team to register for {$tournament['mode']} tournaments. ";
+            $error_message .= "<a href='../../pages/teams/create_team.php?redirect=tournament&id={$tournament['id']}' class='create-team-link'>Create or Join a Team</a>";
+        } elseif ($team_info['role'] !== 'captain') {
+            // Check if the team is already registered
+            $stmt = $db->prepare("
+                SELECT tr.status
+                FROM tournament_registrations tr
+                WHERE tr.tournament_id = ? AND tr.team_id = ?
+                AND tr.status IN ('pending', 'approved')
+                LIMIT 1
+            ");
+            $stmt->execute([$tournament['id'], $team_info['id']]);
+            $registration = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($registration) {
+                $status = $registration['status'] === 'approved' ? 'registered' : 'pending approval';
+                $error_message = "Your team is already {$status} for this tournament. Only team captains can manage registrations.";
+            } else {
+                $error_message = "Only team captains can register for {$tournament['mode']} tournaments. Please ask your team captain to register the team.";
+            }
+
+            // Get captain's info for the message
+            $stmt = $db->prepare("
+                SELECT u.username 
+                FROM users u
+                INNER JOIN team_members tm ON u.id = tm.user_id
+                WHERE tm.team_id = ? AND tm.role = 'captain' AND tm.status = 'active'
+                LIMIT 1
+            ");
+            $stmt->execute([$team_info['id']]);
+            $captain = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($captain) {
+                $error_message .= "<br><br>Your team captain is: <strong>" . htmlspecialchars($captain['username']) . "</strong>";
+            }
         } else {
+            $team = $team_info; // For existing code compatibility
+            
             // Get available team members
             $stmt = $db->prepare("
                 SELECT 
@@ -198,35 +233,37 @@ require_once '../../includes/header.php';
                         </div>
                         <div class="card-body">
                             <?php if (isset($error_message)): ?>
-                                <div class="alert alert-warning">
+                                                                 <div class="alert alert-warning">
                                     <h4 class="alert-heading">Registration Requirements</h4>
                                     <p><?php echo $error_message; ?></p>
-                                    <?php if ($tournament['mode'] !== 'Solo' && !$team): ?>
-                                        <hr>
-                                        <p class="mb-0">
-                                            To register for <?php echo $tournament['mode']; ?> tournaments:
-                                            <ul>
-                                                <li>Create a team or join an existing team</li>
-                                                <li>Become the team captain</li>
-                                                <li>Have enough active team members</li>
-                                            </ul>
-                                        </p>
-                                    <?php elseif ($tournament['mode'] !== 'Solo'): ?>
-                                        <hr>
-                                        <p class="mb-0">
-                                            As team captain, you need to:
-                                            <ul>
-                                                <?php if (empty($team_members)): ?>
-                                                    <li>Add at least <?php echo $required_members; ?> member(s) to your team</li>
-                                                    <li>Wait for members to accept their invitations</li>
-                                                <?php else: ?>
-                                                    <li>Ensure you have <?php echo $required_members; ?> available member(s)</li>
-                                                    <li>Check if your members are already registered</li>
-                                                <?php endif; ?>
-                                            </ul>
-                                        </p>
+                                    <?php if ($tournament['mode'] !== 'Solo'): ?>
+                                        <?php if (!isset($team_info)): ?>
+                                            <hr>
+                                            <p class="mb-0">
+                                                To register for <?php echo $tournament['mode']; ?> tournaments:
+                                                <ul>
+                                                    <li>Create a team or join an existing team</li>
+                                                    <li>Become the team captain</li>
+                                                    <li>Have enough active team members</li>
+                                                </ul>
+                                            </p>
+                                        <?php elseif ($team_info['role'] === 'captain' && isset($team_members)): ?>
+                                            <hr>
+                                            <p class="mb-0">
+                                                As team captain, you need to:
+                                                <ul>
+                                                    <?php if (empty($team_members)): ?>
+                                                        <li>Add at least <?php echo $required_members; ?> member(s) to your team</li>
+                                                        <li>Wait for members to accept their invitations</li>
+                                                    <?php else: ?>
+                                                        <li>Ensure you have <?php echo $required_members; ?> available member(s)</li>
+                                                        <li>Check if your members are already registered</li>
+                                                    <?php endif; ?>
+                                                </ul>
+                                            </p>
+                                        <?php endif; ?>
                                     <?php endif; ?>
-                                </div>
+                                 </div>
                             <?php else: ?>
                                 <form method="POST" id="registrationForm">
                                     <div class="tournament-info mb-4">
