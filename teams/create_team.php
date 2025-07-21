@@ -308,7 +308,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 let checkTimeout;
 let isValidName = false;
-let selectedBanner = null;
 
 function selectBanner(element, bannerId) {
     // Remove selected class from all options
@@ -322,10 +321,11 @@ function selectBanner(element, bannerId) {
     // Check the radio button
     const radio = element.querySelector('input[type="radio"]');
     radio.checked = true;
-    selectedBanner = bannerId;
     
     // Clear any banner error
-    document.getElementById('bannerError').textContent = '';
+    const bannerError = document.getElementById('bannerError');
+    bannerError.textContent = '';
+    bannerError.classList.remove('error');
 }
 
 function checkTeamName(name) {
@@ -386,17 +386,35 @@ function validateForm() {
     }
 
     // Check banner selection
+    const selectedBanner = document.querySelector('input[name="banner_id"]:checked');
     if (!selectedBanner) {
         bannerError.textContent = 'Please select a team banner';
         bannerError.classList.add('error');
-        isValid = false;
-    } else {
-        bannerError.textContent = '';
-        bannerError.classList.remove('error');
+        return false;
     }
 
-    return isValid;
+    // Check other required fields
+    const requiredFields = ['logo', 'description', 'language', 'max_members'];
+    for (const field of requiredFields) {
+        const element = document.getElementById(field);
+        if (!element.value.trim()) {
+            alert(`Please fill in the ${field.replace('_', ' ')}`);
+            element.focus();
+            return false;
+        }
+    }
+
+    return true;
 }
+
+// Initialize: Select first banner by default
+document.addEventListener('DOMContentLoaded', function() {
+    const firstBanner = document.querySelector('.banner-option');
+    if (firstBanner) {
+        const bannerId = firstBanner.querySelector('input[type="radio"]').value;
+        selectBanner(firstBanner, bannerId);
+    }
+});
 
 // Add click handler to banner options
 document.querySelectorAll('.banner-option').forEach(option => {
