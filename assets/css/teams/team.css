@@ -143,16 +143,19 @@ article {
 /* Tabs Section */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 15px;
   margin: 20px 0;
-  padding: 10px;
+  padding: 15px;
   background: var(--raisin-black-2);
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.1);
 }
 
+/* Main tabs (Players and Tournament) */
 .tab {
   flex: 1;
+  min-width: 160px;
   padding: 12px 20px;
   background: rgba(255,255,255,0.05);
   border-radius: 8px;
@@ -165,7 +168,14 @@ article {
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  min-width: auto;
+}
+
+/* Special styling for Requests tab */
+.tab[href*="requests"] {
+  flex-basis: 100%;
+  margin-top: 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--orange);
 }
 
 .tab i {
@@ -770,5 +780,53 @@ article {
     font-size: 12px;
     top: 10px;
     right: 10px;
+  }
+}
+
+/* Responsive adjustments for tabs */
+@media (max-width: 768px) {
+  .tabs {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .tab {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    min-width: 140px;
+  }
+
+  .tab[href*="requests"] {
+    margin-top: 8px;
+  }
+
+  .tab i {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .tab {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    min-width: 120px;
+  }
+
+  .tab[href*="requests"] {
+    margin-top: 6px;
+  }
+
+  .tab i {
+    font-size: 13px;
+  }
+
+  .badge {
+    padding: 1px 6px;
+    font-size: 10px;
   }
 }
