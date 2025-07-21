@@ -3,7 +3,7 @@
     \*-----------------------------------*/
 
     article {
-      background-color: var(--raisin-black-1);
+      background-color: #0a0a0a;
       min-height: 100vh;
       padding: 120px 20px 50px;
     }
@@ -47,8 +47,8 @@
       height: 140px;
       border-radius: 50%;
       overflow: hidden;
-      border: 4px solid var(--raisin-black-3);
-      background: var(--raisin-black-2);
+      border: 4px solid rgba(255,255,255,0.1);
+      background: #222;
       flex-shrink: 0;
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
@@ -65,7 +65,7 @@
       right: 20px;
       background: rgba(255,255,255,0.1);
       border: none;
-      color: var(--orange);
+      color: #ffd700;
       font-size: 14px;
       cursor: pointer;
       display: flex;
@@ -89,7 +89,7 @@
     
     /* Team Details */
     .team-details {
-      color: var(--white);
+      color: #fff;
       flex: 1;
     }
     
@@ -111,12 +111,12 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: var(--white);
+      color: #fff;
       opacity: 0.9;
     }
     
     .team-meta i {
-      color: var(--orange);
+      color: #ff5722;
     }
     
     /* Responsive Design */
@@ -324,36 +324,35 @@
     display: flex;
     gap: 15px;
     margin-bottom: 30px;
-    border-bottom: 1px solid var(--raisin-black-3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 10px;
   }
   .tab {
     padding: 12px 24px;
-    background: var(--raisin-black-2);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    border: 1px solid var(--raisin-black-3);
-    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
     cursor: pointer;
     font-weight: 500;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 8px;
-    text-decoration: none;
   }
   .tab i {
     font-size: 16px;
   }
   .tab:hover {
-    background: var(--raisin-black-3);
+    background: rgba(255, 255, 255, 0.1);
   }
   .tab.active {
-    background: var(--orange);
-    border-color: var(--orange);
+    background: #ff5722;
+    border-color: #ff5722;
   }
   .badge {
-    background-color: var(--orange);
-    color: var(--white);
+    background-color: #ff4444;
+    color: white;
     padding: 2px 8px;
     border-radius: 12px;
     font-size: 12px;
