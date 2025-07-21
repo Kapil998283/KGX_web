@@ -53,7 +53,11 @@ try {
     if ($tournament['mode'] !== 'Solo') {
         // First check if user is a member of any team
         $stmt = $db->prepare("
-            SELECT t.*, tm.role, tm.status as member_status
+            SELECT t.*, tm.role, tm.status as member_status,
+            (SELECT username FROM users u 
+             INNER JOIN team_members tm2 ON u.id = tm2.user_id 
+             WHERE tm2.team_id = t.id AND tm2.role = 'captain' AND tm2.status = 'active'
+             LIMIT 1) as captain_name
             FROM teams t
             INNER JOIN team_members tm ON t.id = tm.team_id
             WHERE tm.user_id = ? AND tm.status = 'active'
@@ -68,7 +72,7 @@ try {
         } elseif ($team_info['role'] !== 'captain') {
             // Check if the team is already registered
             $stmt = $db->prepare("
-                SELECT tr.status
+                SELECT tr.status, tr.registration_date
                 FROM tournament_registrations tr
                 WHERE tr.tournament_id = ? AND tr.team_id = ?
                 AND tr.status IN ('pending', 'approved')
@@ -79,24 +83,19 @@ try {
 
             if ($registration) {
                 $status = $registration['status'] === 'approved' ? 'registered' : 'pending approval';
-                $error_message = "Your team is already {$status} for this tournament. Only team captains can manage registrations.";
+                $error_message = "Your team is already {$status} for this tournament.<br><br>";
+                $error_message .= "Registration Details:<br>";
+                $error_message .= "• Team: " . htmlspecialchars($team_info['name']) . "<br>";
+                $error_message .= "• Captain: " . htmlspecialchars($team_info['captain_name']) . "<br>";
+                $error_message .= "• Registration Date: " . date('M d, Y h:i A', strtotime($registration['registration_date'])) . "<br>";
+                $error_message .= "• Status: " . ucfirst($status);
             } else {
-                $error_message = "Only team captains can register for {$tournament['mode']} tournaments. Please ask your team captain to register the team.";
-            }
-
-            // Get captain's info for the message
-            $stmt = $db->prepare("
-                SELECT u.username 
-                FROM users u
-                INNER JOIN team_members tm ON u.id = tm.user_id
-                WHERE tm.team_id = ? AND tm.role = 'captain' AND tm.status = 'active'
-                LIMIT 1
-            ");
-            $stmt->execute([$team_info['id']]);
-            $captain = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($captain) {
-                $error_message .= "<br><br>Your team captain is: <strong>" . htmlspecialchars($captain['username']) . "</strong>";
+                $error_message = "Only team captains can register for {$tournament['mode']} tournaments.<br><br>";
+                $error_message .= "Your Team Details:<br>";
+                $error_message .= "• Team: " . htmlspecialchars($team_info['name']) . "<br>";
+                $error_message .= "• Your Role: Team Member<br>";
+                $error_message .= "• Team Captain: " . htmlspecialchars($team_info['captain_name']) . "<br><br>";
+                $error_message .= "Please ask your team captain to register the team.";
             }
         } else {
             $team = $team_info; // For existing code compatibility

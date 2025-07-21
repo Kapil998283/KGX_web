@@ -139,9 +139,15 @@ function getStatusClass($tournament) {
                                 <?php echo $user_team_info['registration_status'] === 'approved' ? 'Already Registered' : 'Registration Pending'; ?>
                             </button>
                         <?php else: ?>
-                            <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
-                                Register Now
-                            </button>
+                            <?php if ($user_team_info['role'] === 'member'): ?>
+                                <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
+                                    View Registration
+                                </button>
+                            <?php else: ?>
+                                <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
+                                    Register Now
+                                </button>
+                            <?php endif; ?>
                         <?php endif; ?>
                         <span class="tournament-time"><?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?></span>
                         <span class="players-count">👥 <?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams</span>
