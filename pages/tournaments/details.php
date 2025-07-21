@@ -131,7 +131,7 @@ function getStatusClass($tournament) {
                                 Register Now
                             </button>
                         <?php elseif (!$user_team_info): ?>
-                            <button class="view-more" onclick="window.location.href='../../pages/teams/create_team.php?redirect=tournament&id=<?php echo $tournament['id']; ?>'">
+                            <button class="view-more" onclick="window.location.href='../../teams/create_team.php?redirect=tournament&id=<?php echo $tournament['id']; ?>'">
                                 Create/Join Team
                             </button>
                         <?php elseif (isset($user_team_info['registration_status'])): ?>
