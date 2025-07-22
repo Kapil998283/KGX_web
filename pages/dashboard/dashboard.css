@@ -217,41 +217,42 @@ body {
   padding: 20px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-gap: 30px;
+  grid-gap: 20px;
 }
 
 .cardBox .card {
   position: relative;
   background: var(--white);
-  padding: 30px;
-  border-radius: 20px;
+  padding: 20px;
+  border-radius: 15px;
   display: flex;
   justify-content: space-between;
   cursor: pointer;
-  box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
 .cardBox .card .numbers {
   position: relative;
   font-weight: 500;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   color: var(--blue);
 }
 
 .cardBox .card .cardName {
   color: var(--black2);
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin-top: 5px;
 }
 
 .cardBox .card .iconBx {
-  font-size: 3.5rem;
+  font-size: 2.5rem;
   color: var(--black2);
 }
 
 .cardBox .card:hover {
   background: var(--blue);
 }
+
 .cardBox .card:hover .numbers,
 .cardBox .card:hover .cardName,
 .cardBox .card:hover .iconBx {
@@ -488,12 +489,48 @@ body {
   }
   .cardBox {
     grid-template-columns: repeat(2, 1fr);
+    padding: 15px;
+    grid-gap: 15px;
+  }
+  
+  .cardBox .card {
+    padding: 15px;
+  }
+  
+  .cardBox .card .numbers {
+    font-size: 1.8rem;
+  }
+  
+  .cardBox .card .iconBx {
+    font-size: 2rem;
   }
 }
 
 @media (max-width: 768px) {
   .details {
     grid-template-columns: 1fr;
+  }
+  
+  .cardBox {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 12px;
+    grid-gap: 12px;
+  }
+  
+  .cardBox .card {
+    padding: 15px;
+  }
+  
+  .cardBox .card .numbers {
+    font-size: 1.6rem;
+  }
+  
+  .cardBox .card .cardName {
+    font-size: 0.9rem;
+  }
+  
+  .cardBox .card .iconBx {
+    font-size: 1.8rem;
   }
 
   .recentOrders {
@@ -506,7 +543,26 @@ body {
 
 @media (max-width: 480px) {
   .cardBox {
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    padding: 10px;
+    grid-gap: 10px;
+  }
+  
+  .cardBox .card {
+    padding: 12px;
+  }
+  
+  .cardBox .card .numbers {
+    font-size: 1.4rem;
+  }
+  
+  .cardBox .card .cardName {
+    font-size: 0.85rem;
+    margin-top: 2px;
+  }
+  
+  .cardBox .card .iconBx {
+    font-size: 1.6rem;
   }
 
   .cardHeader h2 {
