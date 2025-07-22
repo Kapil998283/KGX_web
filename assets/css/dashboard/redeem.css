@@ -1,0 +1,334 @@
+/* Redeem Page Styles */
+:root {
+  --card-gradient: linear-gradient(145deg, var(--raisin-black-2), var(--raisin-black-3));
+  --card-border: 1px solid rgba(255, 255, 255, 0.05);
+  --card-radius: 20px;
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  background: var(--raisin-black-1);
+  color: var(--white);
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+/* Header Section */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--orange);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.back-button:hover {
+  transform: translateX(-4px);
+}
+
+.history-toggle {
+  background: var(--orange);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition);
+}
+
+.history-toggle:hover {
+  background: var(--xiketic);
+  transform: translateY(-2px);
+}
+
+.history-toggle i {
+  font-size: 1.1rem;
+}
+
+/* Main Content */
+.page-title {
+  font-family: var(--ff-oswald);
+  font-size: var(--fs-2);
+  color: var(--white);
+  text-align: center;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.coin-balance {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-size: var(--fs-6);
+  color: var(--light-gray);
+  background: var(--raisin-black-2);
+  padding: 1rem;
+  border-radius: var(--card-radius);
+  border: var(--card-border);
+}
+
+.coin-balance strong {
+  color: var(--orange);
+  font-size: var(--fs-4);
+  margin-left: 0.5rem;
+}
+
+/* Redeem Cards Grid */
+.redeem-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.redeem-card {
+  background: var(--card-gradient);
+  border-radius: var(--card-radius);
+  padding: 1.5rem;
+  text-align: center;
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.redeem-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, var(--orange), transparent);
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.redeem-card:hover {
+  transform: translateY(-6px);
+}
+
+.redeem-card:hover::before {
+  opacity: 0.1;
+}
+
+.redeem-card img {
+  width: 70px;
+  height: 70px;
+  margin-bottom: 1rem;
+  position: relative;
+  filter: drop-shadow(0 4px 8px rgba(0, 255, 132, 0.2));
+}
+
+.redeem-card h3 {
+  font-family: var(--ff-oswald);
+  font-size: var(--fs-5);
+  color: var(--white);
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.redeem-card p {
+  color: var(--light-gray);
+  margin-bottom: 1.2rem;
+  font-size: var(--fs-8);
+  position: relative;
+}
+
+.redeem-card button {
+  background: var(--orange);
+  border: none;
+  color: var(--white);
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--fs-8);
+  transition: var(--transition);
+  position: relative;
+}
+
+.redeem-card button:hover {
+  background: var(--xiketic);
+  transform: translateY(-2px);
+}
+
+.redeem-card button:disabled {
+  background: var(--raisin-black-3);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Conversion Card */
+.conversion-card {
+  border: 2px solid var(--orange);
+}
+
+.conversion-card img {
+  opacity: 0.9;
+}
+
+/* History Section */
+.redemption-history {
+  display: none;
+  background: var(--raisin-black-2);
+  border-radius: var(--card-radius);
+  padding: 2rem;
+  margin-top: 2rem;
+  border: var(--card-border);
+  animation: slideDown 0.3s ease;
+}
+
+.redemption-history.active {
+  display: block;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.redemption-history .cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.redemption-history h2 {
+  font-family: var(--ff-oswald);
+  font-size: var(--fs-4);
+  color: var(--orange);
+}
+
+.redemption-history table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.redemption-history thead td {
+  font-weight: 600;
+  color: var(--white);
+  padding: 1rem;
+  background: var(--raisin-black-3);
+  border-bottom: 2px solid var(--orange);
+}
+
+.redemption-history tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: var(--transition);
+}
+
+.redemption-history tbody tr:hover {
+  background: rgba(0, 255, 132, 0.05);
+}
+
+.redemption-history tbody td {
+  padding: 1rem;
+  color: var(--light-gray);
+}
+
+.status {
+  display: inline-flex;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: var(--fs-9);
+  font-weight: 500;
+}
+
+.status.pending {
+  background: rgba(249, 202, 63, 0.2);
+  color: #f9ca3f;
+}
+
+.status.completed {
+  background: rgba(141, 224, 44, 0.2);
+  color: #8de02c;
+}
+
+.status.rejected {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff0000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .back-button,
+  .history-toggle {
+    justify-content: center;
+  }
+
+  .redeem-container {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 0.5rem;
+  }
+
+  .redemption-history {
+    padding: 1rem;
+  }
+
+  .redemption-history table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: var(--fs-3);
+  }
+
+  .redeem-card {
+    padding: 1.2rem;
+  }
+
+  .redeem-card img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .redeem-card h3 {
+    font-size: var(--fs-6);
+  }
+
+  .redeem-card p {
+    font-size: var(--fs-9);
+  }
+
+  .redeem-card button {
+    padding: 0.6rem 1.2rem;
+    font-size: var(--fs-9);
+  }
+} 
