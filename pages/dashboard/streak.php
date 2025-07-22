@@ -352,160 +352,9 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Streak Dashboard</title>
-    <link rel="stylesheet" href="../../assets/css/style.css">
-    <link rel="stylesheet" href="../../assets/css/streak/streak.css">
-    <link rel="stylesheet" href="../../assets/css/streak/alerts.css">
+    <link rel="stylesheet" href="../../assets/css/root.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard/streak.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="streak.js"></script>
-    <style>
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background: #19fb00;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        
-        .back-button:hover {
-            background: #16e100;
-            transform: translateY(-2px);
-        }
-
-        .main-content {
-            padding: 80px 20px 20px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .task-status {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        .status-icon {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-        }
-        
-        .status-icon ion-icon {
-            font-size: 24px;
-        }
-        
-        .status-icon.completed {
-            color: #19fb00;
-        }
-        
-        .status-icon.pending {
-            color: #ffa500;
-        }
-        
-        .status-icon.incomplete {
-            color: #ff4444;
-        }
-        
-        .task-card {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .task-card.completed::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            border-style: solid;
-            border-width: 0 50px 50px 0;
-            border-color: transparent #19fb00 transparent transparent;
-        }
-
-        .convert-card {
-            position: relative;
-        }
-
-        .convert-btn {
-            background: #19fb00;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin: 10px auto 0;
-            transition: all 0.3s ease;
-        }
-
-        .convert-btn:hover {
-            background: #16e100;
-            transform: translateY(-2px);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .cancel-btn, .confirm-btn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .cancel-btn {
-            background: #f8f9fa;
-            color: #333;
-        }
-
-        .confirm-btn {
-            background: #19fb00;
-            color: white;
-        }
-
-        .cancel-btn:hover, .confirm-btn:hover {
-            transform: translateY(-2px);
-        }
-    </style>
 </head>
 <body>
     <a href="dashboard.php" class="back-button">
@@ -517,57 +366,23 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="streak-stats">
             <div class="stat-card">
                 <div class="stat-number"><?php echo $streakInfo['current_streak'] ?? 0; ?></div>
-                <div class="stat-label">LONGEST STREAK</div>
+                <div class="stat-label">Longest Streak</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo $today_tasks['completed_count'] ?? 0; ?></div>
-                <div class="stat-label">TASKS COMPLETED TODAY</div>
+                <div class="stat-label">Tasks Completed Today</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo $streakInfo['streak_points'] ?? 0; ?></div>
-                <div class="stat-label">AVAILABLE POINTS</div>
+                <div class="stat-label">Available Points</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?></div>
-                <div class="stat-label">CONVERTIBLE COINS</div>
-                <button onclick="convertPoints()" class="convert-btn">Convert to Coins →</button>
-            </div>
-        </div>
-
-        <!-- Conversion Modal -->
-        <div id="conversion-modal" class="modal">
-            <div class="modal-content">
-                <h2>Convert Points to Coins</h2>
-                <div class="conversion-info">
-                    <div class="info-row">
-                        <span>Available Points:</span>
-                        <span id="available-points"><?php echo $streakInfo['streak_points'] ?? 0; ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span>Conversion Rate:</span>
-                        <span>10 points = 1 coin</span>
-                    </div>
-                    <div class="info-row">
-                        <span>Maximum coins available:</span>
-                        <span id="max-coins"><?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?></span>
-                    </div>
-                </div>
-
-                <div class="coin-input">
-                    <label for="coins-to-convert">How many coins do you want?</label>
-                    <div class="input-group">
-                        <button type="button" onclick="decrementCoins()" class="coin-btn">-</button>
-                        <input type="number" id="coins-to-convert" min="1" 
-                               max="<?php echo floor(($streakInfo['streak_points'] ?? 0) / 10); ?>" value="1">
-                        <button type="button" onclick="incrementCoins()" class="coin-btn">+</button>
-                    </div>
-                    <p class="points-needed">Points needed: <span id="points-needed">10</span></p>
-                </div>
-
-                <div class="modal-buttons">
-                    <button onclick="closeModal()" class="cancel-btn">Cancel</button>
-                    <button onclick="confirmConversion()" class="confirm-btn">Convert</button>
-                </div>
+                <div class="stat-label">Convertible Coins</div>
+                <button onclick="convertPoints()" class="convert-btn">
+                    <ion-icon name="swap-horizontal-outline"></ion-icon>
+                    Convert to Coins
+                </button>
             </div>
         </div>
 
@@ -580,6 +395,7 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                 ?>%"></div>
             </div>
             <div class="milestone-reward">
+                <ion-icon name="trophy-outline"></ion-icon>
                 Reward: <?php echo $next_milestone['reward_points']; ?> Points
             </div>
             <div class="milestone-description">
@@ -691,7 +507,7 @@ $achievements = $achievements_stmt->fetchAll(PDO::FETCH_ASSOC);
                     
                     foreach ($last7Days as $day): 
                     ?>
-                    <tr class="<?php echo $day['tasks_completed'] > 0 ? 'active-day' : 'inactive-day'; ?>">
+                    <tr class="<?php echo $day['tasks_completed'] > 0 ? 'active-day' : ''; ?>">
                         <td><?php echo date('D, M j', strtotime($day['date'])); ?></td>
                         <td><?php echo $day['tasks_completed']; ?></td>
                         <td><?php echo $day['points_earned'] ?? 0; ?></td>
