@@ -217,35 +217,35 @@ body {
   padding: 20px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-gap: 20px;
+  grid-gap: 30px;
 }
 
 .cardBox .card {
   position: relative;
   background: var(--white);
-  padding: 20px;
-  border-radius: 15px;
+  padding: 30px;
+  border-radius: 20px;
   display: flex;
   justify-content: space-between;
   cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
 }
 
 .cardBox .card .numbers {
   position: relative;
   font-weight: 500;
-  font-size: 2.2rem;
+  font-size: 2.5rem;
   color: var(--blue);
 }
 
 .cardBox .card .cardName {
   color: var(--black2);
-  font-size: 1rem;
+  font-size: 1.1rem;
   margin-top: 5px;
 }
 
 .cardBox .card .iconBx {
-  font-size: 2.5rem;
+  font-size: 3.5rem;
   color: var(--black2);
 }
 
@@ -489,8 +489,8 @@ body {
   }
   .cardBox {
     grid-template-columns: repeat(2, 1fr);
-    padding: 15px;
-    grid-gap: 15px;
+    padding: 20px;
+    grid-gap: 20px;
   }
   
   .cardBox .card {
@@ -502,7 +502,7 @@ body {
   }
   
   .cardBox .card .iconBx {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 }
 
@@ -513,24 +513,24 @@ body {
   
   .cardBox {
     grid-template-columns: repeat(2, 1fr);
-    padding: 12px;
-    grid-gap: 12px;
+    padding: 18px;
+    grid-gap: 18px;
   }
   
   .cardBox .card {
-    padding: 15px;
+    padding: 18px;
   }
   
   .cardBox .card .numbers {
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
   
   .cardBox .card .cardName {
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
   
   .cardBox .card .iconBx {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
 
   .recentOrders {
