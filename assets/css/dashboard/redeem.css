@@ -14,6 +14,15 @@ body {
   padding: 2rem;
 }
 
+/* Main Content Container */
+.main-content {
+  transition: var(--transition);
+}
+
+.main-content.hidden {
+  display: none;
+}
+
 /* Header Section */
 .page-header {
   display: flex;
@@ -21,6 +30,9 @@ body {
   align-items: center;
   margin-bottom: 2rem;
   padding: 1rem;
+  background: var(--raisin-black-2);
+  border-radius: var(--card-radius);
+  border: var(--card-border);
 }
 
 .back-button {
@@ -32,10 +44,14 @@ body {
   text-decoration: none;
   font-size: 1rem;
   transition: var(--transition);
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  background: rgba(0, 255, 132, 0.1);
 }
 
 .back-button:hover {
   transform: translateX(-4px);
+  background: rgba(0, 255, 132, 0.15);
 }
 
 .history-toggle {
@@ -70,6 +86,20 @@ body {
   margin-bottom: 1.5rem;
   text-transform: uppercase;
   letter-spacing: 2px;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: var(--orange);
+  border-radius: 2px;
 }
 
 .coin-balance {
@@ -78,15 +108,29 @@ body {
   font-size: var(--fs-6);
   color: var(--light-gray);
   background: var(--raisin-black-2);
-  padding: 1rem;
+  padding: 1.5rem;
   border-radius: var(--card-radius);
   border: var(--card-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.coin-balance::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, var(--orange), transparent);
+  opacity: 0.1;
 }
 
 .coin-balance strong {
   color: var(--orange);
   font-size: var(--fs-4);
   margin-left: 0.5rem;
+  font-family: var(--ff-oswald);
 }
 
 /* Redeem Cards Grid */
@@ -100,13 +144,16 @@ body {
 .redeem-card {
   background: var(--card-gradient);
   border-radius: var(--card-radius);
-  padding: 1.5rem;
+  padding: 2rem;
   text-align: center;
   border: var(--card-border);
   box-shadow: var(--card-shadow);
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .redeem-card::before {
@@ -127,39 +174,75 @@ body {
 }
 
 .redeem-card img {
-  width: 70px;
-  height: 70px;
-  margin-bottom: 1rem;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1rem;
   position: relative;
   filter: drop-shadow(0 4px 8px rgba(0, 255, 132, 0.2));
+  border-radius: 15px;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .redeem-card h3 {
   font-family: var(--ff-oswald);
-  font-size: var(--fs-5);
+  font-size: var(--fs-4);
   color: var(--white);
   margin-bottom: 0.5rem;
   position: relative;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .redeem-card p {
   color: var(--light-gray);
-  margin-bottom: 1.2rem;
-  font-size: var(--fs-8);
+  margin-bottom: 0.5rem;
+  font-size: var(--fs-7);
   position: relative;
+  line-height: 1.4;
+}
+
+.redeem-card .item-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+.redeem-card .detail {
+  text-align: center;
+}
+
+.redeem-card .detail-label {
+  font-size: var(--fs-9);
+  color: var(--light-gray);
+  margin-bottom: 0.25rem;
+}
+
+.redeem-card .detail-value {
+  font-size: var(--fs-7);
+  color: var(--orange);
+  font-weight: 600;
 }
 
 .redeem-card button {
   background: var(--orange);
   border: none;
   color: var(--white);
-  padding: 0.8rem 1.5rem;
+  padding: 1rem 2rem;
   border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
-  font-size: var(--fs-8);
+  font-size: var(--fs-7);
   transition: var(--transition);
   position: relative;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: auto;
 }
 
 .redeem-card button:hover {
@@ -180,6 +263,7 @@ body {
 
 .conversion-card img {
   opacity: 0.9;
+  background: rgba(0, 255, 132, 0.1);
 }
 
 /* History Section */
@@ -191,6 +275,8 @@ body {
   margin-top: 2rem;
   border: var(--card-border);
   animation: slideDown 0.3s ease;
+  max-width: 1200px;
+  margin: 2rem auto;
 }
 
 .redemption-history.active {
@@ -212,13 +298,17 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--orange);
 }
 
 .redemption-history h2 {
   font-family: var(--ff-oswald);
-  font-size: var(--fs-4);
+  font-size: var(--fs-3);
   color: var(--orange);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .redemption-history table {
@@ -227,11 +317,14 @@ body {
 }
 
 .redemption-history thead td {
+  font-family: var(--ff-oswald);
   font-weight: 600;
   color: var(--white);
-  padding: 1rem;
+  padding: 1.25rem 1rem;
   background: var(--raisin-black-3);
-  border-bottom: 2px solid var(--orange);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: var(--fs-8);
 }
 
 .redemption-history tbody tr {
@@ -244,16 +337,19 @@ body {
 }
 
 .redemption-history tbody td {
-  padding: 1rem;
+  padding: 1.25rem 1rem;
   color: var(--light-gray);
+  font-size: var(--fs-8);
 }
 
 .status {
   display: inline-flex;
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 20px;
   font-size: var(--fs-9);
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .status.pending {
@@ -291,13 +387,19 @@ body {
   }
 
   .redemption-history {
-    padding: 1rem;
+    padding: 1.5rem;
   }
 
   .redemption-history table {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
+  }
+
+  .redemption-history thead td,
+  .redemption-history tbody td {
+    padding: 1rem 0.75rem;
+    font-size: var(--fs-9);
   }
 }
 
@@ -311,24 +413,34 @@ body {
   }
 
   .redeem-card {
-    padding: 1.2rem;
+    padding: 1.5rem;
   }
 
   .redeem-card img {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
   }
 
   .redeem-card h3 {
-    font-size: var(--fs-6);
+    font-size: var(--fs-5);
   }
 
   .redeem-card p {
-    font-size: var(--fs-9);
+    font-size: var(--fs-8);
+  }
+
+  .redeem-card .item-details {
+    padding: 0.75rem;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   .redeem-card button {
-    padding: 0.6rem 1.2rem;
-    font-size: var(--fs-9);
+    padding: 0.75rem 1.5rem;
+    font-size: var(--fs-8);
+  }
+
+  .redemption-history .cardHeader h2 {
+    font-size: var(--fs-4);
   }
 } 

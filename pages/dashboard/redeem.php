@@ -179,51 +179,71 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </button>
     </div>
 
-    <h2 class="page-title">Redeem Center</h2>
+    <div class="main-content" id="mainContent">
+        <h2 class="page-title">Redeem Center</h2>
 
-    <?php if($success_message): ?>
-        <div class="alert alert-success"><?php echo $success_message; ?></div>
-    <?php endif; ?>
-    
-    <?php if($error_message): ?>
-        <div class="alert alert-danger"><?php echo $error_message; ?></div>
-    <?php endif; ?>
+        <?php if($success_message): ?>
+            <div class="alert alert-success"><?php echo $success_message; ?></div>
+        <?php endif; ?>
+        
+        <?php if($error_message): ?>
+            <div class="alert alert-danger"><?php echo $error_message; ?></div>
+        <?php endif; ?>
 
-    <div class="coin-balance">
-        Your Balance: <strong><?php echo number_format($coin_balance); ?> Coins</strong>
-    </div>
-
-    <!-- Rest of your existing redeem cards code -->
-    <div class="redeem-container">
-        <!-- Coin to Ticket Conversion Card -->
-        <div class="redeem-card conversion-card">
-            <img src="../../assets/images/ticket-icon.png" alt="Ticket" /> <!-- Replace with actual ticket icon path -->
-            <h3>Convert Coins to Ticket</h3>
-            <p>Exchange 200 Coins for 1 Ticket</p>
-            <p>Use tickets for special entries!</p>
-            <form method="POST" onsubmit="return confirm('Convert 200 coins to 1 ticket?');">
-                <button type="submit" name="convert_ticket" <?php echo ($coin_balance < 200) ? 'disabled' : ''; ?>>
-                    Convert (200 Coins)
-                </button>
-            </form>
+        <div class="coin-balance">
+            Your Balance: <strong><?php echo number_format($coin_balance); ?> Coins</strong>
         </div>
 
-        <?php foreach($redeemable_items as $item): ?>
+        <div class="redeem-container">
+            <!-- Coin to Ticket Conversion Card -->
+            <div class="redeem-card conversion-card">
+                <img src="../../assets/images/ticket-icon.png" alt="Ticket">
+                <h3>Convert Coins to Ticket</h3>
+                <p>Exchange 200 Coins for 1 Ticket</p>
+                <p>Use tickets for special entries!</p>
+                <div class="item-details">
+                    <div class="detail">
+                        <div class="detail-label">Cost</div>
+                        <div class="detail-value">200 Coins</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Get</div>
+                        <div class="detail-value">1 Ticket</div>
+                    </div>
+                </div>
+                <form method="POST" onsubmit="return confirm('Convert 200 coins to 1 ticket?');">
+                    <button type="submit" name="convert_ticket" <?php echo ($coin_balance < 200) ? 'disabled' : ''; ?>>
+                        Convert Now
+                    </button>
+                </form>
+            </div>
+
+            <?php foreach($redeemable_items as $item): ?>
             <div class="redeem-card">
-                <img src="<?php echo htmlspecialchars($item['image_url']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" />
+                <img src="<?php echo htmlspecialchars($item['image_url']); ?>" 
+                     alt="<?php echo htmlspecialchars($item['name']); ?>">
                 <h3><?php echo htmlspecialchars($item['name']); ?></h3>
                 <p><?php echo htmlspecialchars($item['description']); ?></p>
-                <p>Cost: <?php echo $item['coin_cost']; ?> Coins</p>
-                <p>Stock: <?php echo $item['is_unlimited'] ? 'Unlimited' : $item['stock'] . ' left'; ?></p>
+                <div class="item-details">
+                    <div class="detail">
+                        <div class="detail-label">Cost</div>
+                        <div class="detail-value"><?php echo number_format($item['coin_cost']); ?> Coins</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Stock</div>
+                        <div class="detail-value"><?php echo $item['is_unlimited'] ? 'Unlimited' : number_format($item['stock']) . ' left'; ?></div>
+                    </div>
+                </div>
                 <form method="POST" onsubmit="return confirm('Are you sure you want to redeem this item?');">
                     <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
                     <input type="hidden" name="coin_cost" value="<?php echo $item['coin_cost']; ?>">
                     <button type="submit" name="redeem" <?php echo ($coin_balance < $item['coin_cost']) ? 'disabled' : ''; ?>>
-                        Redeem
+                        Redeem Now
                     </button>
                 </form>
             </div>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
+        </div>
     </div>
 
     <!-- History Section -->
@@ -285,13 +305,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script>
         function toggleHistory() {
             const historySection = document.getElementById('historySection');
+            const mainContent = document.getElementById('mainContent');
             const toggleButton = document.querySelector('.history-toggle');
             
             historySection.classList.toggle('active');
+            mainContent.classList.toggle('hidden');
             
             // Update button text based on state
             if (historySection.classList.contains('active')) {
-                toggleButton.innerHTML = '<i class="fas fa-times"></i> Hide History';
+                toggleButton.innerHTML = '<i class="fas fa-times"></i> Back to Redeem';
             } else {
                 toggleButton.innerHTML = '<i class="fas fa-history"></i> View History';
             }
