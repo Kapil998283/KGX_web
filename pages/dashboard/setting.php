@@ -21,7 +21,13 @@ $stmt->execute();
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Get user's current profile image
-$profile_image = $user['profile_image'] ?? '/assets/images/team-member-8.png';
+$profile_image = $user['profile_image'];
+if (!$profile_image || empty($profile_image)) {
+    $profile_image = '../../assets/images/team-member-8.png';
+} else if (strpos($profile_image, '/') === 0) {
+    // If the path starts with /, add the proper relative path
+    $profile_image = '../..' . $profile_image;
+}
 
 // Get user's games
 $sql = "SELECT game_name, is_primary FROM user_games WHERE user_id = :user_id";
