@@ -2,18 +2,25 @@
 require_once '../config/database.php';
 require_once '../includes/user-auth.php';
 
+// Function to send JSON response
+function sendJsonResponse($success, $message, $data = null) {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => $success,
+        'message' => $message,
+        'data' => $data
+    ]);
+    exit;
+}
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    $_SESSION['error_message'] = 'Please login first';
-    header("Location: /KGX/auth/login.php");
-    exit;
+    sendJsonResponse(false, 'Please login first');
 }
 
 // Check if form was submitted
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    $_SESSION['error_message'] = 'Invalid request method';
-    header("Location: yourteams.php");
-    exit;
+    sendJsonResponse(false, 'Invalid request method');
 }
 
 // Get POST data
@@ -22,9 +29,7 @@ $action = isset($_POST['action']) ? $_POST['action'] : ''; // 'approve' or 'reje
 $team_id = isset($_POST['team_id']) ? (int)$_POST['team_id'] : 0;
 
 if (!$request_id || !in_array($action, ['approve', 'reject']) || !$team_id) {
-    $_SESSION['error_message'] = 'Invalid request parameters';
-    header("Location: yourteams.php");
-    exit;
+    sendJsonResponse(false, 'Invalid request parameters');
 }
 
 try {
@@ -44,23 +49,17 @@ try {
     $request = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$request) {
-        $_SESSION['error_message'] = 'Request not found or already processed';
-        header("Location: yourteams.php?team_id=" . $team_id);
-        exit;
+        sendJsonResponse(false, 'Request not found or already processed');
     }
 
     // Verify user is the team captain
     if ($request['captain_id'] != $_SESSION['user_id']) {
-        $_SESSION['error_message'] = 'You are not authorized to handle this request';
-        header("Location: yourteams.php?team_id=" . $team_id);
-        exit;
+        sendJsonResponse(false, 'You are not authorized to handle this request');
     }
 
     // Check if team is full when approving
     if ($action === 'approve' && $request['current_members'] >= $request['max_members']) {
-        $_SESSION['error_message'] = 'Team is full';
-        header("Location: yourteams.php?team_id=" . $team_id);
-        exit;
+        sendJsonResponse(false, 'Team is full');
     }
 
     // Start transaction
@@ -112,12 +111,12 @@ try {
         ]);
 
         $conn->commit();
-        $_SESSION['success_message'] = $action === 'approve' 
+        
+        $successMessage = $action === 'approve' 
             ? "Successfully approved " . $request['requester_username'] . "'s request to join the team!"
             : "Request from " . $request['requester_username'] . " has been rejected.";
         
-        header("Location: yourteams.php?team_id=" . $team_id);
-        exit;
+        sendJsonResponse(true, $successMessage);
 
     } catch (Exception $e) {
         $conn->rollBack();
@@ -126,7 +125,5 @@ try {
 
 } catch (Exception $e) {
     error_log("Error in handle_request.php: " . $e->getMessage());
-    $_SESSION['error_message'] = 'An error occurred while processing the request';
-    header("Location: yourteams.php?team_id=" . $team_id);
-    exit;
+    sendJsonResponse(false, 'An error occurred while processing the request');
 } 

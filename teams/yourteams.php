@@ -529,3 +529,128 @@ function showGameProfile(userId) {
     }
 }
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle all request action forms
+    document.querySelectorAll('.request-actions form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button');
+            const originalButtonText = submitButton.innerHTML;
+            
+            // Disable button and show loading state
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            fetch('handle_request.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showNotification(data.message || 'Request processed successfully', 'success');
+                    
+                    // Remove the request card from the UI
+                    const requestCard = this.closest('.request-card');
+                    if (requestCard) {
+                        requestCard.style.animation = 'fadeOut 0.5s';
+                        setTimeout(() => {
+                            requestCard.remove();
+                            
+                            // Check if there are no more requests
+                            const requestsList = document.querySelector('.requests-list');
+                            if (requestsList && !requestsList.querySelector('.request-card')) {
+                                requestsList.innerHTML = `
+                                    <div class="no-requests">
+                                        <i class="fas fa-user-plus"></i>
+                                        <h3>No Pending Requests</h3>
+                                        <p>There are no pending join requests for your team at the moment.</p>
+                                    </div>
+                                `;
+                            }
+                        }, 500);
+                    }
+                } else {
+                    // Show error message
+                    showNotification(data.message || 'Error processing request', 'error');
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while processing the request', 'error');
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            });
+        });
+    });
+});
+
+// Notification function
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+        ${message}
+    `;
+    document.body.appendChild(notification);
+    
+    // Add animation
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+</script>
+
+<style>
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 5px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification.success {
+    background-color: #4CAF50;
+}
+
+.notification.error {
+    background-color: #f44336;
+}
+
+.notification i {
+    margin-right: 10px;
+}
+</style>
+</body>
+</html>
