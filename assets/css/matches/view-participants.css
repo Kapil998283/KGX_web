@@ -1,0 +1,258 @@
+.participants-page {
+    min-height: 100vh;
+    padding: 120px 20px 60px;
+    background: var(--raisin-black-1);
+    position: relative;
+    overflow: hidden;
+}
+
+.participants-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, var(--xiketic), transparent);
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* Header Section */
+.page-header {
+    margin-bottom: 40px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--orange);
+    color: var(--raisin-black-1);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-bottom: 25px;
+}
+
+.back-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(140, 255, 128, 0.2);
+}
+
+.page-header h1 {
+    color: var(--platinum);
+    font-size: 2em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Match Info */
+.match-info {
+    background: var(--raisin-black-3);
+    padding: 25px;
+    border-radius: 20px;
+    border: 1px solid var(--onyx);
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.match-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, var(--xiketic), transparent);
+    opacity: 0.1;
+}
+
+.game-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.game-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 15px;
+    object-fit: cover;
+    border: 2px solid var(--orange);
+    padding: 2px;
+    background: var(--raisin-black-1);
+    transition: all 0.3s ease;
+}
+
+.game-icon:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(140, 255, 128, 0.2);
+}
+
+.game-info h2 {
+    color: var(--platinum);
+    font-size: 1.8em;
+    margin: 0 0 10px;
+}
+
+.match-date {
+    color: var(--light-gray);
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Participants Table */
+.participants-table {
+    background: var(--raisin-black-3);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid var(--onyx);
+    overflow: hidden;
+    position: relative;
+}
+
+.participants-table::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, var(--xiketic), transparent);
+    opacity: 0.1;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    position: relative;
+    z-index: 1;
+}
+
+th {
+    background: var(--raisin-black-2);
+    color: var(--orange);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 15px;
+    text-align: left;
+    font-size: 0.9em;
+    border-bottom: 1px solid var(--onyx);
+}
+
+th:first-child {
+    border-top-left-radius: 12px;
+}
+
+th:last-child {
+    border-top-right-radius: 12px;
+}
+
+td {
+    padding: 15px;
+    color: var(--light-gray);
+    border-bottom: 1px solid var(--onyx);
+    transition: all 0.3s ease;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background: var(--raisin-black-2);
+}
+
+/* Column Specific Styles */
+td:nth-child(1) {
+    color: var(--orange);
+    font-weight: 600;
+    width: 60px;
+}
+
+td:nth-child(2) {
+    font-weight: 500;
+}
+
+td:nth-child(5), td:nth-child(6) {
+    color: var(--orange);
+}
+
+/* Empty State */
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: var(--light-gray);
+    font-size: 1.1em;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .game-info {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .game-info h2 {
+        font-size: 1.5em;
+    }
+}
+
+@media (max-width: 768px) {
+    .participants-page {
+        padding: 100px 15px 40px;
+    }
+
+    .participants-table {
+        padding: 15px;
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 700px;
+    }
+
+    th, td {
+        padding: 12px;
+        font-size: 0.9em;
+    }
+
+    .game-icon {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 1.6em;
+    }
+
+    .back-link {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+
+    .game-icon {
+        width: 50px;
+        height: 50px;
+    }
+} 
