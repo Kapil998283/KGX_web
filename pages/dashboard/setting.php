@@ -44,257 +44,9 @@ foreach ($user_games as $game) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Settings Page</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background-color: #f2f4f8;
-      padding: 30px;
-    }
-
-    .settings-container {
-      max-width: 550px;
-      margin: auto;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
-    }
-
-    .back-arrow {
-      display: inline-flex;
-      align-items: center;
-      margin-bottom: 20px;
-      color: #3b82f6;
-      font-weight: 500;
-      text-decoration: none;
-      font-size: 16px;
-    }
-
-    .back-arrow:hover {
-      color: #2563eb;
-    }
-
-    .back-arrow span {
-      margin-left: 6px;
-    }
-
-    .settings-title {
-      font-size: 1.8rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      color: #222;
-      text-align: center;
-    }
-
-    .profile-section {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .profile-pic {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 4px solid #25d366;
-      margin-bottom: 1rem;
-    }
-
-    .btn {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: 0.3s ease;
-    }
-
-    .upload-btn {
-      background-color: #25d366;
-      color: white;
-      margin: 5px;
-    }
-
-    .upload-btn:hover {
-      background-color: #1eba5d;
-    }
-
-    .remove-btn {
-      background-color: #eee;
-      color: #333;
-      margin: 5px;
-    }
-
-    .remove-btn:hover {
-      background-color: #ddd;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 500;
-      color: #444;
-    }
-
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 15px;
-      background: #f9f9f9;
-      outline: none;
-      transition: border 0.2s ease;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus {
-      border-color: #25d366;
-    }
-
-    .save-changes-btn {
-      background-color: #25d366;
-      color: white;
-      padding: 12px;
-      border-radius: 8px;
-      width: 100%;
-      font-size: 15px;
-      border: none;
-      cursor: pointer;
-      transition: 0.3s ease;
-    }
-
-    .save-changes-btn:hover {
-      background-color: #1eba5d;
-    }
-
-    .delete-section {
-      max-width: 550px;
-      margin: 30px auto 0;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
-    }
-
-    .delete-account-btn {
-      background-color: #ff4d4f;
-      color: white;
-      padding: 12px;
-      border-radius: 8px;
-      width: 100%;
-      font-size: 15px;
-      border: none;
-      cursor: pointer;
-      transition: 0.3s ease;
-    }
-
-   
-
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-    }
-
-    .modal-content {
-      position: relative;
-      background-color: #fff;
-      margin: 5% auto;
-      padding: 20px;
-      width: 90%;
-      max-width: 600px;
-      border-radius: 16px;
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .close-modal {
-      position: absolute;
-      right: 20px;
-      top: 20px;
-      font-size: 24px;
-      cursor: pointer;
-      color: #666;
-    }
-
-    .close-modal:hover {
-      color: #333;
-    }
-
-    .modal-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      color: #222;
-      text-align: center;
-    }
-
-    .profile-images-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 20px;
-      padding: 20px 0;
-    }
-
-    .profile-image-item {
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 3px solid transparent;
-      transition: all 0.3s ease;
-    }
-
-    .profile-image-item:hover {
-      transform: scale(1.05);
-      border-color: #25d366;
-    }
-
-    .profile-image-item.selected {
-      border-color: #25d366;
-      transform: scale(1.05);
-    }
-
-    @media (max-width: 600px) {
-      .settings-container,
-      .delete-section {
-        padding: 1.5rem 1rem;
-      }
-
-      .upload-btn,
-      .remove-btn {
-        width: 100%;
-      }
-
-      .modal-content {
-        margin: 10% auto;
-        width: 95%;
-      }
-
-      .profile-images-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 15px;
-      }
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/root.css">
+  <link rel="stylesheet" href="../../assets/css/dashboard/settings.css">
 </head>
 <body>
   <div class="settings-container">
@@ -318,7 +70,7 @@ foreach ($user_games as $game) {
     <!-- Main Game -->
     <div class="form-group">
       <label for="main_game">Main Game</label>
-      <select id="main_game" name="main_game" class="form-control">
+      <select id="main_game" name="main_game">
         <?php
         $games = [
             'PUBG' => 'PUBG',
@@ -343,7 +95,7 @@ foreach ($user_games as $game) {
         }
         ?>
       </select>
-      <small class="form-text text-muted">This is the game that will be shown as your main game profile</small>
+      <small class="form-text">This is the game that will be shown as your main game profile</small>
     </div>
 
     <!-- Language Selection -->
@@ -360,7 +112,6 @@ foreach ($user_games as $game) {
     <!-- Save Button -->
     <button class="save-changes-btn" onclick="saveChanges()">Save Changes</button>
   </div>
-
 
   <!-- Profile Image Selection Modal -->
   <div id="imageModal" class="modal">
