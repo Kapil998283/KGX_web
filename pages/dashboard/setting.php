@@ -23,10 +23,12 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 // Get user's current profile image
 $profile_image = $user['profile_image'];
 if (!$profile_image || empty($profile_image)) {
-    $profile_image = '../../assets/images/team-member-8.png';
-} else if (strpos($profile_image, '/') === 0) {
-    // If the path starts with /, add the proper relative path
-    $profile_image = '../..' . $profile_image;
+    // Get the default profile image from the database
+    $sql = "SELECT image_path FROM profile_images WHERE is_default = 1 LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $default_image = $stmt->fetch(PDO::FETCH_ASSOC);
+    $profile_image = $default_image ? $default_image['image_path'] : '';
 }
 
 // Get user's games
