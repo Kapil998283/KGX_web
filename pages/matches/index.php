@@ -119,215 +119,157 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="section-header">
         <h2 class="section-title">Available Matches</h2>
         <?php if (isset($_SESSION['user_id'])): ?>
-            <div class="user-balance">
-                <span class="balance-item">
-                    <i class="bi bi-coin"></i> <?= number_format($user_balance) ?> Coins
-                </span>
-                <span class="balance-item">
-                    <i class="bi bi-ticket-perforated"></i> <?= number_format($user_tickets) ?> Tickets
-                </span>
-                <a href="my-matches.php" class="my-matches-link">
-                    <i class="bi bi-trophy"></i> My Matches
-                </a>
-            </div>
+            <a href="my-matches.php" class="my-matches-link">
+                <i class="bi bi-trophy"></i> My Matches
+            </a>
         <?php endif; ?>
     </div>
 
     <!-- Games Filter -->
     <div class="games-filter">
         <a href="?game=" class="game-filter-btn <?= empty($game) ? 'active' : '' ?>">
-            <i class="bi bi-grid-3x3-gap"></i> All Games
+            <i class="bi bi-grid-3x3-gap"></i> All
         </a>
         <?php foreach ($games as $game_item): ?>
         <a href="?game=<?= urlencode($game_item['name']) ?>" 
            class="game-filter-btn <?= strtoupper($game) === strtoupper($game_item['name']) ? 'active' : '' ?>">
-            <img src="<?= htmlspecialchars($game_item['image_url']) ?>" alt="<?= htmlspecialchars($game_item['name']) ?>">
-            <?= htmlspecialchars($game_item['name']) ?>
+            <i class="bi bi-controller"></i> <?= htmlspecialchars($game_item['name']) ?>
         </a>
         <?php endforeach; ?>
     </div>
 
     <!-- Matches Grid -->
     <div class="matches-grid">
-            <?php if (empty($matches)): ?>
-            <div class="no-matches">
-                <i class="bi bi-controller"></i>
-                <p>No matches available at the moment.</p>
-                <a href="?game=" class="btn-join btn-primary">View All Games</a>
-            </div>
-            <?php else: ?>
-                <?php foreach ($matches as $match): ?>
-                <div class="match-card">
-                    <div class="match-header">
-                        <div class="game-info">
-                            <img src="<?= htmlspecialchars($match['game_image']) ?>" 
-                                 alt="<?= htmlspecialchars($match['game_name']) ?>" 
-                                 class="game-icon">
-                            <div>
-                                <h3 class="game-name"><?= htmlspecialchars($match['game_name']) ?></h3>
-                                <?php if ($match['tournament_name']): ?>
-                                <div class="tournament-name">
-                                    <i class="bi bi-trophy"></i> <?= htmlspecialchars($match['tournament_name']) ?>
-                                </div>
-                                <?php endif; ?>
+        <?php if (empty($matches)): ?>
+        <div class="no-matches">
+            <i class="bi bi-controller"></i>
+            <p>No matches available at the moment.</p>
+            <a href="?game=" class="btn-join btn-primary">View All Games</a>
+        </div>
+        <?php else: ?>
+            <?php foreach ($matches as $match): ?>
+            <div class="match-card">
+                <div class="match-header">
+                    <div class="game-info">
+                        <img src="<?= htmlspecialchars($match['game_image']) ?>" 
+                             alt="<?= htmlspecialchars($match['game_name']) ?>" 
+                             class="game-icon">
+                        <div>
+                            <h3 class="game-name"><?= htmlspecialchars($match['game_name']) ?></h3>
+                            <?php if ($match['tournament_name']): ?>
+                            <div class="tournament-name">
+                                <i class="bi bi-trophy"></i> <?= htmlspecialchars($match['tournament_name']) ?>
                             </div>
+                            <?php endif; ?>
                         </div>
-                        <span class="match-type">
-                            <i class="bi bi-people"></i> <?= ucfirst(htmlspecialchars($match['match_type'])) ?>
+                    </div>
+                    <span class="match-type">
+                        <i class="bi bi-people"></i> <?= ucfirst(htmlspecialchars($match['match_type'])) ?>
+                    </span>
+                </div>
+
+                <div class="match-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="bi bi-calendar"></i>
+                            <?= date('M j, Y', strtotime($match['match_date'])) ?>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-clock"></i>
+                            <?= date('g:i A', strtotime($match['match_time'])) ?>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-map"></i>
+                            <?= htmlspecialchars($match['map_name']) ?>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-people"></i>
+                            <?= $match['current_participants'] ?>/<?= $match['max_participants'] ?>
+                        </div>
+                    </div>
+
+                    <div class="entry-fee">
+                        <i class="bi bi-ticket"></i>
+                        <?php if ($match['entry_type'] === 'free'): ?>
+                            Free Entry
+                        <?php else: ?>
+                            Entry: <?= number_format($match['entry_fee']) ?> <?= ucfirst($match['entry_type']) ?>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="match-status">
+                        <span class="status-badge status-<?= strtolower($match['match_status']) ?>">
+                            <i class="bi bi-circle-fill"></i>
+                            <?= $match['match_status'] ?>
                         </span>
                     </div>
+                </div>
 
-                    <div class="match-info">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <i class="bi bi-calendar"></i>
-                                <?= date('M j, Y', strtotime($match['match_date'])) ?>
-                            </div>
-                            <div class="info-item">
-                                <i class="bi bi-clock"></i>
-                                <?= date('g:i A', strtotime($match['match_time'])) ?>
-                            </div>
-                            <div class="info-item">
-                                <i class="bi bi-map"></i>
-                                <?= htmlspecialchars($match['map_name']) ?>
-                            </div>
-                            <div class="info-item">
-                                <i class="bi bi-people"></i>
-                                <?= $match['current_participants'] ?>/<?= $match['max_participants'] ?>
-                            </div>
-                            <div class="prize-pool">
-                                <i class="bi bi-trophy"></i>
-                                <?php 
-                                    if (!empty($match['website_currency_type']) && $match['website_currency_amount'] > 0) {
-                                        echo 'Prize Pool: ' . number_format($match['website_currency_amount']) . ' ' . ucfirst($match['website_currency_type']);
-                                    } elseif (!empty($match['prize_pool']) && $match['prize_pool'] > 0) {
-                                        $currency_symbol = ($match['prize_type'] === 'USD') ? '$' : '₹';
-                                        echo 'Prize Pool: ' . $currency_symbol . number_format($match['prize_pool']);
-                                    } else {
-                                        echo 'Prize Pool: Not Set';
-                                    }
-                                ?>
-                                <?php if ($match['prize_distribution']): ?>
-                                    <div class="prize-distribution">
-                                        <i class="bi bi-award"></i>
-                                        <?php
-                                            switch($match['prize_distribution']) {
-                                                case 'single':
-                                                    echo 'Winner Takes All';
-                                                    break;
-                                                case 'top3':
-                                                    echo 'Top 3 Winners';
-                                                    break;
-                                                case 'top5':
-                                                    echo 'Top 5 Winners';
-                                                    break;
-                                            }
-                                        ?>
-                                    </div>
-                                <?php endif; ?>
-                                <?php if ($match['coins_per_kill'] > 0): ?>
-                                    <div class="coins-per-kill">
-                                        <i class="bi bi-lightning"></i>
-                                        <?= number_format($match['coins_per_kill']) ?> Coins per Kill
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="entry-fee">
-                                <i class="bi bi-ticket"></i>
-                                <?php if ($match['entry_type'] === 'free'): ?>
-                                    Free Entry
-                                <?php else: ?>
-                                    Entry: <?= number_format($match['entry_fee']) ?> <?= ucfirst($match['entry_type']) ?>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-
-                        <div class="match-status">
-                            <span class="status-badge status-<?= strtolower($match['match_status']) ?>">
-                                <i class="bi bi-circle-fill"></i>
-                                <?= $match['match_status'] ?>
-                            </span>
-                        </div>
-
-                        <?php if ($match['has_joined'] && $match['status'] === 'in_progress'): ?>
-                        <div class="room-details">
-                            <div class="room-info">
-                                <i class="bi bi-door-open"></i>
-                                Room ID: <strong><?= htmlspecialchars($match['room_code']) ?></strong>
-                            </div>
-                            <div class="room-info">
-                                <i class="bi bi-key"></i>
-                                Password: <strong><?= htmlspecialchars($match['room_password']) ?></strong>
-                            </div>
-                        </div>
+                <div class="match-actions">
+                    <?php if (!isset($_SESSION['user_id'])): ?>
+                        <a href="../login.php" class="btn-join btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Login to Join
+                        </a>
+                    <?php elseif ($match['status'] === 'completed'): ?>
+                        <?php if ($match['has_joined']): ?>
+                        <a href="view-winner.php?match_id=<?= $match['id'] ?>" class="btn-join btn-success">
+                            <i class="bi bi-trophy"></i> View Winner
+                        </a>
                         <?php endif; ?>
-                    </div>
-
-                    <div class="match-actions">
-                        <?php if (!isset($_SESSION['user_id'])): ?>
-                            <a href="../login.php" class="btn-join btn-primary">
-                                <i class="bi bi-box-arrow-in-right"></i> Login to Join
+                        <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                            <i class="bi bi-people"></i> View Participants
+                        </a>
+                    <?php elseif ($match['has_joined']): ?>
+                        <button class="btn-join btn-success" disabled>
+                            <i class="bi bi-check2-circle"></i> Already Joined
+                        </button>
+                        <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                            <i class="bi bi-people"></i> View Participants
+                        </a>
+                    <?php elseif ($match['status'] === 'upcoming'): ?>
+                        <?php
+                        $can_join = true;
+                        $error_message = '';
+                        
+                        if ($match['current_participants'] >= $match['max_participants']) {
+                            $can_join = false;
+                            $error_message = 'Match is full';
+                        } elseif ($match['entry_type'] === 'coins' && $user_balance < $match['entry_fee']) {
+                            $can_join = false;
+                            $error_message = 'Insufficient coins';
+                        } elseif ($match['entry_type'] === 'tickets' && $user_tickets < $match['entry_fee']) {
+                            $can_join = false;
+                            $error_message = 'Insufficient tickets';
+                        }
+                        ?>
+                        
+                        <?php if ($can_join): ?>
+                            <a href="join.php?match_id=<?= $match['id'] ?>" class="btn-join btn-primary">
+                                <i class="bi bi-plus-circle"></i> Join Match
                             </a>
-                        <?php elseif ($match['status'] === 'completed'): ?>
-                            <?php if ($match['has_joined']): ?>
-                            <a href="view-winner.php?match_id=<?= $match['id'] ?>" class="btn-join btn-success">
-                                <i class="bi bi-trophy"></i> View Winner
-                            </a>
-                            <?php endif; ?>
-                            <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
-                                <i class="bi bi-people"></i> View Participants
-                            </a>
-                        <?php elseif ($match['has_joined']): ?>
-                            <button class="btn-join btn-success" disabled>
-                                <i class="bi bi-check2-circle"></i> Already Joined
-                            </button>
-                            <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
-                                <i class="bi bi-people"></i> View Participants
-                            </a>
-                        <?php elseif ($match['status'] === 'upcoming'): ?>
-                            <?php
-                            $can_join = true;
-                            $error_message = '';
-                            
-                            if ($match['current_participants'] >= $match['max_participants']) {
-                                $can_join = false;
-                                $error_message = 'Match is full';
-                            } elseif ($match['entry_type'] === 'coins' && $user_balance < $match['entry_fee']) {
-                                $can_join = false;
-                                $error_message = 'Insufficient coins';
-                            } elseif ($match['entry_type'] === 'tickets' && $user_tickets < $match['entry_fee']) {
-                                $can_join = false;
-                                $error_message = 'Insufficient tickets';
-                            }
-                            ?>
-                            
-                            <?php if ($can_join): ?>
-                                <a href="join.php?match_id=<?= $match['id'] ?>" class="btn-join btn-primary">
-                                    <i class="bi bi-plus-circle"></i> Join Match
-                                </a>
-                            <?php else: ?>
-                                <button class="btn-join btn-primary" disabled>
-                                    <i class="bi bi-exclamation-circle"></i> <?= $error_message ?>
-                                </button>
-                            <?php endif; ?>
-                            
-                            <?php if ($match['current_participants'] > 0): ?>
-                            <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
-                                <i class="bi bi-people"></i> View Participants
-                            </a>
-                            <?php endif; ?>
                         <?php else: ?>
                             <button class="btn-join btn-primary" disabled>
-                                <i class="bi bi-clock"></i> Match Started
+                                <i class="bi bi-exclamation-circle"></i> <?= $error_message ?>
                             </button>
-                            <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
-                                <i class="bi bi-people"></i> View Participants
-                            </a>
                         <?php endif; ?>
-                    </div>
+                        
+                        <?php if ($match['current_participants'] > 0): ?>
+                        <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                            <i class="bi bi-people"></i> View Participants
+                        </a>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <button class="btn-join btn-primary" disabled>
+                            <i class="bi bi-clock"></i> Match Started
+                        </button>
+                        <a href="view-participants.php?match_id=<?= $match['id'] ?>" class="btn-join btn-info">
+                            <i class="bi bi-people"></i> View Participants
+                        </a>
+                    <?php endif; ?>
                 </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 </article>
 
