@@ -53,6 +53,8 @@ $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
 include '../../includes/header.php';
 ?>
 
+<link rel="stylesheet" href="../../assets/css/matches/view-participants.css">
+
 <div class="participants-page">
     <div class="container">
         <div class="page-header">
@@ -110,116 +112,5 @@ include '../../includes/header.php';
         </div>
     </div>
 </div>
-
-<style>
-.participants-page {
-    padding: 2rem 0;
-    background: #f8f9fa;
-    min-height: calc(100vh - 60px);
-}
-
-.page-header {
-    margin-bottom: 2rem;
-}
-
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    color: #666;
-    text-decoration: none;
-    margin-bottom: 1rem;
-}
-
-.back-link i {
-    margin-right: 0.5rem;
-}
-
-.match-info {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-}
-
-.game-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.game-icon {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-.game-info h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #333;
-}
-
-.match-date {
-    margin: 0.5rem 0 0;
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.participants-table {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-th {
-    background: #f8f9fa;
-    font-weight: 600;
-    color: #333;
-}
-
-tr:last-child td {
-    border-bottom: none;
-}
-
-.no-data {
-    text-align: center;
-    color: #666;
-    padding: 2rem;
-}
-
-@media (max-width: 768px) {
-    .participants-page {
-        padding: 1rem;
-    }
-    
-    .game-info {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .game-icon {
-        width: 80px;
-        height: 80px;
-    }
-    
-    th, td {
-        padding: 0.75rem;
-    }
-}
-</style>
 
 <?php include '../../includes/footer.php'; ?> 
