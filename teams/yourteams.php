@@ -541,6 +541,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitButton = this.querySelector('button');
             const originalButtonText = submitButton.innerHTML;
             
+            // Log form data for debugging
+            console.log('Form data being sent:', {
+                request_id: formData.get('request_id'),
+                action: formData.get('action'),
+                team_id: formData.get('team_id')
+            });
+            
             // Disable button and show loading state
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
@@ -549,8 +556,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                // Log the raw response for debugging
+                console.log('Raw response:', response);
+                
+                // Check if the response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                }
+                throw new Error('Expected JSON response but got ' + contentType);
+            })
             .then(data => {
+                // Log the parsed data for debugging
+                console.log('Parsed response:', data);
+                
                 if (data.success) {
                     // Show success message
                     showNotification(data.message || 'Request processed successfully', 'success');
@@ -576,16 +596,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         }, 500);
                     }
                 } else {
-                    // Show error message
-                    showNotification(data.message || 'Error processing request', 'error');
+                    // Show error message with more details
+                    const errorMessage = data.message || 'Error processing request';
+                    console.error('Error from server:', errorMessage);
+                    showNotification(errorMessage, 'error');
+                    
                     // Reset button state
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalButtonText;
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showNotification('An error occurred while processing the request', 'error');
+                // Log the full error for debugging
+                console.error('Fetch error:', error);
+                
+                // Show a more detailed error message
+                showNotification('Error: ' + error.message, 'error');
+                
                 // Reset button state
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalButtonText;
@@ -594,24 +621,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Notification function
+// Enhanced notification function with error details
 function showNotification(message, type) {
+    // Remove any existing notifications
+    document.querySelectorAll('.notification').forEach(n => n.remove());
+    
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-        ${message}
-    `;
+    
+    // For errors, add an "Error Details" button if the message is long
+    if (type === 'error' && message.length > 50) {
+        notification.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message.substring(0, 50)}...</span>
+            <button onclick="alert('Full error message:\\n\\n${message}')" class="error-details-btn">
+                Show Details
+            </button>
+        `;
+    } else {
+        notification.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            ${message}
+        `;
+    }
+    
     document.body.appendChild(notification);
     
     // Add animation
     setTimeout(() => notification.classList.add('show'), 100);
     
-    // Remove notification after 3 seconds
+    // Remove notification after 5 seconds (increased from 3)
     setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    }, 5000);
 }
 </script>
 
@@ -633,6 +676,8 @@ function showNotification(message, type) {
     opacity: 0;
     transform: translateY(-20px);
     transition: all 0.3s ease;
+    max-width: 80%;
+    word-wrap: break-word;
 }
 
 .notification.show {
@@ -650,6 +695,20 @@ function showNotification(message, type) {
 
 .notification i {
     margin-right: 10px;
+}
+
+.error-details-btn {
+    margin-left: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    color: white;
+    cursor: pointer;
+}
+
+.error-details-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 </style>
 </body>
