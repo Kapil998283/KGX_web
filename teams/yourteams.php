@@ -135,9 +135,17 @@ if (!empty($teams)) {
                     </div>
                 
                     <?php if ($team['role'] === 'captain'): ?>
-                        <a href="/KGX/teams/captain.php?id=<?php echo $team['id']; ?>" class="edit-btn">
-                            <i class="fas fa-edit"></i> Edit Team
-                        </a>
+                        <div class="team-actions">
+                            <a href="/KGX/teams/captain.php?id=<?php echo $team['id']; ?>" class="edit-btn">
+                                <i class="fas fa-edit"></i> Edit Team
+                            </a>
+                            <a href="/KGX/teams/requests.php?team_id=<?php echo $team['id']; ?>" class="requests-btn">
+                                <i class="fas fa-user-plus"></i> View Requests
+                                <?php if (!empty($pending_requests)): ?>
+                                    <span class="badge"><?php echo count($pending_requests); ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </div>
                     <?php endif; ?>
                 </div>
             </section>
