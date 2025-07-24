@@ -34,6 +34,21 @@ function getTournamentDisplayStatus($tournament) {
     }
 }
 
+// Add this function at the top of the file after database connection
+function isUserRegistered($db, $tournament_id, $user_id) {
+    $stmt = $db->prepare("
+        SELECT COUNT(*) as count
+        FROM tournament_registrations tr
+        LEFT JOIN team_members tm ON tr.team_id = tm.team_id
+        WHERE tr.tournament_id = ? 
+        AND (tr.user_id = ? OR (tm.user_id = ? AND tm.status = 'active'))
+        AND tr.status IN ('pending', 'approved')
+    ");
+    $stmt->execute([$tournament_id, $user_id, $user_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['count'] > 0;
+}
+
 // Check if tournament ID is provided
 if (!isset($_GET['id'])) {
     header('Location: index.php');
@@ -97,6 +112,9 @@ if (isset($_SESSION['user_id'])) {
         }
     }
 }
+
+$is_registered = isset($_SESSION['user_id']) ? isUserRegistered($db, $tournament['id'], $_SESSION['user_id']) : false;
+
 ?>
 
 <link rel="stylesheet" href="../../assets/css/tournament/details.css">
@@ -169,56 +187,60 @@ if (isset($_SESSION['user_id'])) {
                     <?php endif; ?>
 
                     <div class="tournament-meta">
-                    <?php if ($tournament['status'] === 'registration_open' || $tournament['status'] === 'team_full'): ?>
-                        <?php if (!isset($_SESSION['user_id'])): ?>
-                            <button class="view-more" onclick="window.location.href='../../auth/login.php'">
-                                Login to Register
-                            </button>
-                        <?php elseif ($tournament['mode'] === 'Solo'): ?>
-                            <?php if ($tournament['status'] === 'team_full'): ?>
+                        <?php if ($tournament['status'] === 'registration_open' || $tournament['status'] === 'team_full'): ?>
+                            <?php if (!isset($_SESSION['user_id'])): ?>
+                                <button class="view-more" onclick="window.location.href='../../auth/login.php'">
+                                    Login to Register
+                                </button>
+                            <?php elseif ($is_registered): ?>
                                 <button class="view-more" disabled>
-                                    Teams Full
+                                    Already Registered
+                                </button>
+                            <?php elseif ($tournament['mode'] === 'Solo'): ?>
+                                <?php if ($tournament['status'] === 'team_full'): ?>
+                                    <button class="view-more" disabled>
+                                        Teams Full
+                                    </button>
+                                <?php else: ?>
+                                    <button class="view-more" onclick="window.location.href='register.php?id=<?php echo $tournament['id']; ?>'">
+                                        Register Now
+                                    </button>
+                                <?php endif; ?>
+                            <?php elseif (!$user_team_info): ?>
+                                <button class="view-more" onclick="window.location.href='../../teams/create_team.php?redirect=tournament&id=<?php echo $tournament['id']; ?>'">
+                                    Create/Join Team
+                                </button>
+                            <?php elseif (isset($user_team_info['registration_status'])): ?>
+                                <button class="view-more" disabled>
+                                    <?php echo $user_team_info['registration_status'] === 'approved' ? 'Already Registered' : 'Registration Pending'; ?>
                                 </button>
                             <?php else: ?>
-                                <button class="view-more" onclick="window.location.href='register.php?id=<?php echo $tournament['id']; ?>'">
-                                    Register Now
-                                </button>
+                                <?php if ($tournament['status'] === 'team_full'): ?>
+                                    <button class="view-more" disabled>
+                                        Teams Full
+                                    </button>
+                                <?php else: ?>
+                                    <button class="view-more" onclick="window.location.href='register.php?id=<?php echo $tournament['id']; ?>'">
+                                        Register Now
+                                    </button>
+                                <?php endif; ?>
                             <?php endif; ?>
-                        <?php elseif (!$user_team_info): ?>
-                            <button class="view-more" onclick="window.location.href='../../teams/create_team.php?redirect=tournament&id=<?php echo $tournament['id']; ?>'">
-                                Create/Join Team
-                            </button>
-                        <?php elseif (isset($user_team_info['registration_status'])): ?>
-                            <button class="view-more" disabled>
-                                <?php echo $user_team_info['registration_status'] === 'approved' ? 'Already Registered' : 'Registration Pending'; ?>
-                            </button>
+                            <span class="tournament-time"><?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?></span>
+                            <span class="players-count">👥 <?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams</span>
                         <?php else: ?>
-                            <?php if ($tournament['status'] === 'team_full'): ?>
-                                <button class="view-more" disabled>
-                                    Teams Full
-                                </button>
-                            <?php else: ?>
-                                <button class="view-more" onclick="window.location.href='register.php?id=<?php echo $tournament['id']; ?>'">
-                                    Register Now
-                                </button>
-                            <?php endif; ?>
+                            <?php
+                                $status_info = getTournamentDisplayStatus($tournament);
+                                $status_text = $status_info['status'];
+                                if ($tournament['status'] === 'announced') {
+                                    $status_text .= ' - Registration opens ' . date('M d, Y', strtotime($tournament['registration_open_date']));
+                                }
+                            ?>
+                            <button class="view-more" disabled>
+                                <?php echo $status_text; ?>
+                            </button>
+                            <span class="tournament-time"><?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?></span>
+                            <span class="players-count">👥 <?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams</span>
                         <?php endif; ?>
-                        <span class="tournament-time"><?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?></span>
-                        <span class="players-count">👥 <?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams</span>
-                    <?php else: ?>
-                        <?php
-                            $status_info = getTournamentDisplayStatus($tournament);
-                            $status_text = $status_info['status'];
-                            if ($tournament['status'] === 'announced') {
-                                $status_text .= ' - Registration opens ' . date('M d, Y', strtotime($tournament['registration_open_date']));
-                            }
-                        ?>
-                        <button class="view-more" disabled>
-                            <?php echo $status_text; ?>
-                        </button>
-                        <span class="tournament-time"><?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?></span>
-                        <span class="players-count">👥 <?php echo $tournament['current_teams']; ?>/<?php echo $tournament['max_teams']; ?> Teams</span>
-                    <?php endif; ?>
                     </div>
                 </div>
             </div>
