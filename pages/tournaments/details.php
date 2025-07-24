@@ -5,7 +5,7 @@ require_once '../../includes/header.php';
 
 // Function to get registration URL
 function getRegistrationUrl($tournament) {
-    return "/KGX/pages/tournaments/register.php?id=" . $tournament['id'];
+    return "register.php?id=" . $tournament['id'];
 }
 
 // Function to get tournament display status

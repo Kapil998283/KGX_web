@@ -23,7 +23,7 @@ function redirect($url, $message = '', $type = 'error') {
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    redirect('../auth/login.php', 'Please login to register for tournaments.');
+    redirect('../../register/login.php', 'Please login to register for tournaments.');
 }
 
 // Check if tournament ID is provided
