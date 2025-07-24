@@ -141,9 +141,10 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 
                                 <a href="details.php?id=<?php echo $tournament['id']; ?>" class="details-btn">
                                     <?php if (isTournamentRegistrationOpen($tournament)): ?>
-                                        <span class="register-now">Register Now</span>
+                                        <ion-icon name="arrow-forward-outline"></ion-icon>
+                                    <?php else: ?>
+                                        <ion-icon name="arrow-forward-outline"></ion-icon>
                                     <?php endif; ?>
-                                    <ion-icon name="arrow-forward-outline"></ion-icon>
                                 </a>
                             </div>
                         </div>
