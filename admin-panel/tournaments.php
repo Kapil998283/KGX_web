@@ -1,7 +1,7 @@
 <?php
 require_once 'includes/admin-auth.php';
 require_once '../config/database.php';
-require_once '/includes/tournament-status.php';
+require_once '../includes/tournament-status.php';
 
 // Initialize database connection
 $database = new Database();
@@ -328,26 +328,22 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php
                                         $status_info = getTournamentDisplayStatus($tournament);
                                     ?>
-                                    <span class="status-badge status-<?php echo $status_info['class']; ?>">
+                                    <span class="status-badge <?php echo $status_info['class']; ?>">
                                         <?php echo $status_info['status']; ?>
                                     </span>
-                                    <?php if ($status_info['class'] !== 'status-cancelled' && $status_info['class'] !== 'status-completed'): ?>
+                                    <?php if ($status_info['date_label'] && $status_info['date_value']): ?>
                                     <div class="date-info">
-                                        <?php if ($status_info['class'] === 'status-upcoming'): ?>
-                                            <small>Starts: <?php echo date('M d, Y', strtotime($tournament['registration_open_date'])); ?></small>
-                                        <?php elseif ($status_info['class'] === 'status-registration'): ?>
-                                            <small>Closes: <?php echo date('M d, Y', strtotime($tournament['registration_close_date'])); ?></small>
-                                        <?php elseif ($status_info['class'] === 'status-playing'): ?>
-                                            <small>Ends: <?php echo date('M d, Y', strtotime($tournament['finish_date'])); ?></small>
-                                        <?php endif; ?>
+                                        <small><?php echo $status_info['date_label']; ?>: <?php echo $status_info['date_value']; ?></small>
                                     </div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="actions-column">
                                     <div class="action-buttons">
+                                        <?php if (canEditTournament($tournament)): ?>
                                         <button class="btn btn-sm btn-primary" onclick="editTournament(<?php echo $tournament['id']; ?>)" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </button>
+                                        <?php endif; ?>
                                         <button class="btn btn-sm btn-danger" onclick="deleteTournament(<?php echo $tournament['id']; ?>)" title="Delete">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -360,7 +356,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <button class="btn btn-sm btn-info" onclick="viewRegistrations(<?php echo $tournament['id']; ?>)" title="Teams">
                                             <i class="bi bi-people"></i>
                                         </button>
-                                        <?php if ($tournament['status'] !== 'cancelled' && $tournament['status'] !== 'completed'): ?>
+                                        <?php if (canCancelTournament($tournament)): ?>
                                         <button class="btn btn-sm btn-warning" onclick="cancelTournament(<?php echo $tournament['id']; ?>)" title="Cancel Tournament">
                                             <i class="bi bi-x-circle"></i>
                                         </button>
