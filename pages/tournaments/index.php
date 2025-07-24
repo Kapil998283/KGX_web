@@ -20,12 +20,12 @@ $current_date = date('Y-m-d');
 
 switch ($active_tab) {
     case 'active':
-        $where_clause = "WHERE status != 'cancelled' 
+        $where_clause = "WHERE status = 'ongoing' 
             AND playing_start_date <= '$current_date' 
             AND finish_date >= '$current_date'";
         break;
     case 'upcoming':
-        $where_clause = "WHERE status != 'cancelled' 
+        $where_clause = "WHERE status = 'upcoming' 
             AND (
                 (registration_open_date <= '$current_date' AND registration_close_date >= '$current_date')
                 OR
@@ -34,7 +34,7 @@ switch ($active_tab) {
             AND playing_start_date > '$current_date'";
         break;
     case 'finished':
-        $where_clause = "WHERE (status = 'completed' OR finish_date < '$current_date')";
+        $where_clause = "WHERE status = 'completed'";
         break;
     default: // 'all'
         $where_clause = "WHERE status != 'cancelled'";
@@ -45,9 +45,9 @@ $stmt = $db->prepare("
     SELECT *, 
     CASE 
         WHEN status = 'cancelled' THEN 4
-        WHEN playing_start_date <= '$current_date' AND finish_date >= '$current_date' THEN 1
-        WHEN registration_open_date <= '$current_date' AND registration_close_date >= '$current_date' THEN 2
-        WHEN playing_start_date > '$current_date' THEN 2
+        WHEN status = 'ongoing' AND playing_start_date <= '$current_date' AND finish_date >= '$current_date' THEN 1
+        WHEN status = 'upcoming' AND registration_open_date <= '$current_date' AND registration_close_date >= '$current_date' THEN 2
+        WHEN status = 'upcoming' AND playing_start_date > '$current_date' THEN 2
         ELSE 3
     END as sort_order
     FROM tournaments 
@@ -68,14 +68,21 @@ function getTournamentStatus($tournament) {
     
     if ($tournament['status'] === 'cancelled') {
         return ['status' => 'Cancelled', 'class' => 'status-cancelled'];
-    } elseif ($now >= $playStart && $now <= $finishDate) {
-        return ['status' => 'Playing', 'class' => 'status-playing'];
-    } elseif ($now >= $regOpen && $now <= $regClose) {
-        return ['status' => 'Registration Open', 'class' => 'status-upcoming'];
-    } elseif ($now < $regOpen) {
-        return ['status' => 'Upcoming', 'class' => 'status-upcoming'];
-    } else {
-        return ['status' => 'Completed', 'class' => 'status-completed'];
+    }
+    
+    switch ($tournament['status']) {
+        case 'ongoing':
+            return ['status' => 'Playing', 'class' => 'status-playing'];
+        case 'upcoming':
+            if ($now >= $regOpen && $now <= $regClose) {
+                return ['status' => 'Registration Open', 'class' => 'status-upcoming'];
+            } else {
+                return ['status' => 'Upcoming', 'class' => 'status-upcoming'];
+            }
+        case 'completed':
+            return ['status' => 'Completed', 'class' => 'status-completed'];
+        default:
+            return ['status' => 'Unknown', 'class' => 'status-unknown'];
     }
 }
 
