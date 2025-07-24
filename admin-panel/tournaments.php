@@ -11,46 +11,19 @@ $conn = $database->connect();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
-            case 'cancel':
-                try {
-                    $stmt = $conn->prepare("UPDATE tournaments SET status = 'cancelled', registration_phase = 'closed' WHERE id = ?");
-                    if ($stmt->execute([$_POST['tournament_id']])) {
-                        $_SESSION['success'] = "Tournament cancelled successfully!";
-                        logAdminAction('cancel_tournament', 'Cancelled tournament ID: ' . $_POST['tournament_id']);
-                    } else {
-                        $_SESSION['error'] = "Error cancelling tournament.";
-                    }
-                } catch (Exception $e) {
-                    $_SESSION['error'] = "Error cancelling tournament: " . $e->getMessage();
-                }
-                header('Location: tournaments.php');
-                exit();
-                break;
-                
             case 'create':
                 try {
                     // Begin transaction
                     $conn->beginTransaction();
 
-                    // Determine initial registration phase
-                    $regOpenDate = new DateTime($_POST['registration_open_date']);
-                    $regCloseDate = new DateTime($_POST['registration_close_date']);
-                    $now = new DateTime();
-
-                    $registrationPhase = 'closed';
-                    if ($now >= $regOpenDate && $now <= $regCloseDate) {
-                        $registrationPhase = 'open';
-                    } elseif ($now < $regOpenDate) {
-                        $registrationPhase = 'closed';
-                    }
-
+                    // Initial status will be 'draft'
                     $stmt = $conn->prepare("INSERT INTO tournaments (
                         name, game_name, banner_image, prize_pool, prize_currency, entry_fee, 
                         max_teams, mode, format, match_type, registration_open_date,
                         registration_close_date, playing_start_date, finish_date,
-                        description, rules, status, registration_phase, created_by, payment_date
+                        description, rules, status, created_by, payment_date
                     ) VALUES (
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming', ?, ?, ?
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?
                     )");
                     
                     $stmt->execute([
@@ -70,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         date('Y-m-d', strtotime($_POST['finish_date'])),
                         $_POST['description'],
                         $_POST['rules'],
-                        $registrationPhase,
                         $_SESSION['admin_id'],
                         !empty($_POST['payment_date']) ? date('Y-m-d', strtotime($_POST['payment_date'])) : null
                     ]);
@@ -84,6 +56,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Rollback transaction
                     $conn->rollBack();
                     $_SESSION['error'] = "Error creating tournament: " . $e->getMessage();
+                }
+                header('Location: tournaments.php');
+                exit();
+                break;
+
+            case 'cancel':
+                try {
+                    $stmt = $conn->prepare("UPDATE tournaments SET status = 'cancelled' WHERE id = ?");
+                    if ($stmt->execute([$_POST['tournament_id']])) {
+                        $_SESSION['success'] = "Tournament cancelled successfully!";
+                        logAdminAction('cancel_tournament', 'Cancelled tournament ID: ' . $_POST['tournament_id']);
+                    } else {
+                        $_SESSION['error'] = "Error cancelling tournament.";
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['error'] = "Error cancelling tournament: " . $e->getMessage();
                 }
                 header('Location: tournaments.php');
                 exit();
