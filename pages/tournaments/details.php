@@ -160,6 +160,7 @@ $is_registered = isset($_SESSION['user_id']) ? isUserRegistered($db, $tournament
     background-color: #f5f5f5;
     color: #9e9e9e;
 }
+
 </style>
 
 <main>
@@ -348,49 +349,123 @@ $is_registered = isset($_SESSION['user_id']) ? isUserRegistered($db, $tournament
                 <div class="players-section">
                     <div class="players-branches">
                         <?php
-                        // Fetch registered teams and their members
-                        $stmt = $db->prepare("
-                            SELECT t.*, tr.status as registration_status, tm.user_id, tm.role, u.username
-                            FROM tournament_registrations tr
-                            INNER JOIN teams t ON tr.team_id = t.id
-                            INNER JOIN team_members tm ON t.id = tm.team_id
-                            INNER JOIN users u ON tm.user_id = u.id
-                            WHERE tr.tournament_id = ? AND tr.status = 'approved'
-                            ORDER BY t.name, tm.role DESC
-                        ");
-                        $stmt->execute([$tournament['id']]);
-                        $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        if ($tournament['mode'] === 'Solo') {
+                            // Fetch registered solo players
+                            $stmt = $db->prepare("
+                                SELECT u.id, u.username, u.profile_image, tr.registration_date
+                                FROM tournament_registrations tr
+                                INNER JOIN users u ON tr.user_id = u.id
+                                WHERE tr.tournament_id = ? AND tr.status = 'approved'
+                                ORDER BY tr.registration_date ASC
+                            ");
+                            $stmt->execute([$tournament['id']]);
+                            $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            if (!empty($players)): ?>
+                                <div class="branch">
+                                    <h3>Registered Players</h3>
+                                    <?php foreach ($players as $player): ?>
+                                        <div class="player-card">
+                                            <?php
+                                            $profile_image = $player['profile_image'];
+                                            if (empty($profile_image)) {
+                                                $default_img_sql = "SELECT image_path FROM profile_images WHERE is_default = 1 AND is_active = 1 LIMIT 1";
+                                                $default_img_stmt = $db->prepare($default_img_sql);
+                                                $default_img_stmt->execute();
+                                                $default_img = $default_img_stmt->fetch(PDO::FETCH_ASSOC);
+                                                $profile_image = $default_img ? $default_img['image_path'] : '../../assets/images/guest-icon.png';
+                                            }
+                                            ?>
+                                            <img src="<?php echo htmlspecialchars($profile_image); ?>" 
+                                                 alt="<?php echo htmlspecialchars($player['username']); ?>"
+                                                 onerror="this.src='../../assets/images/guest-icon.png'">
+                                            <span><?php echo htmlspecialchars($player['username']); ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif;
+                        } else {
+                            // Fetch registered teams and their members for Duo/Squad modes
+                            $stmt = $db->prepare("
+                                SELECT 
+                                    t.id as team_id,
+                                    t.name as team_name,
+                                    t.logo as team_logo,
+                                    u.id as user_id,
+                                    u.username,
+                                    u.profile_image,
+                                    tm.role,
+                                    tr.registration_date
+                                FROM tournament_registrations tr
+                                INNER JOIN teams t ON tr.team_id = t.id
+                                INNER JOIN team_members tm ON t.id = tm.team_id
+                                INNER JOIN users u ON tm.user_id = u.id
+                                WHERE tr.tournament_id = ? 
+                                AND tr.status = 'approved'
+                                AND tm.status = 'active'
+                                ORDER BY t.name, FIELD(tm.role, 'captain', 'member')
+                            ");
+                            $stmt->execute([$tournament['id']]);
+                            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                        $teams = [];
-                        foreach ($players as $player) {
-                            if (!isset($teams[$player['team_id']])) {
-                                $teams[$player['team_id']] = [
-                                    'name' => $player['name'],
-                                    'members' => []
+                            $teams = [];
+                            foreach ($results as $row) {
+                                if (!isset($teams[$row['team_id']])) {
+                                    $teams[$row['team_id']] = [
+                                        'name' => $row['team_name'],
+                                        'logo' => $row['team_logo'],
+                                        'members' => []
+                                    ];
+                                }
+                                $teams[$row['team_id']]['members'][] = [
+                                    'username' => $row['username'],
+                                    'profile_image' => $row['profile_image'],
+                                    'role' => $row['role']
                                 ];
                             }
-                            $teams[$player['team_id']]['members'][] = [
-                                'username' => $player['username'],
-                                'role' => $player['role']
-                            ];
-                        }
 
-                        foreach ($teams as $teamId => $team): ?>
-                            <div class="branch">
-                                <h3><?php echo htmlspecialchars($team['name']); ?></h3>
-                                <?php foreach ($team['members'] as $member): ?>
-                                    <div class="player-card">
-                                        <img src="/assets/images/team-member-1.png" alt="Player">
-                                        <span>
-                                            <?php echo htmlspecialchars($member['username']); ?>
-                                            <?php if ($member['role'] === 'captain'): ?>
-                                                <i class="fas fa-crown" style="color: gold;"></i>
+                            if (!empty($teams)): 
+                                foreach ($teams as $team): ?>
+                                    <div class="branch">
+                                        <div class="team-header">
+                                            <?php if (!empty($team['logo'])): ?>
+                                                <img src="<?php echo htmlspecialchars($team['logo']); ?>" 
+                                                     alt="<?php echo htmlspecialchars($team['name']); ?> logo"
+                                                     class="team-logo"
+                                                     onerror="this.src='../../assets/images/default-team-logo.png'">
                                             <?php endif; ?>
-                                        </span>
+                                            <h3><?php echo htmlspecialchars($team['name']); ?></h3>
+                                        </div>
+                                        <?php foreach ($team['members'] as $member): 
+                                            $profile_image = $member['profile_image'];
+                                            if (empty($profile_image)) {
+                                                $default_img_sql = "SELECT image_path FROM profile_images WHERE is_default = 1 AND is_active = 1 LIMIT 1";
+                                                $default_img_stmt = $db->prepare($default_img_sql);
+                                                $default_img_stmt->execute();
+                                                $default_img = $default_img_stmt->fetch(PDO::FETCH_ASSOC);
+                                                $profile_image = $default_img ? $default_img['image_path'] : '../../assets/images/guest-icon.png';
+                                            }
+                                        ?>
+                                            <div class="player-card <?php echo $member['role']; ?>">
+                                                <img src="<?php echo htmlspecialchars($profile_image); ?>" 
+                                                     alt="<?php echo htmlspecialchars($member['username']); ?>"
+                                                     onerror="this.src='../../assets/images/guest-icon.png'">
+                                                <span>
+                                                    <?php echo htmlspecialchars($member['username']); ?>
+                                                    <?php if ($member['role'] === 'captain'): ?>
+                                                        <span class="captain-badge" title="Team Captain">👑</span>
+                                                    <?php endif; ?>
+                                                </span>
+                                            </div>
+                                        <?php endforeach; ?>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endforeach; ?>
+                                <?php endforeach;
+                            else: ?>
+                                <div class="no-registrations">
+                                    <p>No teams have registered for this tournament yet.</p>
+                                </div>
+                            <?php endif;
+                        } ?>
                     </div>
                 </div>
             </div>

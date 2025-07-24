@@ -588,3 +588,112 @@ main {
     font-size: 1.6rem;
   }
 } 
+
+
+
+
+
+     
+
+
+/* Players Section Styles */
+.players-section {
+  padding: 2rem 0;
+}
+
+.players-branches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.branch {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 77, 0, 0.1);
+}
+
+.team-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.team-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.branch h3 {
+  color: var(--white);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--card-radius);
+  margin-bottom: 0.75rem;
+  transition: var(--card-transition);
+}
+
+.player-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.player-card.captain {
+  background: rgba(255, 77, 0, 0.1);
+  border: 1px solid var(--neon-green);
+}
+
+.player-card img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.player-card span {
+  color: var(--white);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.captain-badge {
+  font-size: 1.2rem;
+}
+
+.no-registrations {
+  text-align: center;
+  padding: 3rem;
+  color: var(--white);
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .players-branches {
+      grid-template-columns: 1fr;
+  }
+
+  .branch {
+      padding: 1rem;
+  }
+
+  .player-card {
+      padding: 0.75rem;
+  }
+}
