@@ -28,7 +28,7 @@ try {
     if ($mode === 'Solo') {
         // Show registered players with game details
         $stmt = $conn->prepare("
-            SELECT u.username, u.email, tr.registration_date, tr.status as registration_status, ug.game_username, ug.game_uid, ug.game_level
+            SELECT u.username, u.email, tr.registration_date, tr.status as registration_status, ug.game_username, ug.game_uid, ug.game_level, u.id as user_id
             FROM tournament_registrations tr
             INNER JOIN users u ON tr.user_id = u.id
             LEFT JOIN user_games ug ON ug.user_id = u.id AND ug.game_name = ?
@@ -54,6 +54,7 @@ try {
                             <th>Level</th>
                             <th>Registration Date</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,11 +77,11 @@ try {
                             <td>
                                 <?php if ($reg['registration_status'] === 'pending'): ?>
                                     <button class="btn btn-sm btn-success" 
-                                            onclick="updateRegistrationStatus('<?php echo $reg['username']; ?>', 'approved', <?php echo $_GET['tournament_id']; ?>, 'solo')">
+                                            onclick="updateRegistrationStatus('<?php echo $reg['user_id']; ?>', 'approved', <?php echo $_GET['tournament_id']; ?>, 'solo')">
                                         Approve
                                     </button>
                                     <button class="btn btn-sm btn-danger" 
-                                            onclick="updateRegistrationStatus('<?php echo $reg['username']; ?>', 'rejected', <?php echo $_GET['tournament_id']; ?>, 'solo')">
+                                            onclick="updateRegistrationStatus('<?php echo $reg['user_id']; ?>', 'rejected', <?php echo $_GET['tournament_id']; ?>, 'solo')">
                                         Reject
                                     </button>
                                 <?php endif; ?>
