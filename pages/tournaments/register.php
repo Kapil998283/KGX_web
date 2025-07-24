@@ -42,6 +42,40 @@ try {
     $available_members = [];
     $required_members = ($tournament['mode'] === 'Squad') ? 3 : ($tournament['mode'] === 'Duo' ? 1 : 0);
 
+    // --- GAME PROFILE CHECK ---
+    $game_name = $tournament['game_name'];
+    $missing_profiles = [];
+    if ($tournament['mode'] === 'Solo') {
+        $stmt = $db->prepare("SELECT * FROM user_games WHERE user_id = ? AND game_name = ?");
+        $stmt->execute([$_SESSION['user_id'], $game_name]);
+        $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$profile) {
+            $error_message = "You must add your $game_name game details (username, UID, level) before registering. <a href='../../pages/dashboard/game-profile.php?return=" . urlencode($_SERVER['REQUEST_URI']) . "' class='btn btn-sm btn-primary mt-2'>Add Game Profile</a>";
+        }
+    } else {
+        // For teams, check captain and all available members
+        $team_user_ids = [];
+        $stmt = $db->prepare("SELECT tm.user_id, tm.role FROM team_members tm WHERE tm.team_id = (SELECT t.id FROM teams t INNER JOIN team_members tm2 ON t.id = tm2.team_id WHERE tm2.user_id = ? AND tm2.status = 'active' LIMIT 1) AND tm.status = 'active'");
+        $stmt->execute([$_SESSION['user_id']]);
+        $team_users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($team_users as $user) {
+            $stmt2 = $db->prepare("SELECT * FROM user_games WHERE user_id = ? AND game_name = ?");
+            $stmt2->execute([$user['user_id'], $game_name]);
+            $profile = $stmt2->fetch(PDO::FETCH_ASSOC);
+            if (!$profile) {
+                $missing_profiles[] = $user['user_id'];
+            }
+        }
+        if (!empty($missing_profiles)) {
+            // Get usernames for missing profiles
+            $in = str_repeat('?,', count($missing_profiles) - 1) . '?';
+            $stmt = $db->prepare("SELECT username FROM users WHERE id IN ($in)");
+            $stmt->execute($missing_profiles);
+            $names = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $error_message = "The following team members must add their $game_name game details before registering: <strong>" . htmlspecialchars(implode(', ', $names)) . "</strong>. <br><a href='../../pages/dashboard/game-profile.php?return=" . urlencode($_SERVER['REQUEST_URI']) . "' class='btn btn-sm btn-primary mt-2'>Add Game Profile</a>";
+        }
+    }
+
     // For team modes (Duo and Squad), check if user is a team captain or member
     if ($tournament['mode'] !== 'Solo') {
         // First check if user is a member of any team
