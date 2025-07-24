@@ -11,9 +11,21 @@ function validateTournament($db, $tournament_id, $user_id) {
             return ['valid' => false, 'error' => 'Tournament not found.'];
         }
 
-        // Check registration phase
-        if ($tournament['registration_phase'] !== 'open') {
-            return ['valid' => false, 'error' => 'Tournament registration is not available.'];
+        // Check registration status
+        if ($tournament['status'] !== 'registration_open') {
+            if ($tournament['status'] === 'team_full') {
+                return ['valid' => false, 'error' => 'This tournament is full.'];
+            } elseif ($tournament['status'] === 'announced') {
+                return ['valid' => false, 'error' => 'Registration has not started yet.'];
+            } elseif ($tournament['status'] === 'registration_closed' || $tournament['status'] === 'in_progress') {
+                return ['valid' => false, 'error' => 'Registration period has ended.'];
+            } elseif ($tournament['status'] === 'completed' || $tournament['status'] === 'archived') {
+                return ['valid' => false, 'error' => 'This tournament has ended.'];
+            } elseif ($tournament['status'] === 'cancelled') {
+                return ['valid' => false, 'error' => 'This tournament has been cancelled.'];
+            } else {
+                return ['valid' => false, 'error' => 'Tournament registration is not available.'];
+            }
         }
 
         // Check if tournament is full
@@ -37,10 +49,12 @@ function validateTournament($db, $tournament_id, $user_id) {
         $stmt = $db->prepare("
             SELECT COUNT(*) as count
             FROM tournament_registrations tr
-            INNER JOIN team_members tm ON tr.team_id = tm.team_id
-            WHERE tr.tournament_id = ? AND tm.user_id = ? AND tm.status = 'active'
+            LEFT JOIN team_members tm ON tr.team_id = tm.team_id
+            WHERE tr.tournament_id = ? 
+            AND (tr.user_id = ? OR (tm.user_id = ? AND tm.status = 'active'))
+            AND tr.status IN ('pending', 'approved')
         ");
-        $stmt->execute([$tournament_id, $user_id]);
+        $stmt->execute([$tournament_id, $user_id, $user_id]);
         
         if ($stmt->fetch(PDO::FETCH_ASSOC)['count'] > 0) {
             return ['valid' => false, 'error' => 'You are already registered for this tournament.'];

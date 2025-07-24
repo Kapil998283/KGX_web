@@ -3,27 +3,20 @@ ob_start();
 session_start();
 
 require_once '../../config/database.php';
-require_once __DIR__ . '/tournament_validator.php';
+require_once 'tournament_validator.php';
 
 // Function to handle redirects
 function redirect($url, $message = '', $type = 'error') {
     if ($message) {
         $_SESSION[$type] = $message;
     }
-    if (headers_sent()) {
-        echo "<script>window.location.href='$url';</script>";
-        echo '<noscript><meta http-equiv="refresh" content="0;url='.$url.'"></noscript>';
-        exit();
-    } else {
-        ob_end_clean();
-        header("Location: $url");
-        exit();
-    }
+    header("Location: $url");
+    exit();
 }
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    redirect('../../register/login.php', 'Please login to register for tournaments.');
+    redirect('../../auth/login.php', 'Please login to register for tournaments.');
 }
 
 // Check if tournament ID is provided
