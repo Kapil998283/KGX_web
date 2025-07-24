@@ -171,7 +171,7 @@ if (isset($_SESSION['user_id'])) {
                     <div class="tournament-meta">
                     <?php if ($tournament['status'] === 'registration_open' || $tournament['status'] === 'team_full'): ?>
                         <?php if (!isset($_SESSION['user_id'])): ?>
-                            <button class="view-more" onclick="window.location.href='../../register/login.php'">
+                            <button class="view-more" onclick="window.location.href='../../auth/login.php'">
                                 Login to Register
                             </button>
                         <?php elseif ($tournament['mode'] === 'Solo'): ?>
@@ -180,7 +180,7 @@ if (isset($_SESSION['user_id'])) {
                                     Teams Full
                                 </button>
                             <?php else: ?>
-                                <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
+                                <button class="view-more" onclick="window.location.href='register.php?id=<?php echo $tournament['id']; ?>'">
                                     Register Now
                                 </button>
                             <?php endif; ?>
@@ -198,7 +198,7 @@ if (isset($_SESSION['user_id'])) {
                                     Teams Full
                                 </button>
                             <?php else: ?>
-                                <button class="view-more" onclick="window.location.href='<?php echo getRegistrationUrl($tournament); ?>'">
+                                <button class="view-more" onclick="window.location.href='register.php?id=<?php echo $tournament['id']; ?>'">
                                     Register Now
                                 </button>
                             <?php endif; ?>
