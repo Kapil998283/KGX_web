@@ -1,7 +1,7 @@
 <?php
 require_once 'includes/admin-auth.php';
 require_once '../config/database.php';
-require_once '../includes/tournament-status.php';
+require_once '/includes/tournament-status.php';
 
 // Initialize database connection
 $database = new Database();
