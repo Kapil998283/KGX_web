@@ -259,37 +259,71 @@ if (!empty($teams)) {
                 <div class="tab-content <?php echo $active_tab === 'tournament' ? 'active' : ''; ?>" id="tournamentContent">
                     <div class="tournaments-section">
                         <?php
-                        // Fetch team's tournaments
+                        // Fetch tournaments where the team is registered (duo/squad)
                         $stmt = $conn->prepare("
                             SELECT 
-                                t.*,
-                                tr.registration_date,
-                                tr.status as registration_status
+                                t.*, 
+                                tr.registration_date, 
+                                tr.status as registration_status, 
+                                NULL as solo_user_id, 
+                                NULL as solo_username
                             FROM tournaments t
                             INNER JOIN tournament_registrations tr ON t.id = tr.tournament_id
                             WHERE tr.team_id = ?
-                            ORDER BY 
-                                CASE 
-                                    WHEN t.registration_phase = 'playing' THEN 1
-                                    WHEN t.registration_phase = 'closed' THEN 2
-                                    ELSE 3
-                                END,
-                                t.playing_start_date DESC
+                            ORDER BY t.playing_start_date DESC
                         ");
                         $stmt->execute([$team['id']]);
-                        $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        $team_tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        // Fetch all team members
+                        $stmt = $conn->prepare("SELECT u.id, u.username FROM team_members tm INNER JOIN users u ON tm.user_id = u.id WHERE tm.team_id = ? AND tm.status = 'active'");
+                        $stmt->execute([$team['id']]);
+                        $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        $member_ids = array_column($members, 'id');
+
+                        // Fetch solo tournaments for all team members
+                        $solo_tournaments = [];
+                        if (!empty($member_ids)) {
+                            $in = str_repeat('?,', count($member_ids) - 1) . '?';
+                            $sql = "
+                                SELECT t.*, tr.registration_date, tr.status as registration_status, tr.user_id as solo_user_id, u.username as solo_username
+                                FROM tournaments t
+                                INNER JOIN tournament_registrations tr ON t.id = tr.tournament_id
+                                INNER JOIN users u ON tr.user_id = u.id
+                                WHERE tr.user_id IN ($in) AND t.mode = 'Solo'
+                                ORDER BY t.playing_start_date DESC
+                            ";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->execute($member_ids);
+                            $solo_tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        }
+
+                        // Merge and deduplicate tournaments (avoid showing the same tournament twice if registered both as team and solo)
+                        $all_tournaments = $team_tournaments;
+                        foreach ($solo_tournaments as $solo) {
+                            // Only add if not already in team_tournaments
+                            $already = false;
+                            foreach ($team_tournaments as $tt) {
+                                if ($tt['id'] == $solo['id']) {
+                                    $already = true;
+                                    break;
+                                }
+                            }
+                            if (!$already) {
+                                $all_tournaments[] = $solo;
+                            }
+                        }
                         ?>
 
-                        <?php if (!empty($tournaments)): ?>
+                        <?php if (!empty($all_tournaments)): ?>
                             <div class="row g-4">
-                                <?php foreach ($tournaments as $tournament): ?>
+                                <?php foreach ($all_tournaments as $tournament): ?>
                                     <div class="col-md-6">
                                         <div class="tournament-card">
                                             <div class="card-banner">
                                                 <img src="<?php echo htmlspecialchars($tournament['banner_image']); ?>" 
                                                      alt="<?php echo htmlspecialchars($tournament['name']); ?>" 
                                                      class="tournament-banner">
-                                                
                                                 <div class="tournament-meta">
                                                     <div class="prize-pool">
                                                         <ion-icon name="trophy-outline"></ion-icon>
@@ -304,11 +338,9 @@ if (!empty($teams)) {
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="card-content">
                                                 <h3 class="tournament-title"><?php echo htmlspecialchars($tournament['name']); ?></h3>
                                                 <p class="game-name"><?php echo htmlspecialchars($tournament['game_name']); ?></p>
-                                                
                                                 <div class="tournament-info">
                                                     <div class="info-item">
                                                         <ion-icon name="people-outline"></ion-icon>
@@ -319,7 +351,6 @@ if (!empty($teams)) {
                                                         <span><?php echo htmlspecialchars($tournament['mode']); ?></span>
                                                     </div>
                                                 </div>
-
                                                 <div class="tournament-dates">
                                                     <div class="registration-date">
                                                         Registered: <?php echo date('M d, Y', strtotime($tournament['registration_date'])); ?>
@@ -328,13 +359,17 @@ if (!empty($teams)) {
                                                         Starts: <?php echo date('M d, Y', strtotime($tournament['playing_start_date'])); ?>
                                                     </div>
                                                 </div>
-
+                                                <?php if ($tournament['mode'] === 'Solo' && !empty($tournament['solo_username'])): ?>
+                                                    <div class="solo-registered-by">
+                                                        <ion-icon name="person-outline"></ion-icon>
+                                                        <span>Registered by: <strong><?php echo htmlspecialchars($tournament['solo_username']); ?></strong> (Solo)</span>
+                                                    </div>
+                                                <?php endif; ?>
                                                 <div class="tournament-phase">
                                                     <?php
                                                     $phase_class = '';
                                                     $phase_text = '';
-                                                    
-                                                    switch ($tournament['registration_phase']) {
+                                                    switch ($tournament['registration_phase'] ?? $tournament['phase']) {
                                                         case 'open':
                                                             $phase_class = 'bg-success';
                                                             $phase_text = 'Registration Open';
@@ -354,7 +389,6 @@ if (!empty($teams)) {
                                                     ?>
                                                     <span class="badge <?php echo $phase_class; ?>"><?php echo $phase_text; ?></span>
                                                 </div>
-
                                                 <div class="card-actions">
                                                     <a href="../tournaments/details.php?id=<?php echo $tournament['id']; ?>" 
                                                        class="btn btn-primary">View Details</a>
