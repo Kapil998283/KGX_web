@@ -151,8 +151,25 @@ CREATE TABLE IF NOT EXISTS tournaments (
     playing_start_date DATE NOT NULL,
     finish_date DATE NOT NULL,
     payment_date DATE DEFAULT NULL,
-    status ENUM('upcoming', 'ongoing', 'completed', 'cancelled') DEFAULT 'upcoming',
-    registration_phase ENUM('open', 'closed', 'playing', 'finished') DEFAULT 'closed',
+    status ENUM(
+        'draft',              -- Initial state when created
+        'announced',          -- Tournament announced but registration not open
+        'registration_open',  -- Registration period is active
+        'registration_closed',-- Registration closed, waiting for tournament to start
+        'in_progress',       -- Tournament is currently being played
+        'completed',         -- Tournament finished, waiting for payment
+        'archived',          -- Tournament completed and payments done
+        'cancelled'          -- Tournament was cancelled
+    ) DEFAULT 'draft',
+    phase ENUM(
+        'pre_registration',   -- Before registration opens
+        'registration',       -- During registration period
+        'pre_tournament',     -- After registration, before tournament starts
+        'playing',           -- During tournament play
+        'post_tournament',    -- After tournament, before payment
+        'payment',           -- During payment processing
+        'finished'           -- Everything completed
+    ) DEFAULT 'pre_registration',
     rules TEXT,
     created_by INT,
     allow_waitlist TINYINT(1) DEFAULT 0,
@@ -161,6 +178,67 @@ CREATE TABLE IF NOT EXISTS tournaments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Add trigger to automatically update tournament status
+DELIMITER //
+
+CREATE TRIGGER before_tournament_update
+BEFORE UPDATE ON tournaments
+FOR EACH ROW
+BEGIN
+    DECLARE current_date DATE;
+    SET current_date = CURDATE();
+    
+    -- Only update status if not cancelled
+    IF NEW.status != 'cancelled' THEN
+        -- Set the status based on dates and current state
+        SET NEW.status = CASE
+            WHEN NEW.registration_open_date > current_date THEN 'announced'
+            WHEN current_date BETWEEN NEW.registration_open_date AND NEW.registration_close_date THEN 'registration_open'
+            WHEN current_date BETWEEN NEW.registration_close_date AND NEW.playing_start_date THEN 'registration_closed'
+            WHEN current_date BETWEEN NEW.playing_start_date AND NEW.finish_date THEN 'in_progress'
+            WHEN current_date BETWEEN NEW.finish_date AND COALESCE(NEW.payment_date, NEW.finish_date) THEN 'completed'
+            WHEN NEW.payment_date IS NOT NULL AND current_date > NEW.payment_date THEN 'archived'
+            ELSE NEW.status
+        END;
+
+        -- Set the phase based on dates
+        SET NEW.phase = CASE
+            WHEN current_date < NEW.registration_open_date THEN 'pre_registration'
+            WHEN current_date BETWEEN NEW.registration_open_date AND NEW.registration_close_date THEN 'registration'
+            WHEN current_date BETWEEN NEW.registration_close_date AND NEW.playing_start_date THEN 'pre_tournament'
+            WHEN current_date BETWEEN NEW.playing_start_date AND NEW.finish_date THEN 'playing'
+            WHEN current_date BETWEEN NEW.finish_date AND COALESCE(NEW.payment_date, NEW.finish_date) THEN 'post_tournament'
+            WHEN NEW.payment_date IS NOT NULL AND current_date BETWEEN NEW.finish_date AND NEW.payment_date THEN 'payment'
+            WHEN NEW.payment_date IS NOT NULL AND current_date > NEW.payment_date THEN 'finished'
+            ELSE NEW.phase
+        END;
+    ELSE
+        -- If cancelled, set appropriate phase
+        SET NEW.phase = 'finished';
+    END IF;
+END //
+
+DELIMITER ;
+
+-- Add procedure to update all tournament statuses
+DELIMITER //
+
+CREATE PROCEDURE update_all_tournament_statuses()
+BEGIN
+    UPDATE tournaments 
+    SET updated_at = CURRENT_TIMESTAMP
+    WHERE status != 'cancelled';
+END //
+
+DELIMITER ;
+
+-- Add event to automatically update tournament statuses daily
+CREATE EVENT IF NOT EXISTS daily_tournament_status_update
+ON SCHEDULE EVERY 1 DAY
+STARTS CURRENT_TIMESTAMP
+DO
+    CALL update_all_tournament_statuses();
 
 -- Tournament days table
 CREATE TABLE IF NOT EXISTS tournament_days (

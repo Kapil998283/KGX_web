@@ -5,26 +5,8 @@
  * @param PDO $db Database connection
  */
 function adminUpdateTournamentStatus($db) {
-    $current_date = date('Y-m-d');
-    
-    $sql = "UPDATE tournaments 
-            SET status = CASE
-                WHEN status = 'cancelled' THEN 'cancelled'
-                WHEN playing_start_date <= :current_date AND finish_date >= :current_date THEN 'ongoing'
-                WHEN finish_date < :current_date THEN 'completed'
-                ELSE 'upcoming'
-            END,
-            registration_phase = CASE
-                WHEN status = 'cancelled' THEN 'closed'
-                WHEN registration_open_date <= :current_date AND registration_close_date >= :current_date THEN 'open'
-                WHEN playing_start_date <= :current_date AND finish_date >= :current_date THEN 'playing'
-                WHEN finish_date < :current_date THEN 'finished'
-                ELSE 'closed'
-            END
-            WHERE status != 'cancelled'";
-            
-    $stmt = $db->prepare($sql);
-    $stmt->execute(['current_date' => $current_date]);
+    // This will trigger the automatic status updates via the database trigger
+    $db->query("CALL update_all_tournament_statuses()");
 }
 
 /**
@@ -33,64 +15,96 @@ function adminUpdateTournamentStatus($db) {
  * @return array Status information with display text and CSS class
  */
 function adminGetTournamentDisplayStatus($tournament) {
-    $now = new DateTime();
-    $playStart = new DateTime($tournament['playing_start_date']);
-    $finishDate = new DateTime($tournament['finish_date']);
-    $regOpen = new DateTime($tournament['registration_open_date']);
-    $regClose = new DateTime($tournament['registration_close_date']);
-    
-    // First check for cancelled status
-    if ($tournament['status'] === 'cancelled') {
-        return [
-            'status' => 'Cancelled',
-            'class' => 'status-cancelled',
-            'date_label' => null,
-            'date_value' => null
-        ];
-    }
-    
-    // Check current tournament phase
-    if ($now >= $playStart && $now <= $finishDate) {
-        return [
-            'status' => 'Playing',
-            'class' => 'status-playing',
-            'date_label' => 'Ends',
-            'date_value' => $finishDate->format('M d, Y')
-        ];
-    }
-    
-    if ($now >= $regOpen && $now <= $regClose) {
-        return [
+    $status_info = [
+        'draft' => [
+            'status' => 'Draft',
+            'class' => 'status-draft',
+            'icon' => 'document-outline'
+        ],
+        'announced' => [
+            'status' => 'Announced',
+            'class' => 'status-announced',
+            'icon' => 'megaphone-outline'
+        ],
+        'registration_open' => [
             'status' => 'Registration Open',
             'class' => 'status-registration',
-            'date_label' => 'Closes',
-            'date_value' => $regClose->format('M d, Y')
-        ];
-    }
-    
-    if ($now < $regOpen) {
-        return [
-            'status' => 'Upcoming',
-            'class' => 'status-upcoming',
-            'date_label' => 'Starts',
-            'date_value' => $regOpen->format('M d, Y')
-        ];
-    }
-    
-    if ($now > $finishDate) {
-        return [
+            'icon' => 'person-add-outline'
+        ],
+        'registration_closed' => [
+            'status' => 'Registration Closed',
+            'class' => 'status-registration-closed',
+            'icon' => 'lock-closed-outline'
+        ],
+        'in_progress' => [
+            'status' => 'In Progress',
+            'class' => 'status-playing',
+            'icon' => 'play-circle-outline'
+        ],
+        'completed' => [
             'status' => 'Completed',
             'class' => 'status-completed',
-            'date_label' => 'Ended',
-            'date_value' => $finishDate->format('M d, Y')
-        ];
-    }
-    
-    return [
+            'icon' => 'checkmark-circle-outline'
+        ],
+        'archived' => [
+            'status' => 'Archived',
+            'class' => 'status-archived',
+            'icon' => 'archive-outline'
+        ],
+        'cancelled' => [
+            'status' => 'Cancelled',
+            'class' => 'status-cancelled',
+            'icon' => 'close-circle-outline'
+        ]
+    ];
+
+    $phase_info = [
+        'pre_registration' => 'Starts',
+        'registration' => 'Registration Closes',
+        'pre_tournament' => 'Tournament Starts',
+        'playing' => 'Tournament Ends',
+        'post_tournament' => 'Payment Date',
+        'payment' => 'Payment Due',
+        'finished' => null
+    ];
+
+    $status = $status_info[$tournament['status']] ?? [
         'status' => 'Unknown',
         'class' => 'status-unknown',
-        'date_label' => null,
-        'date_value' => null
+        'icon' => 'help-circle-outline'
+    ];
+
+    // Get the relevant date based on the current phase
+    $date_value = null;
+    $date_label = $phase_info[$tournament['phase']] ?? null;
+    
+    if ($date_label) {
+        switch ($tournament['phase']) {
+            case 'pre_registration':
+                $date_value = $tournament['registration_open_date'];
+                break;
+            case 'registration':
+                $date_value = $tournament['registration_close_date'];
+                break;
+            case 'pre_tournament':
+                $date_value = $tournament['playing_start_date'];
+                break;
+            case 'playing':
+                $date_value = $tournament['finish_date'];
+                break;
+            case 'post_tournament':
+            case 'payment':
+                $date_value = $tournament['payment_date'];
+                break;
+        }
+    }
+
+    return [
+        'status' => $status['status'],
+        'class' => $status['class'],
+        'icon' => $status['icon'],
+        'date_label' => $date_label,
+        'date_value' => $date_value ? date('M d, Y', strtotime($date_value)) : null
     ];
 }
 
@@ -100,7 +114,8 @@ function adminGetTournamentDisplayStatus($tournament) {
  * @return bool Whether the tournament can be cancelled
  */
 function adminCanCancelTournament($tournament) {
-    return !in_array($tournament['status'], ['cancelled', 'completed']);
+    $non_cancellable = ['completed', 'archived', 'cancelled'];
+    return !in_array($tournament['status'], $non_cancellable);
 }
 
 /**
@@ -109,21 +124,51 @@ function adminCanCancelTournament($tournament) {
  * @return bool Whether the tournament can be edited
  */
 function adminCanEditTournament($tournament) {
-    return !in_array($tournament['status'], ['cancelled', 'completed']);
+    $non_editable = ['completed', 'archived', 'cancelled'];
+    return !in_array($tournament['status'], $non_editable);
 }
 
 /**
- * Gets the registration phase text for display
- * @param string $phase Registration phase from database
- * @return string Human-readable registration phase
+ * Gets CSS styles for tournament status display
+ * @return string CSS styles
  */
-function adminGetRegistrationPhaseText($phase) {
-    $phases = [
-        'open' => 'Open',
-        'closed' => 'Closed',
-        'playing' => 'In Progress',
-        'finished' => 'Finished'
-    ];
-    
-    return isset($phases[$phase]) ? $phases[$phase] : 'Unknown';
+function getAdminTournamentStatusStyles() {
+    return '
+    .status-draft {
+        background-color: #e2e8f0;
+        color: #475569;
+    }
+    .status-announced {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    .status-registration {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    .status-registration-closed {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    .status-playing {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    .status-completed {
+        background-color: #f3e8ff;
+        color: #6b21a8;
+    }
+    .status-archived {
+        background-color: #f5f5f5;
+        color: #525252;
+    }
+    .status-cancelled {
+        background-color: #fecaca;
+        color: #991b1b;
+    }
+    .status-unknown {
+        background-color: #f3f4f6;
+        color: #374151;
+    }
+    ';
 } 
