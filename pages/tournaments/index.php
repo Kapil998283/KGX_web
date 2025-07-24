@@ -20,31 +20,32 @@ $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'all';
 
 // Build the query based on active tab
 $where_clause = "";
-$current_date = date('Y-m-d');
 
 switch ($active_tab) {
-    case 'active':
-        $where_clause = "WHERE status = 'ongoing'";
+    case 'playing':
+        $where_clause = "WHERE status = 'in_progress'";
         break;
     case 'upcoming':
-        $where_clause = "WHERE status = 'upcoming'";
+        $where_clause = "WHERE status IN ('announced', 'registration_open', 'registration_closed')";
         break;
     case 'finished':
-        $where_clause = "WHERE status = 'completed'";
+        $where_clause = "WHERE status IN ('completed', 'archived')";
         break;
     default: // 'all'
-        $where_clause = "WHERE status != 'cancelled'";
+        $where_clause = "WHERE status != 'cancelled' AND status != 'draft'";
 }
 
 // Fetch tournaments based on filter
 $stmt = $db->prepare("
     SELECT *, 
     CASE 
-        WHEN status = 'cancelled' THEN 4
-        WHEN status = 'ongoing' THEN 1
-        WHEN status = 'upcoming' AND registration_phase = 'open' THEN 2
-        WHEN status = 'upcoming' THEN 3
-        ELSE 5
+        WHEN status = 'in_progress' THEN 1
+        WHEN status = 'registration_open' THEN 2
+        WHEN status = 'registration_closed' THEN 3
+        WHEN status = 'announced' THEN 4
+        WHEN status = 'completed' THEN 5
+        WHEN status = 'archived' THEN 6
+        ELSE 7
     END as sort_order
     FROM tournaments 
     {$where_clause}
@@ -54,47 +55,6 @@ $stmt = $db->prepare("
 $stmt->execute();
 $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Function to determine tournament status for display
-function getTournamentStatus($tournament) {
-    $now = new DateTime();
-    $playStart = new DateTime($tournament['playing_start_date']);
-    $finishDate = new DateTime($tournament['finish_date']);
-    $regOpen = new DateTime($tournament['registration_open_date']);
-    $regClose = new DateTime($tournament['registration_close_date']);
-    
-    if ($tournament['status'] === 'cancelled') {
-        return ['status' => 'Cancelled', 'class' => 'status-cancelled'];
-    }
-    
-    switch ($tournament['status']) {
-        case 'ongoing':
-            return ['status' => 'Playing', 'class' => 'status-playing'];
-        case 'upcoming':
-            if ($now >= $regOpen && $now <= $regClose) {
-                return ['status' => 'Registration Open', 'class' => 'status-upcoming'];
-            } else {
-                return ['status' => 'Upcoming', 'class' => 'status-upcoming'];
-            }
-        case 'completed':
-            return ['status' => 'Completed', 'class' => 'status-completed'];
-        default:
-            return ['status' => 'Unknown', 'class' => 'status-unknown'];
-    }
-}
-
-// Function to get the correct registration URL based on tournament mode
-function getRegistrationUrl($tournament) {
-    switch ($tournament['mode']) {
-        case 'Solo':
-            return "register_solo.php?id=" . $tournament['id'];
-        case 'Duo':
-            return "register_duo.php?id=" . $tournament['id'];
-        case 'Squad':
-            return "register_squad.php?id=" . $tournament['id'];
-        default:
-            return "details.php?id=" . $tournament['id'];
-    }
-}
 ?>
 
 <section class="tournaments-section">
@@ -104,8 +64,8 @@ function getRegistrationUrl($tournament) {
         <div class="tournament-tabs">
             <div class="tabs-group">
                 <a href="?tab=all" class="tab-btn <?php echo $active_tab === 'all' ? 'active' : ''; ?>">All</a>
-                <a href="?tab=active" class="tab-btn <?php echo $active_tab === 'active' ? 'active' : ''; ?>">Active</a>
                 <a href="?tab=upcoming" class="tab-btn <?php echo $active_tab === 'upcoming' ? 'active' : ''; ?>">Upcoming</a>
+                <a href="?tab=playing" class="tab-btn <?php echo $active_tab === 'playing' ? 'active' : ''; ?>">Playing</a>
                 <a href="?tab=finished" class="tab-btn <?php echo $active_tab === 'finished' ? 'active' : ''; ?>">Finished</a>
             </div>
             
@@ -133,26 +93,15 @@ function getRegistrationUrl($tournament) {
                                  class="tournament-banner">
                             
                             <?php 
-                                $status_info = getTournamentStatus($tournament);
-                                if ($status_info['class'] === 'status-playing') {
-                                    echo '<div class="tournament-status ' . $status_info['class'] . '">';
-                                    echo '<ion-icon name="play-circle-outline"></ion-icon>';
-                                    echo $status_info['status'];
-                                    echo '</div>';
-                                } elseif ($status_info['class'] === 'status-upcoming') {
-                                    echo '<div class="tournament-status ' . $status_info['class'] . '">';
-                                    echo '<ion-icon name="time-outline"></ion-icon>';
-                                    echo $status_info['status'];
-                                    echo '</div>';
-                                } elseif ($status_info['class'] === 'status-cancelled') {
-                                    echo '<div class="tournament-status ' . $status_info['class'] . '">';
-                                    echo '<ion-icon name="close-circle-outline"></ion-icon>';
-                                    echo $status_info['status'];
-                                    echo '</div>';
-                                } else { // status-completed
-                                    echo '<div class="tournament-status ' . $status_info['class'] . '">';
-                                    echo '<ion-icon name="checkmark-circle-outline"></ion-icon>';
-                                    echo $status_info['status'];
+                                $status_info = getTournamentDisplayStatus($tournament);
+                                echo '<div class="tournament-status ' . $status_info['class'] . '">';
+                                echo '<ion-icon name="' . $status_info['icon'] . '"></ion-icon>';
+                                echo $status_info['status'];
+                                echo '</div>';
+
+                                if ($status_info['date_label'] && $status_info['date_value']) {
+                                    echo '<div class="date-info">';
+                                    echo '<small>' . $status_info['date_label'] . ': ' . $status_info['date_value'] . '</small>';
                                     echo '</div>';
                                 }
                             ?>
@@ -191,6 +140,9 @@ function getRegistrationUrl($tournament) {
                                 </div>
                                 
                                 <a href="details.php?id=<?php echo $tournament['id']; ?>" class="details-btn">
+                                    <?php if (isTournamentRegistrationOpen($tournament)): ?>
+                                        <span class="register-now">Register Now</span>
+                                    <?php endif; ?>
                                     <ion-icon name="arrow-forward-outline"></ion-icon>
                                 </a>
                             </div>
