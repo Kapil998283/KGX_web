@@ -185,32 +185,29 @@ DELIMITER //
 CREATE TRIGGER before_tournament_update
 BEFORE UPDATE ON tournaments
 FOR EACH ROW
-BEGIN
-    DECLARE current_date DATE;
-    SET current_date = CURDATE();
-    
+BEGIN    
     -- Only update status if not cancelled
     IF NEW.status != 'cancelled' THEN
         -- Set the status based on dates and current state
         SET NEW.status = CASE
-            WHEN NEW.registration_open_date > current_date THEN 'announced'
-            WHEN current_date BETWEEN NEW.registration_open_date AND NEW.registration_close_date THEN 'registration_open'
-            WHEN current_date BETWEEN NEW.registration_close_date AND NEW.playing_start_date THEN 'registration_closed'
-            WHEN current_date BETWEEN NEW.playing_start_date AND NEW.finish_date THEN 'in_progress'
-            WHEN current_date BETWEEN NEW.finish_date AND COALESCE(NEW.payment_date, NEW.finish_date) THEN 'completed'
-            WHEN NEW.payment_date IS NOT NULL AND current_date > NEW.payment_date THEN 'archived'
+            WHEN NEW.registration_open_date > CURDATE() THEN 'announced'
+            WHEN CURDATE() BETWEEN NEW.registration_open_date AND NEW.registration_close_date THEN 'registration_open'
+            WHEN CURDATE() BETWEEN NEW.registration_close_date AND NEW.playing_start_date THEN 'registration_closed'
+            WHEN CURDATE() BETWEEN NEW.playing_start_date AND NEW.finish_date THEN 'in_progress'
+            WHEN CURDATE() BETWEEN NEW.finish_date AND COALESCE(NEW.payment_date, NEW.finish_date) THEN 'completed'
+            WHEN NEW.payment_date IS NOT NULL AND CURDATE() > NEW.payment_date THEN 'archived'
             ELSE NEW.status
         END;
 
         -- Set the phase based on dates
         SET NEW.phase = CASE
-            WHEN current_date < NEW.registration_open_date THEN 'pre_registration'
-            WHEN current_date BETWEEN NEW.registration_open_date AND NEW.registration_close_date THEN 'registration'
-            WHEN current_date BETWEEN NEW.registration_close_date AND NEW.playing_start_date THEN 'pre_tournament'
-            WHEN current_date BETWEEN NEW.playing_start_date AND NEW.finish_date THEN 'playing'
-            WHEN current_date BETWEEN NEW.finish_date AND COALESCE(NEW.payment_date, NEW.finish_date) THEN 'post_tournament'
-            WHEN NEW.payment_date IS NOT NULL AND current_date BETWEEN NEW.finish_date AND NEW.payment_date THEN 'payment'
-            WHEN NEW.payment_date IS NOT NULL AND current_date > NEW.payment_date THEN 'finished'
+            WHEN CURDATE() < NEW.registration_open_date THEN 'pre_registration'
+            WHEN CURDATE() BETWEEN NEW.registration_open_date AND NEW.registration_close_date THEN 'registration'
+            WHEN CURDATE() BETWEEN NEW.registration_close_date AND NEW.playing_start_date THEN 'pre_tournament'
+            WHEN CURDATE() BETWEEN NEW.playing_start_date AND NEW.finish_date THEN 'playing'
+            WHEN CURDATE() BETWEEN NEW.finish_date AND COALESCE(NEW.payment_date, NEW.finish_date) THEN 'post_tournament'
+            WHEN NEW.payment_date IS NOT NULL AND CURDATE() BETWEEN NEW.finish_date AND NEW.payment_date THEN 'payment'
+            WHEN NEW.payment_date IS NOT NULL AND CURDATE() > NEW.payment_date THEN 'finished'
             ELSE NEW.phase
         END;
     ELSE
