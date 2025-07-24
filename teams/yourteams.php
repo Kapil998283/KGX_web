@@ -430,6 +430,7 @@ if (!empty($teams)) {
                                                 <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
                                                 <input type="hidden" name="action" value="approve">
                                                 <input type="hidden" name="team_id" value="<?php echo $team['id']; ?>">
+                                                <input type="hidden" name="active_tab" value="requests">
                                                 <button type="submit" class="accept-btn">
                                                     <i class="fas fa-check"></i> Accept
                                                 </button>
@@ -438,6 +439,7 @@ if (!empty($teams)) {
                                                 <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
                                                 <input type="hidden" name="action" value="reject">
                                                 <input type="hidden" name="team_id" value="<?php echo $team['id']; ?>">
+                                                <input type="hidden" name="active_tab" value="requests">
                                                 <button type="submit" class="reject-btn">
                                                     <i class="fas fa-times"></i> Reject
                                                 </button>

@@ -20,10 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $request_id = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
 $action = isset($_POST['action']) ? $_POST['action'] : ''; // 'approve' or 'reject'
 $team_id = isset($_POST['team_id']) ? (int)$_POST['team_id'] : 0;
+$active_tab = isset($_POST['active_tab']) ? $_POST['active_tab'] : 'requests';
 
 if (!$request_id || !in_array($action, ['approve', 'reject']) || !$team_id) {
     $_SESSION['error_message'] = 'Invalid request parameters';
-    header("Location: yourteams.php");
+    header("Location: yourteams.php?team_id=" . $team_id . "&tab=" . $active_tab);
     exit;
 }
 
@@ -45,21 +46,21 @@ try {
 
     if (!$request) {
         $_SESSION['error_message'] = 'Request not found or already processed';
-        header("Location: yourteams.php?team_id=" . $team_id);
+        header("Location: yourteams.php?team_id=" . $team_id . "&tab=" . $active_tab);
         exit;
     }
 
     // Verify user is the team captain
     if ($request['captain_id'] != $_SESSION['user_id']) {
         $_SESSION['error_message'] = 'You are not authorized to handle this request';
-        header("Location: yourteams.php?team_id=" . $team_id);
+        header("Location: yourteams.php?team_id=" . $team_id . "&tab=" . $active_tab);
         exit;
     }
 
     // Check if team is full when approving
     if ($action === 'approve' && $request['current_members'] >= $request['max_members']) {
         $_SESSION['error_message'] = 'Team is full';
-        header("Location: yourteams.php?team_id=" . $team_id);
+        header("Location: yourteams.php?team_id=" . $team_id . "&tab=" . $active_tab);
         exit;
     }
 
@@ -116,7 +117,7 @@ try {
             ? "Successfully approved " . $request['requester_username'] . "'s request to join the team!"
             : "Request from " . $request['requester_username'] . " has been rejected.";
         
-        header("Location: yourteams.php?team_id=" . $team_id);
+        header("Location: yourteams.php?team_id=" . $team_id . "&tab=" . $active_tab);
         exit;
 
     } catch (Exception $e) {
@@ -127,6 +128,6 @@ try {
 } catch (Exception $e) {
     error_log("Error in handle_request.php: " . $e->getMessage());
     $_SESSION['error_message'] = 'An error occurred while processing the request';
-    header("Location: yourteams.php?team_id=" . $team_id);
+    header("Location: yourteams.php?team_id=" . $team_id . "&tab=" . $active_tab);
     exit;
 } 
