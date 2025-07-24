@@ -1,7 +1,7 @@
 <?php
 require_once 'includes/admin-auth.php';
 require_once '../config/database.php';
-require_once '../includes/tournament-status.php';
+require_once 'includes/tournament-status.php';  // Changed path to admin's version
 
 // Initialize database connection
 $database = new Database();
@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Update status of all tournaments
-updateTournamentStatus($conn);
+adminUpdateTournamentStatus($conn);
 
 // Fetch all tournaments
 $stmt = $conn->query("SELECT * FROM tournaments ORDER BY registration_open_date DESC");
@@ -326,7 +326,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <td class="teams-column"><?php echo $tournament['current_teams'] . '/' . $tournament['max_teams']; ?></td>
                                 <td class="status-column">
                                     <?php
-                                        $status_info = getTournamentDisplayStatus($tournament);
+                                        $status_info = adminGetTournamentDisplayStatus($tournament);
                                     ?>
                                     <span class="status-badge <?php echo $status_info['class']; ?>">
                                         <?php echo $status_info['status']; ?>
@@ -339,7 +339,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </td>
                                 <td class="actions-column">
                                     <div class="action-buttons">
-                                        <?php if (canEditTournament($tournament)): ?>
+                                        <?php if (adminCanEditTournament($tournament)): ?>
                                         <button class="btn btn-sm btn-primary" onclick="editTournament(<?php echo $tournament['id']; ?>)" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </button>
@@ -356,7 +356,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <button class="btn btn-sm btn-info" onclick="viewRegistrations(<?php echo $tournament['id']; ?>)" title="Teams">
                                             <i class="bi bi-people"></i>
                                         </button>
-                                        <?php if (canCancelTournament($tournament)): ?>
+                                        <?php if (adminCanCancelTournament($tournament)): ?>
                                         <button class="btn btn-sm btn-warning" onclick="cancelTournament(<?php echo $tournament['id']; ?>)" title="Cancel Tournament">
                                             <i class="bi bi-x-circle"></i>
                                         </button>

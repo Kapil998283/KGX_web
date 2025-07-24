@@ -4,7 +4,7 @@
  * Updates tournament status based on current date and tournament dates
  * @param PDO $db Database connection
  */
-function updateTournamentStatus($db) {
+function adminUpdateTournamentStatus($db) {
     $current_date = date('Y-m-d');
     
     $sql = "UPDATE tournaments 
@@ -32,7 +32,7 @@ function updateTournamentStatus($db) {
  * @param array $tournament Tournament data
  * @return array Status information with display text and CSS class
  */
-function getTournamentDisplayStatus($tournament) {
+function adminGetTournamentDisplayStatus($tournament) {
     $now = new DateTime();
     $playStart = new DateTime($tournament['playing_start_date']);
     $finishDate = new DateTime($tournament['finish_date']);
@@ -99,7 +99,7 @@ function getTournamentDisplayStatus($tournament) {
  * @param array $tournament Tournament data
  * @return bool Whether the tournament can be cancelled
  */
-function canCancelTournament($tournament) {
+function adminCanCancelTournament($tournament) {
     return !in_array($tournament['status'], ['cancelled', 'completed']);
 }
 
@@ -108,7 +108,7 @@ function canCancelTournament($tournament) {
  * @param array $tournament Tournament data
  * @return bool Whether the tournament can be edited
  */
-function canEditTournament($tournament) {
+function adminCanEditTournament($tournament) {
     return !in_array($tournament['status'], ['cancelled', 'completed']);
 }
 
@@ -117,7 +117,7 @@ function canEditTournament($tournament) {
  * @param string $phase Registration phase from database
  * @return string Human-readable registration phase
  */
-function getRegistrationPhaseText($phase) {
+function adminGetRegistrationPhaseText($phase) {
     $phases = [
         'open' => 'Open',
         'closed' => 'Closed',
