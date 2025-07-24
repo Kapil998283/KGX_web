@@ -3,6 +3,7 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/header.php';
 require_once '../../includes/team-auth.php';
+require_once '../../includes/tournament-status.php';
 ?>
 <link rel="stylesheet" href="../../assets/css/tournament/index.css">
 <?php
@@ -10,6 +11,9 @@ require_once '../../includes/team-auth.php';
 // Initialize database connection
 $database = new Database();
 $db = $database->connect();
+
+// Update tournament statuses
+updateTournamentStatus($db);
 
 // Get active tab from URL parameter
 $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'all';
@@ -20,18 +24,10 @@ $current_date = date('Y-m-d');
 
 switch ($active_tab) {
     case 'active':
-        $where_clause = "WHERE status = 'ongoing' 
-            AND playing_start_date <= '$current_date' 
-            AND finish_date >= '$current_date'";
+        $where_clause = "WHERE status = 'ongoing'";
         break;
     case 'upcoming':
-        $where_clause = "WHERE status = 'upcoming' 
-            AND (
-                (registration_open_date <= '$current_date' AND registration_close_date >= '$current_date')
-                OR
-                (registration_open_date > '$current_date')
-            )
-            AND playing_start_date > '$current_date'";
+        $where_clause = "WHERE status = 'upcoming'";
         break;
     case 'finished':
         $where_clause = "WHERE status = 'completed'";
@@ -45,10 +41,10 @@ $stmt = $db->prepare("
     SELECT *, 
     CASE 
         WHEN status = 'cancelled' THEN 4
-        WHEN status = 'ongoing' AND playing_start_date <= '$current_date' AND finish_date >= '$current_date' THEN 1
-        WHEN status = 'upcoming' AND registration_open_date <= '$current_date' AND registration_close_date >= '$current_date' THEN 2
-        WHEN status = 'upcoming' AND playing_start_date > '$current_date' THEN 2
-        ELSE 3
+        WHEN status = 'ongoing' THEN 1
+        WHEN status = 'upcoming' AND registration_phase = 'open' THEN 2
+        WHEN status = 'upcoming' THEN 3
+        ELSE 5
     END as sort_order
     FROM tournaments 
     {$where_clause}

@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/admin-auth.php';
 require_once '../config/database.php';
+require_once '../includes/tournament-status.php';
 
 // Initialize database connection
 $database = new Database();
@@ -12,8 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch ($_POST['action']) {
             case 'cancel':
                 try {
-                    if (cancelTournament($conn, $_POST['tournament_id'])) {
+                    $stmt = $conn->prepare("UPDATE tournaments SET status = 'cancelled', registration_phase = 'closed' WHERE id = ?");
+                    if ($stmt->execute([$_POST['tournament_id']])) {
                         $_SESSION['success'] = "Tournament cancelled successfully!";
+                        logAdminAction('cancel_tournament', 'Cancelled tournament ID: ' . $_POST['tournament_id']);
                     } else {
                         $_SESSION['error'] = "Error cancelling tournament.";
                     }
@@ -323,43 +326,19 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <td class="teams-column"><?php echo $tournament['current_teams'] . '/' . $tournament['max_teams']; ?></td>
                                 <td class="status-column">
                                     <?php
-                                    $now = new DateTime();
-                                    $playStart = new DateTime($tournament['playing_start_date']);
-                                    $finishDate = new DateTime($tournament['finish_date']);
-                                    $regOpen = new DateTime($tournament['registration_open_date']);
-                                    $regClose = new DateTime($tournament['registration_close_date']);
-                                    
-                                    $status = '';
-                                    $statusClass = '';
-                                    
-                                    if ($tournament['status'] === 'cancelled') {
-                                        $status = 'Cancelled';
-                                        $statusClass = 'cancelled';
-                                    } elseif ($now < $regOpen) {
-                                        $status = 'Upcoming';
-                                        $statusClass = 'upcoming';
-                                    } elseif ($now >= $regOpen && $now <= $regClose) {
-                                        $status = 'Registration Open';
-                                        $statusClass = 'registration';
-                                    } elseif ($now >= $playStart && $now <= $finishDate) {
-                                        $status = 'Ongoing';
-                                        $statusClass = 'ongoing';
-                                    } else {
-                                        $status = 'Completed';
-                                        $statusClass = 'completed';
-                                    }
+                                        $status_info = getTournamentDisplayStatus($tournament);
                                     ?>
-                                    <span class="status-badge status-<?php echo $statusClass; ?>">
-                                        <?php echo $status; ?>
+                                    <span class="status-badge status-<?php echo $status_info['class']; ?>">
+                                        <?php echo $status_info['status']; ?>
                                     </span>
-                                    <?php if ($statusClass !== 'cancelled' && $statusClass !== 'completed'): ?>
+                                    <?php if ($status_info['class'] !== 'status-cancelled' && $status_info['class'] !== 'status-completed'): ?>
                                     <div class="date-info">
-                                        <?php if ($statusClass === 'upcoming'): ?>
-                                            <small>Starts: <?php echo $regOpen->format('M d, Y'); ?></small>
-                                        <?php elseif ($statusClass === 'registration'): ?>
-                                            <small>Closes: <?php echo $regClose->format('M d, Y'); ?></small>
-                                        <?php elseif ($statusClass === 'ongoing'): ?>
-                                            <small>Ends: <?php echo $finishDate->format('M d, Y'); ?></small>
+                                        <?php if ($status_info['class'] === 'status-upcoming'): ?>
+                                            <small>Starts: <?php echo date('M d, Y', strtotime($tournament['registration_open_date'])); ?></small>
+                                        <?php elseif ($status_info['class'] === 'status-registration'): ?>
+                                            <small>Closes: <?php echo date('M d, Y', strtotime($tournament['registration_close_date'])); ?></small>
+                                        <?php elseif ($status_info['class'] === 'status-playing'): ?>
+                                            <small>Ends: <?php echo date('M d, Y', strtotime($tournament['finish_date'])); ?></small>
                                         <?php endif; ?>
                                     </div>
                                     <?php endif; ?>
