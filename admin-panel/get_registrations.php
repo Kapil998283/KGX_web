@@ -73,6 +73,18 @@ try {
                                     <?php echo ucfirst($reg['registration_status']); ?>
                                 </span>
                             </td>
+                            <td>
+                                <?php if ($reg['registration_status'] === 'pending'): ?>
+                                    <button class="btn btn-sm btn-success" 
+                                            onclick="updateRegistrationStatus('<?php echo $reg['username']; ?>', 'approved', <?php echo $_GET['tournament_id']; ?>, 'solo')">
+                                        Approve
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" 
+                                            onclick="updateRegistrationStatus('<?php echo $reg['username']; ?>', 'rejected', <?php echo $_GET['tournament_id']; ?>, 'solo')">
+                                        Reject
+                                    </button>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -140,6 +152,18 @@ try {
                                     <?php echo ucfirst($team['registration_status']); ?>
                                 </span>
                             </td>
+                            <td>
+                                <?php if ($team['registration_status'] === 'pending'): ?>
+                                    <button class="btn btn-sm btn-success" 
+                                            onclick="updateRegistrationStatus('<?php echo $team['team_id']; ?>', 'approved', <?php echo $_GET['tournament_id']; ?>, 'team')">
+                                        Approve
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" 
+                                            onclick="updateRegistrationStatus('<?php echo $team['team_id']; ?>', 'rejected', <?php echo $_GET['tournament_id']; ?>, 'team')">
+                                        Reject
+                                    </button>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -151,13 +175,17 @@ try {
 ?>
 
 <script>
-    function updateRegistrationStatus(teamId, status, tournamentId) {
+    function updateRegistrationStatus(id, status, tournamentId, type) {
         if (!confirm('Are you sure you want to ' + status + ' this registration?')) {
             return;
         }
 
         const formData = new FormData();
-        formData.append('team_id', teamId);
+        if (type === 'solo') {
+            formData.append('user_id', id);
+        } else {
+            formData.append('team_id', id);
+        }
         formData.append('tournament_id', tournamentId);
         formData.append('status', status);
 

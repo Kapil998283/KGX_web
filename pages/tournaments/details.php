@@ -194,9 +194,28 @@ $is_registered = isset($_SESSION['user_id']) ? isUserRegistered($db, $tournament
                                     Login to Register
                                 </button>
                             <?php elseif ($is_registered): ?>
-                                <button class="view-more" disabled>
-                                    Already Registered
-                                </button>
+                                <?php
+                                // Fetch the registration status for the current user/team
+                                $reg_status = null;
+                                if ($tournament['mode'] === 'Solo') {
+                                    $stmt = $db->prepare("SELECT status FROM tournament_registrations WHERE tournament_id = ? AND user_id = ? LIMIT 1");
+                                    $stmt->execute([$tournament['id'], $_SESSION['user_id']]);
+                                    $reg_status = $stmt->fetchColumn();
+                                } else if ($user_team_info) {
+                                    $stmt = $db->prepare("SELECT status FROM tournament_registrations WHERE tournament_id = ? AND team_id = ? LIMIT 1");
+                                    $stmt->execute([$tournament['id'], $user_team_info['id']]);
+                                    $reg_status = $stmt->fetchColumn();
+                                }
+                                ?>
+                                <?php if ($reg_status === 'pending'): ?>
+                                    <button class="view-more" disabled>
+                                        Wait for Approval
+                                    </button>
+                                <?php else: ?>
+                                    <button class="view-more" disabled>
+                                        Already Registered
+                                    </button>
+                                <?php endif; ?>
                             <?php elseif ($tournament['mode'] === 'Solo'): ?>
                                 <?php if ($tournament['status'] === 'team_full'): ?>
                                     <button class="view-more" disabled>
