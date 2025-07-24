@@ -10,17 +10,22 @@ function updateTournamentStatus($db) {
     $sql = "UPDATE tournaments 
             SET status = CASE
                 WHEN status = 'cancelled' THEN 'cancelled'
-                WHEN playing_start_date <= :current_date AND finish_date >= :current_date THEN 'ongoing'
+                WHEN playing_start_date <= :current_date AND finish_date >= :current_date THEN 'in_progress'
+                WHEN registration_open_date <= :current_date AND registration_close_date >= :current_date THEN 'registration_open'
+                WHEN registration_close_date < :current_date AND playing_start_date > :current_date THEN 'registration_closed'
                 WHEN finish_date < :current_date THEN 'completed'
-                ELSE 'upcoming'
+                ELSE 'announced'
             END,
-            registration_phase = CASE
-                WHEN status = 'cancelled' THEN 'closed'
-                WHEN registration_open_date <= :current_date AND registration_close_date >= :current_date THEN 'open'
-                WHEN playing_start_date <= :current_date AND finish_date >= :current_date THEN 'playing'
-                WHEN finish_date < :current_date THEN 'finished'
-                ELSE 'closed'
-            END
+            phase = CASE
+                WHEN status = 'cancelled' THEN 'finished'
+                WHEN :current_date < registration_open_date THEN 'pre_registration'
+                WHEN :current_date BETWEEN registration_open_date AND registration_close_date THEN 'registration'
+                WHEN :current_date BETWEEN registration_close_date AND playing_start_date THEN 'pre_tournament'
+                WHEN :current_date BETWEEN playing_start_date AND finish_date THEN 'playing'
+                WHEN :current_date > finish_date THEN 'finished'
+                ELSE 'pre_registration'
+            END,
+            updated_at = CURRENT_TIMESTAMP
             WHERE status != 'cancelled'";
             
     $stmt = $db->prepare($sql);
