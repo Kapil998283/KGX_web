@@ -21,9 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         name, game_name, banner_image, prize_pool, prize_currency, entry_fee, 
                         max_teams, mode, format, match_type, registration_open_date,
                         registration_close_date, playing_start_date, finish_date,
-                        description, rules, status, created_by, payment_date, requires_admin_approval
+                        description, rules, status, created_by, payment_date
                     ) VALUES (
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?
                     )");
                     
                     $stmt->execute([
@@ -44,8 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_POST['description'],
                         $_POST['rules'],
                         $_SESSION['admin_id'],
-                        !empty($_POST['payment_date']) ? date('Y-m-d', strtotime($_POST['payment_date'])) : null,
-                        isset($_POST['requires_admin_approval']) ? 1 : 0
+                        !empty($_POST['payment_date']) ? date('Y-m-d', strtotime($_POST['payment_date'])) : null
                     ]);
                     
                     // Commit transaction
@@ -85,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         prize_currency = ?, entry_fee = ?, max_teams = ?, mode = ?, 
                         format = ?, match_type = ?, registration_open_date = ?, 
                         registration_close_date = ?, playing_start_date = ?, finish_date = ?,
-                        description = ?, rules = ?, payment_date = ?, requires_admin_approval = ?
+                        description = ?, rules = ?, payment_date = ?
                         WHERE id = ?");
                     
                     $stmt->execute([
@@ -106,7 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_POST['description'],
                         $_POST['rules'],
                         !empty($_POST['payment_date']) ? date('Y-m-d', strtotime($_POST['payment_date'])) : null,
-                        isset($_POST['requires_admin_approval']) ? 1 : 0,
                         $_POST['tournament_id']
                     ]);
                     
@@ -485,18 +483,6 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <label class="form-label">Rules</label>
                             <textarea class="form-control" name="rules" rows="5" required></textarea>
                         </div>
-                        
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="requires_admin_approval" id="requires_admin_approval" checked>
-                                <label class="form-check-label" for="requires_admin_approval">
-                                    <strong>Requires Admin Approval</strong>
-                                </label>
-                                <div class="form-text">
-                                    If checked, players must wait for admin approval after registration. If unchecked, players will be automatically approved upon registration.
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -628,18 +614,6 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <label class="form-label">Rules</label>
                             <textarea class="form-control" name="rules" rows="5" required></textarea>
                         </div>
-                        
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="requires_admin_approval" id="edit_requires_admin_approval">
-                                <label class="form-check-label" for="edit_requires_admin_approval">
-                                    <strong>Requires Admin Approval</strong>
-                                </label>
-                                <div class="form-text">
-                                    If checked, players must wait for admin approval after registration. If unchecked, players will be automatically approved upon registration.
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -766,7 +740,6 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     form.querySelector('[name="payment_date"]').value = data.payment_date ? data.payment_date.split(' ')[0] : '';
                     form.querySelector('[name="description"]').value = data.description;
                     form.querySelector('[name="rules"]').value = data.rules;
-                    form.querySelector('#edit_requires_admin_approval').checked = data.requires_admin_approval == 1;
 
                     // Preview the existing image
                     const preview = form.querySelector('.tournament-image-preview');
