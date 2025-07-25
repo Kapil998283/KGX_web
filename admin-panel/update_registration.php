@@ -197,7 +197,10 @@ try {
     // Commit transaction
     $conn->commit();
 
-    echo json_encode(['success' => true]);
+    echo json_encode([
+        'success' => true,
+        'message' => 'Registration status updated to ' . $_POST['status'] . ' successfully'
+    ]);
 } catch (Exception $e) {
     if (isset($conn)) {
         $conn->rollBack();
