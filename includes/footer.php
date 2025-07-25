@@ -5,10 +5,7 @@
   -->
 
   <footer>
-    <ul class="footer-links">
-      <li><a href="../pages/privacy-policy.php">Privacy Policy</a></li>
-      <li><a href="../pages/dashboard/help-contact.php">Help Centre</a></li>
-    </ul>
+    
 
     <div class="footer-top">
       <div class="container">
@@ -63,11 +60,11 @@
           <ul class="quicklink-list">
 
             <li>
-              <a href="../pages/faq.php" class="quicklink-item">Faq</a>
+              <a href="/pages/faq.php" class="quicklink-item">Faq</a>
             </li>
 
             <li>
-              <a href="../pages/dashboard/help-contact.php" class="quicklink-item">Help center</a>
+              <a href="pages/dashboard/help-contact.php" class="quicklink-item">Help center</a>
             </li>
 
             <li>
@@ -75,7 +72,7 @@
             </li>
 
             <li>
-              <a href="../pages/privacy-policy.php" class="quicklink-item">Privacy</a>
+              <a href="pages/privacy-policy.php" class="quicklink-item">Privacy</a>
             </li>
 
           </ul>
