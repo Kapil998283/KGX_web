@@ -779,13 +779,17 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         // Update registration status
-        function updateRegistrationStatus(teamId, status, tournamentId) {
+        function updateRegistrationStatus(id, status, tournamentId, type) {
             if (!confirm('Are you sure you want to ' + status + ' this registration?')) {
                 return;
             }
 
             const formData = new FormData();
-            formData.append('team_id', teamId);
+            if (type === 'solo') {
+                formData.append('user_id', id);
+            } else {
+                formData.append('team_id', id);
+            }
             formData.append('tournament_id', tournamentId);
             formData.append('status', status);
 
@@ -800,7 +804,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 const messageDiv = document.getElementById('statusMessage');
                 if (data.success) {
                     messageDiv.className = 'alert alert-success';
-                    messageDiv.textContent = data.message;
+                    messageDiv.textContent = data.message || 'Registration status updated successfully';
                     messageDiv.style.display = 'block';
                     
                     // Refresh the registrations list after successful update
