@@ -294,7 +294,7 @@ $videos_watched = $videos_stmt->fetch(PDO::FETCH_ASSOC)['videos_watched'];
                 </li>
 
                 <li>
-                    <a href="../../pages/forgot-password.php">
+                    <a href="../register/forgot-password.php">
                         <span class="icon">
                             <ion-icon name="lock-closed-outline"></ion-icon>
                         </span>
