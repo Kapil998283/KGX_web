@@ -1,21 +1,24 @@
 /* Multi-Step Authentication Styles */
 
-/* Variables for gaming theme */
+/* Import root colors */
+@import url('root.css');
+
+/* Additional gaming theme variables */
 :root {
-    --primary-color: #ff6b35;
-    --primary-dark: #e5602f;
-    --secondary-color: #00d4ff;
-    --accent-color: #ffcd3c;
-    --success-color: #4caf50;
-    --error-color: #f44336;
-    --warning-color: #ff9800;
-    --dark-bg: #0a0a0a;
-    --card-bg: #1a1a1a;
-    --border-color: #333;
-    --text-light: #ffffff;
-    --text-muted: #999;
-    --gradient-primary: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-    --gradient-secondary: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+    --primary-color: var(--orange);
+    --primary-dark: hsl(140, 100%, 35%);
+    --secondary-color: var(--xiketic);
+    --accent-color: var(--orange);
+    --success-color: var(--xiketic);
+    --error-color: hsl(0, 74%, 42%);
+    --warning-color: hsl(39, 100%, 50%);
+    --dark-bg: var(--eerie-black);
+    --card-bg: var(--raisin-black-2);
+    --border-color: var(--onyx);
+    --text-light: var(--white);
+    --text-muted: var(--light-gray);
+    --gradient-primary: linear-gradient(135deg, var(--orange) 0%, hsl(140, 100%, 45%) 100%);
+    --gradient-secondary: linear-gradient(135deg, var(--xiketic) 0%, var(--raisin-black-3) 100%);
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.3);
     --border-radius: 12px;
 }

@@ -1,3 +1,509 @@
+/* Enhanced Settings Page Styles */
+@import url('../root.css');
+
+/* Variables using root colors */
+:root {
+    --primary-color: var(--orange);
+    --primary-dark: hsl(140, 100%, 35%);
+    --secondary-color: var(--xiketic);
+    --accent-color: var(--orange);
+    --success-color: var(--xiketic);
+    --error-color: hsl(0, 74%, 42%);
+    --warning-color: hsl(39, 100%, 50%);
+    --dark-bg: var(--eerie-black);
+    --card-bg: var(--raisin-black-2);
+    --border-color: var(--onyx);
+    --text-light: var(--white);
+    --text-muted: var(--light-gray);
+    --gradient-primary: linear-gradient(135deg, var(--orange) 0%, hsl(140, 100%, 45%) 100%);
+    --gradient-secondary: linear-gradient(135deg, var(--xiketic) 0%, var(--raisin-black-3) 100%);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.3);
+    --border-radius: 12px;
+}
+
+/* Body and layout */
+body {
+    font-family: var(--ff-rajdhani, 'Rajdhani', sans-serif);
+    background: linear-gradient(135deg, var(--eerie-black) 0%, var(--raisin-black-2) 50%, var(--eerie-black) 100%);
+    min-height: 100vh;
+    color: var(--text-light);
+    position: relative;
+    overflow-x: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, hsla(140, 100%, 50%, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, hsla(140, 100%, 20%, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, hsla(140, 100%, 50%, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Settings Container */
+.settings-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 40px;
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.settings-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    z-index: 1;
+}
+
+/* Back Arrow */
+.back-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.back-arrow:hover {
+    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(-5px);
+}
+
+/* Settings Title */
+.settings-title {
+    font-family: var(--ff-oswald, 'Oswald', sans-serif);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-light);
+    text-align: center;
+    margin: 0 0 40px 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Profile Section */
+.profile-section {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary-color);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.profile-pic:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 40px var(--primary-color);
+}
+
+/* Buttons */
+.btn {
+    background: var(--gradient-primary);
+    color: var(--white);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--ff-rajdhani, 'Rajdhani', sans-serif);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 8px 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.upload-btn {
+    background: var(--gradient-primary);
+}
+
+.remove-btn {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.save-changes-btn {
+    background: var(--gradient-primary);
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 16px;
+    margin-top: 30px;
+    border-radius: var(--border-radius);
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 30px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-size: 16px;
+    font-family: var(--ff-rajdhani, 'Rajdhani', sans-serif);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.form-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.form-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Select styling */
+select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+select option {
+    background: var(--card-bg);
+    color: var(--text-light);
+    padding: 10px;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.modal-content {
+    background: var(--card-bg);
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 600px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+    color: var(--primary-color);
+}
+
+.modal-title {
+    font-family: var(--ff-oswald, 'Oswald', sans-serif);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin: 0 0 20px 0;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Profile Images Grid */
+.profile-images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.profile-image-item {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.profile-image-item:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--primary-color);
+}
+
+.profile-image-item.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 30px var(--primary-color);
+}
+
+.profile-image-item.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--primary-color);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .settings-container {
+        margin: 20px;
+        padding: 30px 20px;
+    }
+    
+    .settings-title {
+        font-size: 28px;
+    }
+    
+    .profile-pic {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .profile-images-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 12px;
+    }
+    
+    .profile-image-item {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .modal-content {
+        margin: 10% auto;
+        padding: 20px;
+        width: 95%;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+    
+    .form-group input,
+    .form-group select {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-container {
+        margin: 10px;
+        padding: 20px 15px;
+    }
+    
+    .settings-title {
+        font-size: 24px;
+    }
+    
+    .profile-section {
+        padding: 20px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin: 0 0 10px 0;
+    }
+    
+    .upload-btn,
+    .remove-btn {
+        width: calc(50% - 5px);
+        display: inline-block;
+        margin: 0 5px 10px 0;
+    }
+    
+    .remove-btn {
+        margin-right: 0;
+    }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.settings-container {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Success and error states */
+.success-message {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    color: #4caf50;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.error-message {
+    background: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    color: #ff6b6b;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Loading states */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
 /* Settings Page Styles */
 * {
   box-sizing: border-box;
