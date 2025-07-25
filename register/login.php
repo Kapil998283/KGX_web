@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Esports Tournament Platform</title>
+    <title>Sign In | KGX Gaming</title>
     
     <!-- Favicon -->
     <link rel="shortcut icon" href="../favicon.svg" type="image/svg+xml">
@@ -87,59 +87,98 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <!-- CSS -->
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/auth.css">
+    <link rel="stylesheet" href="../assets/css/multi-step-auth.css">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Ion Icons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
-<body>
-    <div class="auth-container">
-        <h1 class="auth-title">Sign In</h1>
-        
-        <?php if($error): ?>
-            <div class="error-message"><?php echo $error; ?></div>
-        <?php endif; ?>
-        
-        <?php if($success): ?>
-            <div class="success-message"><?php echo $success; ?></div>
-        <?php endif; ?>
-        
-        <form class="auth-form" method="POST" action="">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($email ?? ''); ?>">
+<body class="auth-body">
+    <div class="auth-wrapper">
+        <div class="auth-container multi-step">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="logo">
+                    <h1 class="brand-text">KGX</h1>
+                    <span class="brand-tagline">GAMING XTREME</span>
+                </div>
+                <h2 class="auth-title">Welcome Back</h2>
+                <p class="auth-subtitle">Sign in to your gaming account</p>
             </div>
+        
+            <?php if($error): ?>
+                <div class="error-message">
+                    <ion-icon name="alert-circle-outline"></ion-icon>
+                    <?php echo $error; ?>
+                </div>
+            <?php endif; ?>
             
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-toggle">
-                    <input type="password" id="password" name="password" required>
-                    <ion-icon name="eye-outline" class="toggle-password"></ion-icon>
+            <?php if($success): ?>
+                <div class="success-message">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    <?php echo $success; ?>
+                </div>
+            <?php endif; ?>
+            
+            <form class="auth-form" method="POST" action="">
+                <div class="form-group">
+                    <label for="email">
+                        <ion-icon name="mail-outline"></ion-icon>
+                        Email Address
+                    </label>
+                    <input type="email" id="email" name="email" required 
+                           value="<?php echo htmlspecialchars($email ?? ''); ?>"
+                           placeholder="Enter your email address">
+                    <div class="input-hint">Use the email you registered with</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">
+                        <ion-icon name="lock-closed-outline"></ion-icon>
+                        Password
+                    </label>
+                    <div class="password-input">
+                        <input type="password" id="password" name="password" required
+                               placeholder="Enter your password">
+                        <button type="button" class="password-toggle" data-target="password">
+                            <ion-icon name="eye-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="auth-btn primary-btn">
+                    <span>Sign In</span>
+                    <ion-icon name="log-in-outline"></ion-icon>
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="multi-step-register.php" class="auth-link">Create Account</a></p>
+                <p><a href="forgot-password.php" class="auth-link">Forgot Password?</a></p>
+                
+                <div class="social-login">
+                    <p class="social-title">Or continue with</p>
+                    <div class="social-buttons">
+                        <button class="social-btn google-btn">
+                            <ion-icon name="logo-google"></ion-icon>
+                        </button>
+                        <button class="social-btn discord-btn">
+                            <ion-icon name="logo-discord"></ion-icon>
+                        </button>
+                        <button class="social-btn steam-btn">
+                            <ion-icon name="game-controller-outline"></ion-icon>
+                        </button>
+                    </div>
                 </div>
             </div>
-            
-            <button type="submit" class="auth-btn">Sign In</button>
-        </form>
-        
-        <div class="auth-links">
-            <p>Don't have an account? <a href="register.php">Sign up</a></p>
-            <p><a href="forgot-password.php">Forgot Password?</a></p>
         </div>
     </div>
 
-    <script>
-        // Toggle password visibility
-        document.querySelector('.toggle-password').addEventListener('click', function() {
-            const passwordInput = document.querySelector('#password');
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.name = type === 'password' ? 'eye-outline' : 'eye-off-outline';
-        });
-    </script>
+    <script src="../assets/js/multi-step-auth.js"></script>
 </body>
 </html> 
