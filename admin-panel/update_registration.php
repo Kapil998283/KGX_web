@@ -99,15 +99,15 @@ try {
         $entry_fee = $tournament_info['entry_fee'] ?? 0;
         
         if ($_POST['status'] === 'rejected' && $entry_fee > 0) {
-            // Refund tickets to user for rejected registration
+            // Refund tickets to user for rejected registration using user_tickets table
             if ($is_solo) {
-                $stmt = $conn->prepare("UPDATE users SET ticket_balance = ticket_balance + ? WHERE id = ?");
+                $stmt = $conn->prepare("UPDATE user_tickets SET tickets = tickets + ? WHERE user_id = ?");
                 $stmt->execute([$entry_fee, $_POST['user_id']]);
             } else {
                 // For team registration, refund to team captain
                 $stmt = $conn->prepare(
-                    "UPDATE users SET ticket_balance = ticket_balance + ? 
-                     WHERE id = (SELECT user_id FROM team_members WHERE team_id = ? AND role = 'captain' AND status = 'active' LIMIT 1)"
+                    "UPDATE user_tickets SET tickets = tickets + ? 
+                     WHERE user_id = (SELECT user_id FROM team_members WHERE team_id = ? AND role = 'captain' AND status = 'active' LIMIT 1)"
                 );
                 $stmt->execute([$entry_fee, $_POST['team_id']]);
             }
