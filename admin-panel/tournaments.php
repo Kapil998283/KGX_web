@@ -784,6 +784,14 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 return;
             }
 
+            // Show loading indicator
+            const messageDiv = document.getElementById('statusMessage');
+            if (messageDiv) {
+                messageDiv.className = 'alert alert-info';
+                messageDiv.textContent = 'Processing...';
+                messageDiv.style.display = 'block';
+            }
+
             const formData = new FormData();
             if (type === 'solo') {
                 formData.append('user_id', id);
@@ -793,19 +801,45 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             formData.append('tournament_id', tournamentId);
             formData.append('status', status);
 
+            // Debug log
+            console.log('Sending request:', {
+                id: id,
+                status: status,
+                tournamentId: tournamentId,
+                type: type
+            });
+
             fetch('update_registration.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json().catch(() => {
-                throw new Error('Invalid JSON response from server');
-            }))
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers.get('content-type'));
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return response.text().then(text => {
+                    console.log('Raw response:', text);
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('JSON parse error:', e);
+                        throw new Error('Invalid JSON response from server: ' + text.substring(0, 100));
+                    }
+                });
+            })
             .then(data => {
+                console.log('Parsed data:', data);
                 const messageDiv = document.getElementById('statusMessage');
                 if (data.success) {
-                    messageDiv.className = 'alert alert-success';
-                    messageDiv.textContent = data.message || 'Registration status updated successfully';
-                    messageDiv.style.display = 'block';
+                    if (messageDiv) {
+                        messageDiv.className = 'alert alert-success';
+                        messageDiv.textContent = data.message || 'Registration status updated successfully';
+                        messageDiv.style.display = 'block';
+                    }
                     
                     // Refresh the registrations list after successful update
                     setTimeout(() => {
@@ -818,9 +852,13 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             .catch(error => {
                 console.error('Error:', error);
                 const messageDiv = document.getElementById('statusMessage');
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = error.message || 'Failed to update registration status';
-                messageDiv.style.display = 'block';
+                if (messageDiv) {
+                    messageDiv.className = 'alert alert-danger';
+                    messageDiv.textContent = error.message || 'Failed to update registration status';
+                    messageDiv.style.display = 'block';
+                } else {
+                    alert('Error: ' + (error.message || 'Failed to update registration status'));
+                }
             });
         }
 

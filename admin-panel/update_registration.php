@@ -8,6 +8,7 @@ header('Content-Type: application/json');
 
 // Check request method
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
     echo json_encode(['error' => 'Invalid request method']);
     exit();
 }
@@ -17,7 +18,16 @@ error_log("Received POST data: " . print_r($_POST, true));
 
 // Validate required parameters
 if ((empty($_POST['team_id']) && empty($_POST['user_id'])) || empty($_POST['tournament_id']) || empty($_POST['status'])) {
-    echo json_encode(['error' => 'Missing required parameters']);
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Missing required parameters',
+        'received' => [
+            'team_id' => $_POST['team_id'] ?? 'not set',
+            'user_id' => $_POST['user_id'] ?? 'not set',
+            'tournament_id' => $_POST['tournament_id'] ?? 'not set',
+            'status' => $_POST['status'] ?? 'not set'
+        ]
+    ]);
     exit();
 }
 

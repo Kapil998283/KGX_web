@@ -174,51 +174,7 @@ try {
     }
 ?>
 
-<script>
-    function updateRegistrationStatus(id, status, tournamentId, type) {
-        if (!confirm('Are you sure you want to ' + status + ' this registration?')) {
-            return;
-        }
-
-        const formData = new FormData();
-        if (type === 'solo') {
-            formData.append('user_id', id);
-        } else {
-            formData.append('team_id', id);
-        }
-        formData.append('tournament_id', tournamentId);
-        formData.append('status', status);
-
-        fetch('update_registration.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            const messageDiv = document.getElementById('statusMessage');
-            if (data.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = data.message;
-                messageDiv.style.display = 'block';
-                // Refresh the registrations list after 1 second
-                setTimeout(() => {
-                    viewRegistrations(tournamentId);
-                }, 1000);
-            } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = data.error || 'Failed to update registration status';
-                messageDiv.style.display = 'block';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const messageDiv = document.getElementById('statusMessage');
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.textContent = 'Failed to update registration status';
-            messageDiv.style.display = 'block';
-        });
-    }
-</script>
+<!-- JavaScript function is now handled by the parent window (tournaments.php) -->
 
 <?php
 } catch (Exception $e) {
