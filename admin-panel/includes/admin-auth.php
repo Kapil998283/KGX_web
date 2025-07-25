@@ -34,7 +34,7 @@ function checkAdminRole($required_role) {
 function logAdminAction($action, $description) {
     $db = getDbConnection();
     $stmt = $db->prepare("INSERT INTO admin_activity_log (admin_id, action, details, ip_address) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$_SESSION['admin_id'], $action, $description, $_SERVER['REMOTE_ADDR']]);
+    $stmt->execute([$_SESSION['admin_id'], $action, $description, $_SERVER['REMOTE_ADDR'] ?? 'unknown']);
 }
 
 // Function to get admin user data

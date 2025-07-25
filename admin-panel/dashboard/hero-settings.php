@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($stmt->execute()) {
             // Log the action
-            logAdminAction($conn, $_SESSION['admin_id'], 'update_hero_settings', 'Updated hero section settings');
+            logAdminAction('update_hero_settings', 'Updated hero section settings');
             
             // Redirect to prevent form resubmission
             header('Location: hero-settings.php?success=1');
