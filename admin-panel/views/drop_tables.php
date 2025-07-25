@@ -2,22 +2,39 @@
 require_once __DIR__ . '/../includes/admin_header.php';
 require_once __DIR__ . '/../../config/database.php';
 
+// Initialize PDO connection
+$database = new Database();
+$pdo = $database->connect();
+
 // Handle table operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
     if ($action === 'drop_tables') {
-        // Get all tables
-        $tables = [];
-        $result = mysqli_query($conn, "SHOW TABLES");
-        while ($row = mysqli_fetch_row($result)) {
-            $tables[] = $row[0];
-        }
-        
-        // Drop each table
-        foreach ($tables as $table) {
-            mysqli_query($conn, "DROP TABLE IF EXISTS `$table`");
-        }
+        try {
+            // Get all tables using PDO
+            $stmt = $pdo->query("SHOW TABLES");
+            $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Whitelist of allowed table prefixes for security
+            $allowed_prefixes = ['users', 'tournaments', 'matches', 'teams', 'admin', 'user_', 'shop_', 'notifications', 'live_streams', 'games', 'video_categories'];
+            
+            // Drop each table with validation
+            foreach ($tables as $table) {
+                $isAllowed = false;
+                foreach ($allowed_prefixes as $prefix) {
+                    if (strpos($table, $prefix) === 0) {
+                        $isAllowed = true;
+                        break;
+                    }
+                }
+                
+                if ($isAllowed) {
+                    // Use PDO with quoted identifier
+                    $stmt = $pdo->prepare("DROP TABLE IF EXISTS " . $pdo->quote($table));
+                    $stmt->execute();
+                }
+            }
         
         log_admin_action('drop_tables', 'Dropped all database tables');
         $message = "All tables have been dropped successfully.";
