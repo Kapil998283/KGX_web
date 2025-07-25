@@ -125,21 +125,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 case 'update_results':
                     $round_id = $_POST['round_id'];
-                    $team_results = $_POST['team_results'];
+                    $participant_results = $_POST['participant_results'];
 
                     // Get round details
                     $stmt = $conn->prepare("
-                        SELECT tr.name as round_name, t.name as tournament_name
+                        SELECT tr.name as round_name, t.name as tournament_name, t.mode
                         FROM tournament_rounds tr
                         JOIN tournaments t ON tr.tournament_id = t.id
                         WHERE tr.id = ?
                     ");
                     $stmt->execute([$round_id]);
                     $round = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $is_round_solo = $round['mode'] === 'solo';
 
                     $notifications = new TournamentNotifications($conn);
 
-                    foreach ($team_results as $team_id => $result) {
+                    foreach ($participant_results as $participant_id => $result) {
                         // Calculate points
                         $kill_points = $result['kills'] * $_POST['kill_points'];
                         
@@ -154,66 +155,124 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ? $placement_points_array[$result['placement']] 
                             : 0;
 
-                        // Calculate bonus points (qualification points if team qualifies)
+                        // Calculate bonus points (qualification points if participant qualifies)
                         $bonus_points = ($result['status'] === 'qualified') ? $_POST['qualification_points'] : 0;
                         
                         // Calculate total points
                         $total_points = $kill_points + $placement_points + $bonus_points;
 
-                        // Update team's total score
-                        $stmt = $conn->prepare("
-                            UPDATE teams 
-                            SET total_score = total_score + ?
-                            WHERE id = ?
-                        ");
-                        $stmt->execute([$total_points, $team_id]);
+                        // Update participant's total score
+                        if ($is_round_solo) {
+                            $stmt = $conn->prepare("
+                                UPDATE users 
+                                SET total_score = COALESCE(total_score, 0) + ?
+                                WHERE id = ?
+                            ");
+                            $stmt->execute([$total_points, $participant_id]);
+                            
+                            $stmt = $conn->prepare("
+                                UPDATE round_teams 
+                                SET placement = ?,
+                                    kills = ?,
+                                    kill_points = ?,
+                                    placement_points = ?,
+                                    bonus_points = ?,
+                                    total_points = ?,
+                                    status = ?
+                                WHERE round_id = ? AND user_id = ?
+                            ");
+                            $stmt->execute([
+                                $result['placement'],
+                                $result['kills'],
+                                $kill_points,
+                                $placement_points,
+                                $bonus_points,
+                                $total_points,
+                                $result['status'],
+                                $round_id,
+                                $participant_id
+                            ]);
+                        } else {
+                            $stmt = $conn->prepare("
+                                UPDATE teams 
+                                SET total_score = total_score + ?
+                                WHERE id = ?
+                            ");
+                            $stmt->execute([$total_points, $participant_id]);
+                            
+                            $stmt = $conn->prepare("
+                                UPDATE round_teams 
+                                SET placement = ?,
+                                    kills = ?,
+                                    kill_points = ?,
+                                    placement_points = ?,
+                                    bonus_points = ?,
+                                    total_points = ?,
+                                    status = ?
+                                WHERE round_id = ? AND team_id = ?
+                            ");
+                            $stmt->execute([
+                                $result['placement'],
+                                $result['kills'],
+                                $kill_points,
+                                $placement_points,
+                                $bonus_points,
+                                $total_points,
+                                $result['status'],
+                                $round_id,
+                                $participant_id
+                            ]);
+                        }
 
-                        $stmt = $conn->prepare("
-                            UPDATE round_teams 
-                            SET placement = ?,
-                                kills = ?,
-                                kill_points = ?,
-                                placement_points = ?,
-                                bonus_points = ?,
-                                total_points = ?,
-                                status = ?
-                            WHERE round_id = ? AND team_id = ?
-                        ");
-                        $stmt->execute([
-                            $result['placement'],
-                            $result['kills'],
-                            $kill_points,
-                            $placement_points,
-                            $bonus_points,
-                            $total_points,
-                            $result['status'],
-                            $round_id,
-                            $team_id
-                        ]);
-
-                        // Send notifications
-                        $notifications->roundResults(
-                            $team_id,
-                            $round['tournament_name'],
-                            $round['round_name'],
-                            $result['placement'],
-                            $result['kills'],
-                            $total_points
-                        );
-
-                        // Send qualification/elimination notification
-                        if ($result['status'] === 'qualified') {
-                            $notifications->teamQualified(
-                                $team_id,
+                        // Send notifications (using appropriate notification method)
+                        if ($is_round_solo) {
+                            // For solo tournaments, we could create user-specific notifications
+                            // For now, we'll use the team notification but with user data
+                            $notifications->roundResults(
+                                $participant_id,
                                 $round['tournament_name'],
-                                $round['round_name']
+                                $round['round_name'],
+                                $result['placement'],
+                                $result['kills'],
+                                $total_points
                             );
-                        } elseif ($result['status'] === 'eliminated') {
-                            $notifications->teamEliminated(
-                                $team_id,
+                            
+                            if ($result['status'] === 'qualified') {
+                                $notifications->teamQualified(
+                                    $participant_id,
+                                    $round['tournament_name'],
+                                    $round['round_name']
+                                );
+                            } elseif ($result['status'] === 'eliminated') {
+                                $notifications->teamEliminated(
+                                    $participant_id,
+                                    $round['tournament_name'],
+                                    $round['round_name']
+                                );
+                            }
+                        } else {
+                            $notifications->roundResults(
+                                $participant_id,
                                 $round['tournament_name'],
-                                $round['round_name']
+                                $round['round_name'],
+                                $result['placement'],
+                                $result['kills'],
+                                $total_points
                             );
+                            
+                            if ($result['status'] === 'qualified') {
+                                $notifications->teamQualified(
+                                    $participant_id,
+                                    $round['tournament_name'],
+                                    $round['round_name']
+                                );
+                            } elseif ($result['status'] === 'eliminated') {
+                                $notifications->teamEliminated(
+                                    $participant_id,
+                                    $round['tournament_name'],
+                                    $round['round_name']
+                                );
+                            }
                         }
                     }
                     $_SESSION['success'] = "Round results updated successfully!";
@@ -289,30 +348,55 @@ if ($nextDayNumber === 1) {
     $totalTeams = $registeredTeams['total_teams'];
 }
 
-// Get all registered teams for team selection
-$stmt = $conn->prepare("
-    SELECT t.*, tr.status as registration_status
-    FROM teams t
-    INNER JOIN tournament_registrations tr ON t.id = tr.team_id
-    WHERE tr.tournament_id = ? AND tr.status = 'approved'
-    ORDER BY t.name
-");
-$stmt->execute([$tournament_id]);
-$allTeams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Check if this is a solo tournament
+$is_solo = $tournament['mode'] === 'solo';
 
-// Get teams for each round
-$roundTeams = [];
+// Get all registered teams/players for selection
+if ($is_solo) {
+    $stmt = $conn->prepare("
+        SELECT u.id, u.username as name, tr.status as registration_status
+        FROM users u
+        INNER JOIN tournament_registrations tr ON u.id = tr.user_id
+        WHERE tr.tournament_id = ? AND tr.status = 'approved'
+        ORDER BY u.username
+    ");
+    $stmt->execute([$tournament_id]);
+    $allParticipants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $stmt = $conn->prepare("
+        SELECT t.*, tr.status as registration_status
+        FROM teams t
+        INNER JOIN tournament_registrations tr ON t.id = tr.team_id
+        WHERE tr.tournament_id = ? AND tr.status = 'approved'
+        ORDER BY t.name
+    ");
+    $stmt->execute([$tournament_id]);
+    $allParticipants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Get participants for each round
+$roundParticipants = [];
 if ($rounds) {
     foreach ($rounds as $round) {
-        $stmt = $conn->prepare("
-            SELECT t.*, rt.status
-            FROM teams t
-            INNER JOIN round_teams rt ON t.id = rt.team_id
-            WHERE rt.round_id = ?
-            ORDER BY t.name
-        ");
+        if ($is_solo) {
+            $stmt = $conn->prepare("
+                SELECT u.id, u.username as name, rt.status
+                FROM users u
+                INNER JOIN round_teams rt ON u.id = rt.user_id
+                WHERE rt.round_id = ?
+                ORDER BY u.username
+            ");
+        } else {
+            $stmt = $conn->prepare("
+                SELECT t.*, rt.status
+                FROM teams t
+                INNER JOIN round_teams rt ON t.id = rt.team_id
+                WHERE rt.round_id = ?
+                ORDER BY t.name
+            ");
+        }
         $stmt->execute([$round['id']]);
-        $roundTeams[$round['id']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $roundParticipants[$round['id']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 
@@ -356,7 +440,7 @@ include 'includes/admin-header.php';
                             <th>Name</th>
                             <th>Time</th>
                             <th>Map</th>
-                            <th>Teams</th>
+                            <th><?php echo $is_solo ? 'Players' : 'Teams'; ?></th>
                             <th>Points System</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -443,13 +527,13 @@ include 'includes/admin-header.php';
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Total Teams</label>
+                            <label class="form-label">Total <?php echo $is_solo ? 'Players' : 'Teams'; ?></label>
                             <input type="number" class="form-control" name="total_teams" value="<?php echo $totalTeams; ?>" readonly>
                             <small class="text-muted">
                                 <?php if ($nextDayNumber === 1): ?>
-                                    Total registered teams
+                                    Total registered <?php echo $is_solo ? 'players' : 'teams'; ?>
                                 <?php else: ?>
-                                    Teams qualified from Day <?php echo $nextDayNumber - 1; ?>
+                                    <?php echo $is_solo ? 'Players' : 'Teams'; ?> qualified from Day <?php echo $nextDayNumber - 1; ?>
                                 <?php endif; ?>
                             </small>
                         </div>
@@ -460,7 +544,7 @@ include 'includes/admin-header.php';
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Qualifying Teams per Round</label>
+                            <label class="form-label">Qualifying <?php echo $is_solo ? 'Players' : 'Teams'; ?> per Round</label>
                             <input type="number" class="form-control" name="qualifying_teams" required min="1">
                         </div>
 
@@ -502,16 +586,16 @@ include 'includes/admin-header.php';
                     <input type="hidden" name="tournament_id" value="<?php echo $tournament_id; ?>">
 
                     <div class="mb-3">
-                        <label class="form-label">Select Teams for this Round</label>
-                        <div class="row" id="teamSelectionContainer">
-                            <!-- Teams will be loaded here -->
+                        <label class="form-label">Select <?php echo $is_solo ? 'Players' : 'Teams'; ?> for this Round</label>
+                        <div class="row" id="participantSelectionContainer">
+                            <!-- Participants will be loaded here -->
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" form="editRoundTeamsForm" class="btn btn-primary">Save Teams</button>
+                <button type="submit" form="editRoundTeamsForm" class="btn btn-primary">Save <?php echo $is_solo ? 'Players' : 'Teams'; ?></button>
             </div>
         </div>
     </div>
@@ -531,6 +615,7 @@ include 'includes/admin-header.php';
                     <input type="hidden" name="round_id" id="results_round_id">
                     <input type="hidden" name="kill_points" id="results_kill_points">
                     <input type="hidden" name="qualification_points" id="results_qualification_points">
+                    <input type="hidden" name="is_solo" value="<?php echo $is_solo ? '1' : '0'; ?>">
 
                     <div class="alert alert-info">
                         <strong>Note:</strong>
@@ -539,16 +624,16 @@ include 'includes/admin-header.php';
                             <li>Enter total kills for each team</li>
                             <li>Select status:
                                 <ul>
-                                    <li><strong>Selected:</strong> Team is in the round</li>
-                                    <li><strong>Eliminated:</strong> Team did not qualify</li>
-                                    <li><strong>Qualified:</strong> Team moves to next round</li>
+                                    <li><strong>Selected:</strong> <?php echo $is_solo ? 'Player' : 'Team'; ?> is in the round</li>
+                                    <li><strong>Eliminated:</strong> <?php echo $is_solo ? 'Player' : 'Team'; ?> did not qualify</li>
+                                    <li><strong>Qualified:</strong> <?php echo $is_solo ? 'Player' : 'Team'; ?> moves to next round</li>
                                 </ul>
                             </li>
                         </ul>
                     </div>
 
                     <div id="resultsContainer">
-                        <!-- Team results will be loaded here -->
+                        <!-- Participant results will be loaded here -->
                     </div>
                 </form>
             </div>
