@@ -13,35 +13,63 @@ if (!isset($_SESSION['user_id'])) {
 $database = new Database();
 $db = $database->connect();
 
-// Fetch user's tournament registrations (both as captain and member)
+// Fetch user's tournament registrations (both solo and team)
 $stmt = $db->prepare("
-    SELECT 
-        t.id as tournament_id,
-        t.name as tournament_name,
-        t.game_name,
-        t.mode,
-        t.banner_image,
-        t.playing_start_date,
-        t.prize_pool,
-        t.prize_currency,
-        t.status,
-        t.phase,
-        tm.team_id,
-        team.name as team_name,
-        tr.registration_date,
-        tr.status as registration_status,
-        CASE 
-            WHEN tm.role = 'captain' THEN 1
-            ELSE 0
-        END as is_captain
-    FROM tournament_registrations tr
-    INNER JOIN tournaments t ON tr.tournament_id = t.id
-    INNER JOIN teams team ON tr.team_id = team.id
-    INNER JOIN team_members tm ON team.id = tm.team_id
-    WHERE tm.user_id = ? AND tm.status = 'active'
-    ORDER BY tr.registration_date DESC
+    (
+        -- Solo registrations
+        SELECT 
+            t.id as tournament_id,
+            t.name as tournament_name,
+            t.game_name,
+            t.mode,
+            t.banner_image,
+            t.playing_start_date,
+            t.prize_pool,
+            t.prize_currency,
+            t.status,
+            t.phase,
+            NULL as team_id,
+            NULL as team_name,
+            tr.registration_date,
+            tr.status as registration_status,
+            0 as is_captain,
+            'solo' as registration_type
+        FROM tournament_registrations tr
+        INNER JOIN tournaments t ON tr.tournament_id = t.id
+        WHERE tr.user_id = ? AND tr.team_id IS NULL
+    )
+    UNION ALL
+    (
+        -- Team registrations (as captain or member)
+        SELECT 
+            t.id as tournament_id,
+            t.name as tournament_name,
+            t.game_name,
+            t.mode,
+            t.banner_image,
+            t.playing_start_date,
+            t.prize_pool,
+            t.prize_currency,
+            t.status,
+            t.phase,
+            tm.team_id,
+            team.name as team_name,
+            tr.registration_date,
+            tr.status as registration_status,
+            CASE 
+                WHEN tm.role = 'captain' THEN 1
+                ELSE 0
+            END as is_captain,
+            'team' as registration_type
+        FROM tournament_registrations tr
+        INNER JOIN tournaments t ON tr.tournament_id = t.id
+        INNER JOIN teams team ON tr.team_id = team.id
+        INNER JOIN team_members tm ON team.id = tm.team_id
+        WHERE tm.user_id = ? AND tm.status = 'active' AND tr.team_id IS NOT NULL
+    )
+    ORDER BY registration_date DESC
 ");
-$stmt->execute([$_SESSION['user_id']]);
+$stmt->execute([$_SESSION['user_id'], $_SESSION['user_id']]);
 $registrations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -109,17 +137,27 @@ $registrations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                 </div>
 
-                                <div class="team-info">
-                                    <div class="team-name">
-                                        <ion-icon name="shield-outline"></ion-icon>
-                                        <span><?php echo htmlspecialchars($reg['team_name']); ?></span>
-                                        <?php if ($reg['is_captain']): ?>
-                                            <span class="badge captain">Team Captain</span>
-                                        <?php else: ?>
-                                            <span class="badge member">Team Member</span>
-                                        <?php endif; ?>
+                                <?php if ($reg['registration_type'] === 'solo'): ?>
+                                    <div class="team-info">
+                                        <div class="team-name">
+                                            <ion-icon name="person-outline"></ion-icon>
+                                            <span>Solo Player</span>
+                                            <span class="badge solo">Individual</span>
+                                        </div>
                                     </div>
-                                </div>
+                                <?php else: ?>
+                                    <div class="team-info">
+                                        <div class="team-name">
+                                            <ion-icon name="shield-outline"></ion-icon>
+                                            <span><?php echo htmlspecialchars($reg['team_name']); ?></span>
+                                            <?php if ($reg['is_captain']): ?>
+                                                <span class="badge captain">Team Captain</span>
+                                            <?php else: ?>
+                                                <span class="badge member">Team Member</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
 
                                 <div class="tournament-dates">
                                     <div class="date-item">
@@ -134,17 +172,25 @@ $registrations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                 <div class="card-actions">
                                     <?php if ($reg['registration_status'] === 'approved'): ?>
-                                        <a href="match-schedule.php?tournament_id=<?php echo $reg['tournament_id']; ?>&team_id=<?php echo $reg['team_id']; ?>" 
-                                           class="action-btn primary">
-                                            <ion-icon name="calendar-outline"></ion-icon>
-                                            Match Schedule
-                                        </a>
-                                        <?php if ($reg['is_captain']): ?>
-                                            <a href="../teams/yourteams.php?tab=tournament&team_id=<?php echo $reg['team_id']; ?>" 
-                                               class="action-btn secondary">
-                                                <ion-icon name="settings-outline"></ion-icon>
-                                                Manage Team
+                                        <?php if ($reg['registration_type'] === 'solo'): ?>
+                                            <a href="match-schedule.php?tournament_id=<?php echo $reg['tournament_id']; ?>&user_id=<?php echo $_SESSION['user_id']; ?>" 
+                                               class="action-btn primary">
+                                                <ion-icon name="calendar-outline"></ion-icon>
+                                                Match Schedule
                                             </a>
+                                        <?php else: ?>
+                                            <a href="match-schedule.php?tournament_id=<?php echo $reg['tournament_id']; ?>&team_id=<?php echo $reg['team_id']; ?>" 
+                                               class="action-btn primary">
+                                                <ion-icon name="calendar-outline"></ion-icon>
+                                                Match Schedule
+                                            </a>
+                                            <?php if ($reg['is_captain']): ?>
+                                                <a href="../teams/yourteams.php?tab=tournament&team_id=<?php echo $reg['team_id']; ?>" 
+                                                   class="action-btn secondary">
+                                                    <ion-icon name="settings-outline"></ion-icon>
+                                                    Manage Team
+                                                </a>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <a href="details.php?id=<?php echo $reg['tournament_id']; ?>" 
