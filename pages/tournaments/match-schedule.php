@@ -9,14 +9,19 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Get tournament_id and team_id from URL
+// Get tournament_id and either team_id or user_id from URL
 $tournament_id = isset($_GET['tournament_id']) ? (int)$_GET['tournament_id'] : 0;
 $team_id = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
+$user_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
 
-if (!$tournament_id || !$team_id) {
+// Must have tournament_id and either team_id or user_id
+if (!$tournament_id || (!$team_id && !$user_id)) {
     header("Location: my-registrations.php");
     exit();
 }
+
+// Determine if this is a solo or team tournament
+$is_solo = !empty($user_id);
 
 // Initialize database connection
 $database = new Database();
@@ -96,7 +101,7 @@ $total_teams = $total_teams_stmt->fetch(PDO::FETCH_ASSOC)['count'];
 ?>
 
 <main>
-    <section class="tournament-schedule-section" style="padding: 120px 0 60px;">
+    <section class="tournament-schedule-section">
         <div class="container">
             <div class="tournament-header mb-5">
                 <div class="game-banner">
@@ -1106,4 +1111,6 @@ function getStatusColor(status) {
 }
 </script>
 
-<?php require_once '../../includes/footer.php'; ?> 
+<?php require_once '../../includes/header.php'; ?>
+
+<link rel="stylesheet" href="../../assets/css/tournament/match-schedule.css">
