@@ -38,7 +38,7 @@ try {
 
     // Get request details and verify captain
     $sql = "SELECT tjr.*, t.captain_id, t.max_members, t.name as team_name,
-            (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as current_members,
+            (SELECT COUNT(*) FROM team_members WHERE team_id = t.id AND status = 'active') as current_members,
             u.username as requester_username,
             t.id as team_id_check
             FROM team_join_requests tjr
@@ -92,8 +92,7 @@ try {
     try {
         // Update request status
         $update_sql = "UPDATE team_join_requests 
-                      SET status = :status, 
-                          updated_at = NOW() 
+                      SET status = :status 
                       WHERE id = :request_id 
                       AND status = 'pending'";  // Added status check
         $stmt = $conn->prepare($update_sql);
@@ -121,8 +120,8 @@ try {
             }
 
             // Add user to team
-            $add_member_sql = "INSERT INTO team_members (team_id, user_id, role, joined_at) 
-                             VALUES (:team_id, :user_id, 'member', NOW())";
+            $add_member_sql = "INSERT INTO team_members (team_id, user_id, role, status, joined_at) 
+                             VALUES (:team_id, :user_id, 'member', 'active', NOW())";
             $stmt = $conn->prepare($add_member_sql);
             $result = $stmt->execute([
                 'team_id' => $team_id,
@@ -135,8 +134,7 @@ try {
 
             // Cancel any other pending requests from this user
             $cancel_other_requests_sql = "UPDATE team_join_requests 
-                                        SET status = 'cancelled', 
-                                            updated_at = NOW()
+                                        SET status = 'cancelled'
                                         WHERE user_id = :user_id 
                                         AND status = 'pending' 
                                         AND id != :request_id";

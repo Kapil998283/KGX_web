@@ -18,7 +18,7 @@ if (isset($_SESSION['user_id'])) {
 $sql = "SELECT 
             t.*, 
             u.username as captain_name,
-            (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as current_members
+            (SELECT COUNT(*) FROM team_members WHERE team_id = t.id AND status = 'active') as current_members
         FROM teams t 
         LEFT JOIN users u ON t.captain_id = u.id 
         WHERE t.is_active = 1 

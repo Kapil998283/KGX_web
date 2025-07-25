@@ -27,11 +27,11 @@ if ($has_teams) {
     // Get user's teams and their roles
     try {
         $sql = "SELECT t.*, tm.role, 
-                (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count,
+                (SELECT COUNT(*) FROM team_members WHERE team_id = t.id AND status = 'active') as member_count,
                 t.total_score
                 FROM teams t
                 JOIN team_members tm ON t.id = tm.team_id
-                WHERE tm.user_id = :user_id AND t.is_active = 1";
+                WHERE tm.user_id = :user_id AND t.is_active = 1 AND tm.status = 'active'";
         $stmt = $conn->prepare($sql);
         $stmt->execute(['user_id' => $user_id]);
         $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -59,6 +59,18 @@ if (!empty($teams)) {
     $stmt->execute($team_ids);
     $pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+// Check for messages
+$success_message = '';
+$error_message = '';
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+if (isset($_SESSION['error_message'])) {
+    $error_message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -73,6 +85,19 @@ if (!empty($teams)) {
 
 <main>
   <article>
+    <!-- Success/Error Message Display -->
+    <?php if (!empty($success_message)): ?>
+        <div class="alert alert-success" style="margin: 20px auto; max-width: 800px; padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px;">
+            <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($success_message); ?>
+        </div>
+    <?php endif; ?>
+    
+    <?php if (!empty($error_message)): ?>
+        <div class="alert alert-danger" style="margin: 20px auto; max-width: 800px; padding: 15px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px;">
+            <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error_message); ?>
+        </div>
+    <?php endif; ?>
+    
     <?php if (!$has_teams): ?>
         <div class="no-teams-container">
             <div class="no-teams-content">
@@ -181,7 +206,7 @@ if (!empty($teams)) {
                             END as role_order
                             FROM team_members tm 
                             JOIN users u ON tm.user_id = u.id 
-                            WHERE tm.team_id = :team_id
+                            WHERE tm.team_id = :team_id AND tm.status = 'active'
                             ORDER BY role_order ASC, tm.joined_at ASC";
                         $stmt = $conn->prepare($sql);
                         $stmt->execute(['team_id' => $team['id']]);
