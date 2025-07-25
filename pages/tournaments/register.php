@@ -180,12 +180,25 @@ try {
                 throw new Exception("You are already registered for this tournament.");
             }
 
+            // Check if user has enough tickets
+            $stmt = $db->prepare("SELECT ticket_balance FROM users WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user['ticket_balance'] < $tournament['entry_fee']) {
+                throw new Exception("You don't have enough tickets. Required: {$tournament['entry_fee']}, Available: {$user['ticket_balance']}");
+            }
+            
+            // Deduct tickets from user balance
+            $stmt = $db->prepare("UPDATE users SET ticket_balance = ticket_balance - ? WHERE id = ?");
+            $stmt->execute([$tournament['entry_fee'], $_SESSION['user_id']]);
+
             if ($tournament['mode'] === 'Solo') {
-                // For solo tournaments, directly create the registration with user_id
+                // For solo tournaments, create registration with pending status (requires admin approval)
                 $stmt = $db->prepare("
                     INSERT INTO tournament_registrations 
                     (tournament_id, user_id, status, registration_date) 
-                    VALUES (?, ?, 'approved', NOW())
+                    VALUES (?, ?, 'pending', NOW())
                 ");
                 $stmt->execute([$tournament['id'], $_SESSION['user_id']]);
 
@@ -225,11 +238,11 @@ try {
                     throw new Exception("Invalid teammate selection or some teammates are already registered.");
                 }
 
-                // Register team
+                // Register team with pending status (requires admin approval)
                 $stmt = $db->prepare("
                     INSERT INTO tournament_registrations 
                     (tournament_id, team_id, status, registration_date) 
-                    VALUES (?, ?, 'approved', NOW())
+                    VALUES (?, ?, 'pending', NOW())
                 ");
                 $stmt->execute([$tournament['id'], $team['id']]);
 
@@ -247,7 +260,7 @@ try {
             $stmt->execute([$tournament['id']]);
 
             $db->commit();
-            redirect('my-registrations.php', 'Registration submitted successfully!', 'success');
+            redirect('my-registrations.php', 'Registration submitted successfully and is pending admin approval!', 'success');
 
         } catch (Exception $e) {
             $db->rollBack();

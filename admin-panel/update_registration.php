@@ -91,7 +91,29 @@ try {
         ]);
     }
 
-    if ($success && $_POST['status'] === 'approved') {
+    if ($success) {
+        // Get tournament entry fee for potential refund
+        $stmt = $conn->prepare("SELECT entry_fee FROM tournaments WHERE id = ?");
+        $stmt->execute([$_POST['tournament_id']]);
+        $tournament_info = $stmt->fetch(PDO::FETCH_ASSOC);
+        $entry_fee = $tournament_info['entry_fee'] ?? 0;
+        
+        if ($_POST['status'] === 'rejected' && $entry_fee > 0) {
+            // Refund tickets to user for rejected registration
+            if ($is_solo) {
+                $stmt = $conn->prepare("UPDATE users SET ticket_balance = ticket_balance + ? WHERE id = ?");
+                $stmt->execute([$entry_fee, $_POST['user_id']]);
+            } else {
+                // For team registration, refund to team captain
+                $stmt = $conn->prepare(
+                    "UPDATE users SET ticket_balance = ticket_balance + ? 
+                     WHERE id = (SELECT user_id FROM team_members WHERE team_id = ? AND role = 'captain' AND status = 'active' LIMIT 1)"
+                );
+                $stmt->execute([$entry_fee, $_POST['team_id']]);
+            }
+        }
+        
+        if ($_POST['status'] === 'approved') {
         if ($is_solo) {
             // Create tournament history record for solo player
             $stmt = $conn->prepare("
@@ -135,6 +157,7 @@ try {
                     $_POST['team_id']
                 ]);
             }
+        }
 
         // Get tournament details for notification
         $stmt = $conn->prepare("SELECT name FROM tournaments WHERE id = ?");
@@ -158,6 +181,7 @@ try {
                 'team'
             );
         }
+    }
     }
 
     // Commit transaction
