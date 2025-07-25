@@ -1,6 +1,6 @@
 <?php
 require_once '../../config/database.php';
-require_once '../includes/admin-utils.php';
+require_once '../includes/admin-auth.php';
 
 // Initialize database connection
 $database = new Database();
