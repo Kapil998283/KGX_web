@@ -1,0 +1,16 @@
+# TEMPORARY BACKUP - Minimal .htaccess for troubleshooting
+# If external resources still don't load, the issue is not with .htaccess
+
+# Enable compression only
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/javascript
+</IfModule>
+
+# Basic security - no restrictions on external resources
+<Files ~ "^\.">
+    Order allow,deny
+    Deny from all
+</Files>
