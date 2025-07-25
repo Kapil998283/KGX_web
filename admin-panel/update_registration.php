@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 error_log("Received POST data: " . print_r($_POST, true));
 
 // Validate required parameters
-if (empty($_POST['team_id']) || empty($_POST['tournament_id']) || empty($_POST['status'])) {
+if ((empty($_POST['team_id']) && empty($_POST['user_id'])) || empty($_POST['tournament_id']) || empty($_POST['status'])) {
     echo json_encode(['error' => 'Missing required parameters']);
     exit();
 }
@@ -35,13 +35,25 @@ try {
     // Begin transaction
     $conn->beginTransaction();
 
+    // Determine if this is a solo or team registration
+    $is_solo = !empty($_POST['user_id']);
+    
     // First check if the registration exists and its current status
-    $stmt = $conn->prepare("
-        SELECT status 
-        FROM tournament_registrations 
-        WHERE team_id = ? AND tournament_id = ?
-    ");
-    $stmt->execute([$_POST['team_id'], $_POST['tournament_id']]);
+    if ($is_solo) {
+        $stmt = $conn->prepare("
+            SELECT status 
+            FROM tournament_registrations 
+            WHERE user_id = ? AND tournament_id = ?
+        ");
+        $stmt->execute([$_POST['user_id'], $_POST['tournament_id']]);
+    } else {
+        $stmt = $conn->prepare("
+            SELECT status 
+            FROM tournament_registrations 
+            WHERE team_id = ? AND tournament_id = ?
+        ");
+        $stmt->execute([$_POST['team_id'], $_POST['tournament_id']]);
+    }
     $registration = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$registration) {
@@ -53,46 +65,76 @@ try {
     }
 
     // Update registration status
-    $stmt = $conn->prepare("
-        UPDATE tournament_registrations 
-        SET status = ? 
-        WHERE team_id = ? AND tournament_id = ?
-    ");
-    
-    $success = $stmt->execute([
-        $_POST['status'],
-        $_POST['team_id'],
-        $_POST['tournament_id']
-    ]);
+    if ($is_solo) {
+        $stmt = $conn->prepare("
+            UPDATE tournament_registrations 
+            SET status = ? 
+            WHERE user_id = ? AND tournament_id = ?
+        ");
+        
+        $success = $stmt->execute([
+            $_POST['status'],
+            $_POST['user_id'],
+            $_POST['tournament_id']
+        ]);
+    } else {
+        $stmt = $conn->prepare("
+            UPDATE tournament_registrations 
+            SET status = ? 
+            WHERE team_id = ? AND tournament_id = ?
+        ");
+        
+        $success = $stmt->execute([
+            $_POST['status'],
+            $_POST['team_id'],
+            $_POST['tournament_id']
+        ]);
+    }
 
     if ($success && $_POST['status'] === 'approved') {
-        // Get team members
-        $stmt = $conn->prepare("
-            SELECT user_id 
-            FROM team_members 
-            WHERE team_id = ? AND status = 'active'
-        ");
-        $stmt->execute([$_POST['team_id']]);
-        $team_members = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        // Create tournament history records for all team members
-        $stmt = $conn->prepare("
-            INSERT INTO tournament_player_history (
-                tournament_id,
-                user_id,
-                team_id,
-                registration_date,
-                status
-            ) VALUES (?, ?, ?, NOW(), 'registered')
-        ");
-
-        foreach ($team_members as $user_id) {
+        if ($is_solo) {
+            // Create tournament history record for solo player
+            $stmt = $conn->prepare("
+                INSERT INTO tournament_player_history (
+                    tournament_id,
+                    user_id,
+                    team_id,
+                    registration_date,
+                    status
+                ) VALUES (?, ?, NULL, NOW(), 'registered')
+            ");
             $stmt->execute([
                 $_POST['tournament_id'],
-                $user_id,
-                $_POST['team_id']
+                $_POST['user_id']
             ]);
-        }
+        } else {
+            // Get team members
+            $stmt = $conn->prepare("
+                SELECT user_id 
+                FROM team_members 
+                WHERE team_id = ? AND status = 'active'
+            ");
+            $stmt->execute([$_POST['team_id']]);
+            $team_members = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            // Create tournament history records for all team members
+            $stmt = $conn->prepare("
+                INSERT INTO tournament_player_history (
+                    tournament_id,
+                    user_id,
+                    team_id,
+                    registration_date,
+                    status
+                ) VALUES (?, ?, ?, NOW(), 'registered')
+            ");
+
+            foreach ($team_members as $user_id) {
+                $stmt->execute([
+                    $_POST['tournament_id'],
+                    $user_id,
+                    $_POST['team_id']
+                ]);
+            }
 
         // Get tournament details for notification
         $stmt = $conn->prepare("SELECT name FROM tournaments WHERE id = ?");
@@ -101,11 +143,21 @@ try {
 
         // Send notifications
         $notifications = new TournamentNotifications($conn);
-        $notifications->registrationStatus(
-            $_POST['team_id'],
-            $tournament['name'],
-            'approved'
-        );
+        if ($is_solo) {
+            $notifications->registrationStatus(
+                $_POST['user_id'],
+                $tournament['name'],
+                'approved',
+                'solo'
+            );
+        } else {
+            $notifications->registrationStatus(
+                $_POST['team_id'],
+                $tournament['name'],
+                'approved',
+                'team'
+            );
+        }
     }
 
     // Commit transaction

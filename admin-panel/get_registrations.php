@@ -116,6 +116,7 @@ try {
                             <th>Members & Game Details</th>
                             <th>Registration Date</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
