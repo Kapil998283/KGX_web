@@ -28,7 +28,7 @@ try {
     if ($mode === 'Solo') {
         // Show registered players with game details
         $stmt = $conn->prepare("
-            SELECT u.username, u.email, tr.registration_date, tr.status as registration_status, ug.game_username, ug.game_uid, ug.game_level, u.id as user_id
+            SELECT u.username, tr.registration_date, tr.status as registration_status, ug.game_username, ug.game_uid, ug.game_level, u.id as user_id
             FROM tournament_registrations tr
             INNER JOIN users u ON tr.user_id = u.id
             LEFT JOIN user_games ug ON ug.user_id = u.id AND ug.game_name = ?
@@ -48,7 +48,6 @@ try {
                     <thead>
                         <tr>
                             <th>Username</th>
-                            <th>Email</th>
                             <th>In-Game Username</th>
                             <th>UID</th>
                             <th>Level</th>
@@ -61,7 +60,6 @@ try {
                         <?php foreach ($registrations as $reg): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($reg['username']); ?></td>
-                            <td><?php echo htmlspecialchars($reg['email']); ?></td>
                             <td><?php echo htmlspecialchars($reg['game_username']); ?></td>
                             <td><?php echo htmlspecialchars($reg['game_uid']); ?></td>
                             <td><?php echo htmlspecialchars($reg['game_level']); ?></td>
@@ -128,7 +126,7 @@ try {
                                 <?php
                                 // Get team members and their game details
                                 $stmt2 = $conn->prepare("
-                                    SELECT u.username, u.email, tm.role, ug.game_username, ug.game_uid, ug.game_level
+                                    SELECT u.username, tm.role, ug.game_username, ug.game_uid, ug.game_level
                                     FROM team_members tm
                                     INNER JOIN users u ON tm.user_id = u.id
                                     LEFT JOIN user_games ug ON ug.user_id = u.id AND ug.game_name = ?
