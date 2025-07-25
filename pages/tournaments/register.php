@@ -180,17 +180,19 @@ try {
                 throw new Exception("You are already registered for this tournament.");
             }
 
-            // Check if user has enough tickets
-            $stmt = $db->prepare("SELECT ticket_balance FROM users WHERE id = ?");
+            // Check if user has enough tickets from user_tickets table
+            $stmt = $db->prepare("SELECT tickets as total_tickets FROM user_tickets WHERE user_id = ?");
             $stmt->execute([$_SESSION['user_id']]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            $user_tickets = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($user['ticket_balance'] < $tournament['entry_fee']) {
-                throw new Exception("You don't have enough tickets. Required: {$tournament['entry_fee']}, Available: {$user['ticket_balance']}");
+            $available_tickets = $user_tickets['total_tickets'] ?? 0;
+            
+            if ($available_tickets < $tournament['entry_fee']) {
+                throw new Exception("You don't have enough tickets. Required: {$tournament['entry_fee']}, Available: {$available_tickets}");
             }
             
-            // Deduct tickets from user balance
-            $stmt = $db->prepare("UPDATE users SET ticket_balance = ticket_balance - ? WHERE id = ?");
+            // Deduct tickets from user_tickets table
+            $stmt = $db->prepare("UPDATE user_tickets SET tickets = tickets - ? WHERE user_id = ?");
             $stmt->execute([$tournament['entry_fee'], $_SESSION['user_id']]);
 
             if ($tournament['mode'] === 'Solo') {
